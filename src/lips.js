@@ -7235,6 +7235,10 @@ function quote(value) {
     if (is_pair(value) || value instanceof LSymbol) {
         value[__data__] = true;
     }
+    if (is_pair(value) && value[__data__]) {
+        // cycle in REPL #313
+        value.markCycles();
+    }
     return value;
 }
 // -------------------------------------------------------------------------

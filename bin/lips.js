@@ -85,9 +85,9 @@ function print_error(e, stack) {
     log_error(e.message);
     if (e.__code__) {
         strace = e.__code__.map((line, i) => {
-            var prefix = `[${i+1}]: `;
-            var formatter = new Formatter(line);
-            var output = formatter.break().format({
+            const prefix = `[${i+1}]: `;
+            const formatter = new Formatter(line);
+            const output = formatter.break().format({
                 offset: prefix.length
             });
             return prefix + output;
@@ -108,10 +108,10 @@ function print_error(e, stack) {
 // -----------------------------------------------------------------------------
 function print(result) {
     if (result && result.length) {
-        var last = result.pop();
+        const last = result.pop();
         if (last !== undefined) {
             try {
-                var ret = env.get('repr')(last, true);
+                const ret = env.get('repr')(last, true);
                 console.log('\x1b[K' + ret.toString());
             } catch(e) {
                 print_error(e, options.t || options.trace);
