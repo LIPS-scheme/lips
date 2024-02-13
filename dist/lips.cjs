@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 13 Feb 2024 14:27:02 +0000
+ * build: Tue, 13 Feb 2024 16:21:46 +0000
  */
 
 'use strict';
@@ -6861,13 +6861,10 @@ function is_cycle(pair) {
   if (!is_pair(pair)) {
     return false;
   }
-  if (is_nil(pair)) {
-    return false;
-  }
   if (pair.have_cycles()) {
     return true;
   }
-  return is_cycle(pair.car) || is_cycle(pair.cdr);
+  return is_cycle(pair.car, fn) || is_cycle(pair.cdr, fn);
 }
 
 // ----------------------------------------------------------------------------
@@ -14556,7 +14553,6 @@ function evaluate_args(rest, _ref43) {
     options = _objectWithoutProperties(_ref43, _excluded5);
   var args = [];
   var node = rest;
-  mark_cycles(node);
   function next() {
     return args;
   }
@@ -14577,7 +14573,7 @@ function evaluate_args(rest, _ref43) {
       return unpromise(resolve_promises(arg), function (arg) {
         args.push(arg);
         if (node.have_cycles('cdr')) {
-          return next();
+          throw new Error("Invalid expression: Can't evaluate cycle");
         }
         node = node.cdr;
         return loop();
@@ -14872,9 +14868,6 @@ function _evaluate(code) {
       }
       if (!is_pair(code)) {
         return code;
-      }
-      if (code.is_cycle()) {
-        throw new Error("Invalid expression: Can't evaluate cycle");
       }
       var first = code.car;
       var rest = code.cdr;
@@ -15420,9 +15413,9 @@ var cbor = function () {
   for (var _i7 = 0, _Object$entries4 = Object.entries(serialization_map); _i7 < _Object$entries4.length; _i7++) {
     var _Object$entries4$_i = _slicedToArray(_Object$entries4[_i7], 2),
       name = _Object$entries4$_i[0],
-      fn = _Object$entries4$_i[1];
+      _fn = _Object$entries4$_i[1];
     var Class = types[name];
-    cbor_serialization_map[name] = serializer(Class, fn);
+    cbor_serialization_map[name] = serializer(Class, _fn);
   }
   // add CBOR data mapping
   var tag = 43311;
@@ -15618,10 +15611,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 13 Feb 2024 14:27:02 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 13 Feb 2024 16:21:46 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 13 Feb 2024 14:27:02 +0000').valueOf();
+  var date = LString('Tue, 13 Feb 2024 16:21:46 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15661,7 +15654,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 13 Feb 2024 14:27:02 +0000';
+var date = 'Tue, 13 Feb 2024 16:21:46 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

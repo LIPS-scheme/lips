@@ -3007,20 +3007,17 @@ Pair.prototype.have_cycles = function(name = null) {
 // ----------------------------------------------------------------------------
 Pair.prototype.is_cycle = function() {
     return is_cycle(this);
-}
+};
 
 // ----------------------------------------------------------------------------
 function is_cycle(pair) {
     if (!is_pair(pair)) {
         return false;
     }
-    if (is_nil(pair)) {
-        return false;
-    }
     if (pair.have_cycles()) {
         return true;
     }
-    return is_cycle(pair.car) || is_cycle(pair.cdr);
+    return is_cycle(pair.car, fn) || is_cycle(pair.cdr, fn);
 }
 
 // ----------------------------------------------------------------------------
@@ -10408,7 +10405,6 @@ function resolve_promises(arg) {
 function evaluate_args(rest, { use_dynamic, ...options }) {
     var args = [];
     var node = rest;
-    mark_cycles(node);
     function next() {
         return args;
     }
@@ -10427,7 +10423,7 @@ function evaluate_args(rest, { use_dynamic, ...options }) {
             return unpromise(resolve_promises(arg), function(arg) {
                 args.push(arg);
                 if (node.have_cycles('cdr')) {
-                    return next();
+                    throw new Error(`Invalid expression: Can't evaluate cycle`);
                 }
                 node = node.cdr;
                 return loop();
@@ -10658,9 +10654,6 @@ function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest }
         }
         if (!is_pair(code)) {
             return code;
-        }
-        if (code.is_cycle()) {
-            throw new Error(`Invalid expression: Can't evaluate cycle`);
         }
         var first = code.car;
         var rest = code.cdr;
