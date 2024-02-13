@@ -1548,7 +1548,7 @@ class Parser {
             return unpromise(this._resolve_object(object), object => {
                 if (is_pair(object)) {
                     // mark cycles on parser level
-                    object.markCycles();
+                    object.mark_cycles();
                 }
                 return object;
             });
@@ -2463,7 +2463,7 @@ function to_array(name, deep) {
         var node = list;
         while (true) {
             if (is_pair(node)) {
-                if (node.haveCycles('cdr')) {
+                if (node.have_cycles('cdr')) {
                     break;
                 }
                 var car = node.car;
@@ -2491,7 +2491,7 @@ Pair.prototype.length = function() {
     var node = this;
     while (true) {
         if (!node || is_nil(node) || !is_pair(node) ||
-            node.haveCycles('cdr')) {
+            node.have_cycles('cdr')) {
             break;
         }
         len++;
@@ -2552,7 +2552,7 @@ Pair.prototype.last_pair = function() {
         if (!is_pair(node.cdr)) {
             return node;
         }
-        if (node.haveCycles('cdr')) {
+        if (node.have_cycles('cdr')) {
             break;
         }
         node = node.cdr;
@@ -2682,7 +2682,7 @@ Pair.prototype.reduce = function(fn) {
 
 // ----------------------------------------------------------------------
 Pair.prototype.reverse = function() {
-    if (this.haveCycles()) {
+    if (this.have_cycles()) {
         throw new Error("You can't reverse list that have cycles");
     }
     var node = this;
@@ -2862,7 +2862,7 @@ const instances = new Map();
     [Pair, function(pair, { quote, skip_cycles, pair_args }) {
         // make sure that repr directly after update set the cycle ref
         if (!skip_cycles) {
-            pair.markCycles();
+            pair.mark_cycles();
         }
         return pair.toString(quote, ...pair_args);
     }],
@@ -2991,21 +2991,40 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
 }
 
 // ----------------------------------------------------------------------------
-Pair.prototype.markCycles = function() {
-    markCycles(this);
+Pair.prototype.mark_cycles = function() {
+    mark_cycles(this);
     return this;
 };
 
 // ----------------------------------------------------------------------------
-Pair.prototype.haveCycles = function(name = null) {
+Pair.prototype.have_cycles = function(name = null) {
     if (!name) {
-        return this.haveCycles('car') || this.haveCycles('cdr');
+        return this.have_cycles('car') || this.have_cycles('cdr');
     }
     return !!(this[__cycles__] && this[__cycles__][name]);
 };
 
 // ----------------------------------------------------------------------------
-function markCycles(pair) {
+Pair.prototype.is_cycle = function() {
+    return is_cycle(this);
+}
+
+// ----------------------------------------------------------------------------
+function is_cycle(pair) {
+    if (!is_pair(pair)) {
+        return false;
+    }
+    if (is_nil(pair)) {
+        return false;
+    }
+    if (pair.have_cycles()) {
+        return true;
+    }
+    return is_cycle(pair.car) || is_cycle(pair.cdr);
+}
+
+// ----------------------------------------------------------------------------
+function mark_cycles(pair) {
     var seen_pairs = [];
     var cycles = [];
     var refs = [];
@@ -3173,7 +3192,7 @@ Pair.prototype.toString = function(quote, { nested = false } = {}) {
 Pair.prototype.set = function(prop, value) {
     this[prop] = value;
     if (is_pair(value)) {
-        this.markCycles();
+        this.mark_cycles();
     }
 };
 
@@ -4590,7 +4609,7 @@ function unbox(object) {
 // ----------------------------------------------------------------------
 function patch_value(value, context) {
     if (is_pair(value)) {
-        value.markCycles();
+        value.mark_cycles();
         return quote(value);
     }
     if (is_function(value)) {
@@ -8871,10 +8890,10 @@ var global_env = new Environment({
         function clear(node) {
             if (is_pair(node)) {
                 delete node[__data__];
-                if (!node.haveCycles('car')) {
+                if (!node.have_cycles('car')) {
                     clear(node.car);
                 }
-                if (!node.haveCycles('cdr')) {
+                if (!node.have_cycles('cdr')) {
                     clear(node.cdr);
                 }
             }
@@ -8975,7 +8994,7 @@ var global_env = new Environment({
             var node = obj;
             var count = 0;
             while (count < index) {
-                if (!node.cdr || is_nil(node.cdr) || node.haveCycles('cdr')) {
+                if (!node.cdr || is_nil(node.cdr) || node.have_cycles('cdr')) {
                     return nil;
                 }
                 node = node.cdr;
@@ -9554,7 +9573,7 @@ var global_env = new Environment({
             if (!is_pair(node)) {
                 return false;
             }
-            if (node.haveCycles('cdr')) {
+            if (node.have_cycles('cdr')) {
                 return false;
             }
             node = node.cdr;
@@ -10355,10 +10374,10 @@ function resolve_promises(arg) {
         if (is_promise(node)) {
             promises.push(node);
         } else if (is_pair(node)) {
-            if (!node.haveCycles('car')) {
+            if (!node.have_cycles('car')) {
                 traverse(node.car);
             }
-            if (!node.haveCycles('cdr')) {
+            if (!node.have_cycles('cdr')) {
                 traverse(node.cdr);
             }
         } else if (node instanceof Array) {
@@ -10367,8 +10386,8 @@ function resolve_promises(arg) {
     }
     async function promise(node) {
         var pair = new Pair(
-            node.haveCycles('car') ? node.car : await resolve(node.car),
-            node.haveCycles('cdr') ? node.cdr : await resolve(node.cdr)
+            node.have_cycles('car') ? node.car : await resolve(node.car),
+            node.have_cycles('cdr') ? node.cdr : await resolve(node.cdr)
         );
         if (node[__data__]) {
             pair[__data__] = true;
@@ -10389,7 +10408,7 @@ function resolve_promises(arg) {
 function evaluate_args(rest, { use_dynamic, ...options }) {
     var args = [];
     var node = rest;
-    markCycles(node);
+    mark_cycles(node);
     function next() {
         return args;
     }
@@ -10407,7 +10426,7 @@ function evaluate_args(rest, { use_dynamic, ...options }) {
             }
             return unpromise(resolve_promises(arg), function(arg) {
                 args.push(arg);
-                if (node.haveCycles('cdr')) {
+                if (node.have_cycles('cdr')) {
                     return next();
                 }
                 node = node.cdr;
@@ -10425,7 +10444,7 @@ function evaluate_syntax(macro, code, eval_args) {
     var value = macro.invoke(code, eval_args);
     return unpromise(resolve_promises(value), function(value) {
         if (is_pair(value)) {
-            value.markCycles();
+            value.mark_cycles();
         }
         return quote(value);
     });
@@ -10434,7 +10453,7 @@ function evaluate_syntax(macro, code, eval_args) {
 function evaluate_macro(macro, code, eval_args) {
     function finalize(result) {
         if (is_pair(result)) {
-            result.markCycles();
+            result.mark_cycles();
             return result;
         }
         return quote(result);
@@ -10514,7 +10533,7 @@ function apply(fn, args, { env, dynamic_env, use_dynamic, error = () => {} } = {
         const result = call_function(fn, _args, { env, dynamic_env, use_dynamic });
         return unpromise(result, (result) => {
             if (is_pair(result)) {
-                result.markCycles();
+                result.mark_cycles();
                 return quote(result);
             }
             return box(result);
@@ -10639,6 +10658,9 @@ function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest }
         }
         if (!is_pair(code)) {
             return code;
+        }
+        if (code.is_cycle()) {
+            throw new Error(`Invalid expression: Can't evaluate cycle`);
         }
         var first = code.car;
         var rest = code.cdr;

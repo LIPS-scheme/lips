@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 13 Feb 2024 14:11:49 +0000
+ * build: Tue, 13 Feb 2024 14:27:02 +0000
  */
 
 'use strict';
@@ -5142,7 +5142,7 @@ var Parser = /*#__PURE__*/function () {
               return _context5.abrupt("return", unpromise(this._resolve_object(object), function (object) {
                 if (is_pair(object)) {
                   // mark cycles on parser level
-                  object.markCycles();
+                  object.mark_cycles();
                 }
                 return object;
               }));
@@ -6308,7 +6308,7 @@ function to_array(name, deep) {
     var node = list;
     while (true) {
       if (is_pair(node)) {
-        if (node.haveCycles('cdr')) {
+        if (node.have_cycles('cdr')) {
           break;
         }
         var car = node.car;
@@ -6335,7 +6335,7 @@ Pair.prototype.length = function () {
   var len = 0;
   var node = this;
   while (true) {
-    if (!node || is_nil(node) || !is_pair(node) || node.haveCycles('cdr')) {
+    if (!node || is_nil(node) || !is_pair(node) || node.have_cycles('cdr')) {
       break;
     }
     len++;
@@ -6397,7 +6397,7 @@ Pair.prototype.last_pair = function () {
     if (!is_pair(node.cdr)) {
       return node;
     }
-    if (node.haveCycles('cdr')) {
+    if (node.have_cycles('cdr')) {
       break;
     }
     node = node.cdr;
@@ -6527,7 +6527,7 @@ Pair.prototype.reduce = function (fn) {
 
 // ----------------------------------------------------------------------
 Pair.prototype.reverse = function () {
-  if (this.haveCycles()) {
+  if (this.have_cycles()) {
     throw new Error("You can't reverse list that have cycles");
   }
   var node = this;
@@ -6700,7 +6700,7 @@ var instances = new Map();
     pair_args = _ref14.pair_args;
   // make sure that repr directly after update set the cycle ref
   if (!skip_cycles) {
-    pair.markCycles();
+    pair.mark_cycles();
   }
   return pair.toString.apply(pair, [quote].concat(_toConsumableArray(pair_args)));
 }], [LCharacter, function (chr, _ref15) {
@@ -6837,22 +6837,41 @@ function toString(obj, quote, skip_cycles) {
 }
 
 // ----------------------------------------------------------------------------
-Pair.prototype.markCycles = function () {
-  markCycles(this);
+Pair.prototype.mark_cycles = function () {
+  mark_cycles(this);
   return this;
 };
 
 // ----------------------------------------------------------------------------
-Pair.prototype.haveCycles = function () {
+Pair.prototype.have_cycles = function () {
   var name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
   if (!name) {
-    return this.haveCycles('car') || this.haveCycles('cdr');
+    return this.have_cycles('car') || this.have_cycles('cdr');
   }
   return !!(this[__cycles__] && this[__cycles__][name]);
 };
 
 // ----------------------------------------------------------------------------
-function markCycles(pair) {
+Pair.prototype.is_cycle = function () {
+  return is_cycle(this);
+};
+
+// ----------------------------------------------------------------------------
+function is_cycle(pair) {
+  if (!is_pair(pair)) {
+    return false;
+  }
+  if (is_nil(pair)) {
+    return false;
+  }
+  if (pair.have_cycles()) {
+    return true;
+  }
+  return is_cycle(pair.car) || is_cycle(pair.cdr);
+}
+
+// ----------------------------------------------------------------------------
+function mark_cycles(pair) {
   var seen_pairs = [];
   var cycles = [];
   var refs = [];
@@ -6963,7 +6982,7 @@ Pair.prototype.toString = function (quote) {
 Pair.prototype.set = function (prop, value) {
   this[prop] = value;
   if (is_pair(value)) {
-    this.markCycles();
+    this.mark_cycles();
   }
 };
 
@@ -8536,7 +8555,7 @@ function unbox(object) {
 // ----------------------------------------------------------------------
 function patch_value(value, context) {
   if (is_pair(value)) {
-    value.markCycles();
+    value.mark_cycles();
     return quote(value);
   }
   if (is_function(value)) {
@@ -13171,10 +13190,10 @@ var global_env = new Environment({
     function clear(node) {
       if (is_pair(node)) {
         delete node[__data__];
-        if (!node.haveCycles('car')) {
+        if (!node.have_cycles('car')) {
           clear(node.car);
         }
-        if (!node.haveCycles('cdr')) {
+        if (!node.have_cycles('cdr')) {
           clear(node.cdr);
         }
       }
@@ -13261,7 +13280,7 @@ var global_env = new Environment({
       var node = obj;
       var count = 0;
       while (count < index) {
-        if (!node.cdr || is_nil(node.cdr) || node.haveCycles('cdr')) {
+        if (!node.cdr || is_nil(node.cdr) || node.have_cycles('cdr')) {
           return _nil;
         }
         node = node.cdr;
@@ -13695,7 +13714,7 @@ var global_env = new Environment({
       if (!is_pair(node)) {
         return false;
       }
-      if (node.haveCycles('cdr')) {
+      if (node.have_cycles('cdr')) {
         return false;
       }
       node = node.cdr;
@@ -14460,10 +14479,10 @@ function resolve_promises(arg) {
     if (is_promise(node)) {
       promises.push(node);
     } else if (is_pair(node)) {
-      if (!node.haveCycles('car')) {
+      if (!node.have_cycles('car')) {
         traverse(node.car);
       }
-      if (!node.haveCycles('cdr')) {
+      if (!node.have_cycles('cdr')) {
         traverse(node.cdr);
       }
     } else if (node instanceof Array) {
@@ -14480,7 +14499,7 @@ function resolve_promises(arg) {
         while (1) switch (_context20.prev = _context20.next) {
           case 0:
             _context20.t0 = Pair;
-            if (!node.haveCycles('car')) {
+            if (!node.have_cycles('car')) {
               _context20.next = 5;
               break;
             }
@@ -14494,7 +14513,7 @@ function resolve_promises(arg) {
             _context20.t1 = _context20.sent;
           case 8:
             _context20.t2 = _context20.t1;
-            if (!node.haveCycles('cdr')) {
+            if (!node.have_cycles('cdr')) {
               _context20.next = 13;
               break;
             }
@@ -14537,7 +14556,7 @@ function evaluate_args(rest, _ref43) {
     options = _objectWithoutProperties(_ref43, _excluded5);
   var args = [];
   var node = rest;
-  markCycles(node);
+  mark_cycles(node);
   function next() {
     return args;
   }
@@ -14557,7 +14576,7 @@ function evaluate_args(rest, _ref43) {
       }
       return unpromise(resolve_promises(arg), function (arg) {
         args.push(arg);
-        if (node.haveCycles('cdr')) {
+        if (node.have_cycles('cdr')) {
           return next();
         }
         node = node.cdr;
@@ -14575,7 +14594,7 @@ function evaluate_syntax(macro, code, eval_args) {
   var value = macro.invoke(code, eval_args);
   return unpromise(resolve_promises(value), function (value) {
     if (is_pair(value)) {
-      value.markCycles();
+      value.mark_cycles();
     }
     return quote(value);
   });
@@ -14584,7 +14603,7 @@ function evaluate_syntax(macro, code, eval_args) {
 function evaluate_macro(macro, code, eval_args) {
   function finalize(result) {
     if (is_pair(result)) {
-      result.markCycles();
+      result.mark_cycles();
       return result;
     }
     return quote(result);
@@ -14686,7 +14705,7 @@ function apply(fn, args) {
     });
     return unpromise(result, function (result) {
       if (is_pair(result)) {
-        result.markCycles();
+        result.mark_cycles();
         return quote(result);
       }
       return box(result);
@@ -14853,6 +14872,9 @@ function _evaluate(code) {
       }
       if (!is_pair(code)) {
         return code;
+      }
+      if (code.is_cycle()) {
+        throw new Error("Invalid expression: Can't evaluate cycle");
       }
       var first = code.car;
       var rest = code.cdr;
@@ -15596,10 +15618,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 13 Feb 2024 14:11:49 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 13 Feb 2024 14:27:02 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 13 Feb 2024 14:11:49 +0000').valueOf();
+  var date = LString('Tue, 13 Feb 2024 14:27:02 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15639,7 +15661,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 13 Feb 2024 14:11:49 +0000';
+var date = 'Tue, 13 Feb 2024 14:27:02 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
