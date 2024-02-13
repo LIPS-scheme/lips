@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 12 Feb 2024 20:25:14 +0000
+ * build: Tue, 13 Feb 2024 00:19:11 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -13591,6 +13591,8 @@ var nan = LNumber(NaN);
 var constants = {
   '#t': true,
   '#f': false,
+  '#true': true,
+  '#false': false,
   nil: _nil,
   'null': null,
   'undefined': undefined,
@@ -17561,10 +17563,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 12 Feb 2024 20:25:14 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 13 Feb 2024 00:19:11 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 12 Feb 2024 20:25:14 +0000').valueOf();
+  var date = LString('Tue, 13 Feb 2024 00:19:11 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17604,7 +17606,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 12 Feb 2024 20:25:14 +0000';
+var date = 'Tue, 13 Feb 2024 00:19:11 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

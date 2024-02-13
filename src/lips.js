@@ -7337,6 +7337,8 @@ var nan = LNumber(NaN);
 var constants = {
     '#t': true,
     '#f': false,
+    '#true': true,
+    '#false': false,
     nil,
     'null': null,
     'undefined': undefined,
