@@ -1545,7 +1545,13 @@ class Parser {
             object = object.valueOf();
         }
         if (this._refs.length) {
-            return this._resolve_object(object);
+            return unpromise(this._resolve_object(object), object => {
+                if (is_pair(object)) {
+                    // mark cycles on parser level
+                    object.markCycles();
+                }
+                return object;
+            });
         }
         return object;
     }
@@ -1565,7 +1571,7 @@ class Parser {
         }
         throw e;
     }
-    // Cover This function (array and object branch)
+    // TODO: Cover This function (array and object branch)
     async _resolve_object(object) {
 
         if (Array.isArray(object)) {
@@ -2983,15 +2989,7 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
     }
     return obj;
 }
-// ----------------------------------------------------------------------------
-function is_prototype(obj) {
-    return obj &&
-        typeof obj === 'object' &&
-        obj.hasOwnProperty &&
-        obj.hasOwnProperty("constructor") &&
-        typeof obj.constructor === "function" &&
-        obj.constructor.prototype === obj;
-}
+
 // ----------------------------------------------------------------------------
 Pair.prototype.markCycles = function() {
     markCycles(this);
@@ -4442,6 +4440,15 @@ function is_nil(value) {
 // ----------------------------------------------------------------------
 function is_function(o) {
     return typeof o === 'function' && typeof o.bind === 'function';
+}
+// ----------------------------------------------------------------------------
+function is_prototype(obj) {
+    return obj &&
+        typeof obj === 'object' &&
+        obj.hasOwnProperty &&
+        obj.hasOwnProperty("constructor") &&
+        typeof obj.constructor === "function" &&
+        obj.constructor.prototype === obj;
 }
 // ----------------------------------------------------------------------
 function is_continuation(o) {
@@ -7234,10 +7241,6 @@ function quote(value) {
     }
     if (is_pair(value) || value instanceof LSymbol) {
         value[__data__] = true;
-    }
-    if (is_pair(value) && value[__data__]) {
-        // cycle in REPL #313
-        value.markCycles();
     }
     return value;
 }

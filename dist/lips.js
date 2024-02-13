@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 13 Feb 2024 13:22:19 +0000
+ * build: Tue, 13 Feb 2024 14:11:49 +0000
  */
 
 (function (global, factory) {
@@ -7120,7 +7120,13 @@
                   _context5.next = 7;
                   break;
                 }
-                return _context5.abrupt("return", this._resolve_object(object));
+                return _context5.abrupt("return", unpromise(this._resolve_object(object), function (object) {
+                  if (is_pair(object)) {
+                    // mark cycles on parser level
+                    object.markCycles();
+                  }
+                  return object;
+                }));
               case 7:
                 return _context5.abrupt("return", object);
               case 8:
@@ -7154,7 +7160,7 @@
         }
         throw e;
       }
-      // Cover This function (array and object branch)
+      // TODO: Cover This function (array and object branch)
     }, {
       key: "_resolve_object",
       value: function () {
@@ -8810,10 +8816,7 @@
     }
     return obj;
   }
-  // ----------------------------------------------------------------------------
-  function is_prototype(obj) {
-    return obj && _typeof$1(obj) === 'object' && obj.hasOwnProperty && obj.hasOwnProperty("constructor") && typeof obj.constructor === "function" && obj.constructor.prototype === obj;
-  }
+
   // ----------------------------------------------------------------------------
   Pair.prototype.markCycles = function () {
     markCycles(this);
@@ -10376,6 +10379,10 @@
   // ----------------------------------------------------------------------
   function is_function(o) {
     return typeof o === 'function' && typeof o.bind === 'function';
+  }
+  // ----------------------------------------------------------------------------
+  function is_prototype(obj) {
+    return obj && _typeof$1(obj) === 'object' && obj.hasOwnProperty && obj.hasOwnProperty("constructor") && typeof obj.constructor === "function" && obj.constructor.prototype === obj;
   }
   // ----------------------------------------------------------------------
   function is_continuation(o) {
@@ -13514,10 +13521,6 @@
     }
     if (is_pair(value) || value instanceof LSymbol) {
       value[__data__] = true;
-    }
-    if (is_pair(value) && value[__data__]) {
-      // cycle in REPL #313
-      value.markCycles();
     }
     return value;
   }
@@ -17574,10 +17577,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 13 Feb 2024 13:22:19 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 13 Feb 2024 14:11:49 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 13 Feb 2024 13:22:19 +0000').valueOf();
+    var date = LString('Tue, 13 Feb 2024 14:11:49 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17617,7 +17620,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Tue, 13 Feb 2024 13:22:19 +0000';
+  var date = 'Tue, 13 Feb 2024 14:11:49 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
