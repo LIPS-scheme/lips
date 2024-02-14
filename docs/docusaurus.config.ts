@@ -8,15 +8,17 @@ const config: Config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://lips.js.org',
+  url: 'https://jcubic.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/lips-website/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'jcubic', // Usually your GitHub org/user name.
-  projectName: 'lips', // Usually your repo name.
+  projectName: 'lips-website', // Usually your repo name.
+  deploymentBranch: 'docusaurus',
+
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
