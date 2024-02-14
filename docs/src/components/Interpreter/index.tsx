@@ -1,5 +1,7 @@
 import Head from '@docusaurus/Head';
 import { useEffect } from 'react';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+
 import './styles.css';
 
 const examples = [
@@ -30,7 +32,7 @@ const examples = [
 
 ;; &() is object literal used with quasiquote
 (define (make-person first last)
-        \`&(:fist ,first :last ,last))
+  \`&(:fist ,first :last ,last))
 
 (define beatles (map make-person
                     '("John" "Paul" "Ringo" "George")
@@ -261,12 +263,13 @@ function useScripts(scripts: string[]) {
 
 
 export default function Interpreter(): JSX.Element {
+    const { siteConfig } = useDocusaurusContext();
     useScripts([
         'https://code.jquery.com/jquery-3.4.1.min.js',
         'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
         'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js',
         'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js',
-        '/js/interpreter.js'
+        `${siteConfig.baseUrl}/js/interpreter.js`
     ]);
     return (
         <>

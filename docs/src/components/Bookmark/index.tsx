@@ -1,17 +1,20 @@
 import Heading from '@theme/Heading';
 import Head from '@docusaurus/Head';
 import styles from './styles.module.css';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const BookmarkSVG = require('@site/static/img/bookmarklet.svg').default;
 
 export default function Bookmark(): JSX.Element {
+    const { siteConfig } = useDocusaurusContext();
+
     return (
         <section id="bookmarklet">
           <div className="container">
             <BookmarkSVG className={styles.bookmarkSVG} role="img" />
             <Heading as="h3">Bookmarklet</Heading>
             <Head>
-              <script src="/js/bookmark.js"/>
+              <script src={`${siteConfig.baseUrl}/js/bookmark.js`}/>
             </Head>
             <p>....</p>
             <p>
