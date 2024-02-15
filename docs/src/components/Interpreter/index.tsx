@@ -264,8 +264,9 @@ function useScripts(scripts: string[]) {
 
 export default function Interpreter(): JSX.Element {
     const { siteConfig } = useDocusaurusContext();
+    //const prod = process.env.NODE_ENV === 'production';
     useScripts([
-        'https://code.jquery.com/jquery-3.4.1.min.js',
+        'https://code.jquery.com/jquery-3.7.1.min.js',
         'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
         'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js',
         'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js',
@@ -274,17 +275,21 @@ export default function Interpreter(): JSX.Element {
     return (
         <>
           <Head>
+            <link rel="preconnect" href="https://cdn.jsdelivr.net" />
             <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/prismjs/themes/prism-coy.css,npm/terminal-prism/css/prism-coy.css" rel="stylesheet"/>
             <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
                   rel="stylesheet"/>
             <link href="https://cdn.jsdelivr.net/gh/richleland/pygments-css/monokai.css"
                   rel="stylesheet"/>
-            {/*
-            <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
-                    bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb"/>
-            */}
-            <script src="http://localhost/~kuba/jcubic/scheme/lips/dist/lips.js"
-                    bootstrap="http://localhost/~kuba/jcubic/scheme/lips/dist/std.scm" />
+            {/*prod && <>
+              <script src="https://code.jquery.com/jquery-3.7.1.min.js" />
+              <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />
+              <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js" />
+              <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js" />
+              <script src={`${siteConfig.baseUrl}/js/interpreter.js`} />
+            </>*/}
+            <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
+                    data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
           </Head>
           <div className="intro">
             <div className="actions-wrapper">
