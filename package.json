@@ -245,7 +245,6 @@
     "preact-render-to-string": "^6.3.1",
     "rollup": "^4.9.5",
     "rollup-plugin-node-globals": "^1.4.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
     "uglify-js": "^3.17.4"
   },
   "peerDepencies": {
