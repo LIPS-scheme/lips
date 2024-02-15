@@ -16,7 +16,6 @@ export default function Bookmark(): JSX.Element {
             <Head>
               <script src={`${siteConfig.baseUrl}/js/bookmark.js`}/>
             </Head>
-            <p>....</p>
             <p>
               When you're learning Scheme language, you can run the REPL directly on any page that
               have Scheme tutorial you're learning from. It even work with PDF files and new empty tab
