@@ -270,7 +270,7 @@ export default function Interpreter(): JSX.Element {
         'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
         'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js',
         'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js',
-        `${siteConfig.baseUrl}/js/interpreter.js`
+        `${siteConfig.baseUrl}js/interpreter.js`
     ]);
     return (
         <>
