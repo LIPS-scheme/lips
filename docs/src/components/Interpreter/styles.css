@@ -1,7 +1,10 @@
-.intro .terminal {
+.intro .term {
     --background: #14232d;
     --color: white;
     height: calc((var(--size, 1) * 14 * 14px) + 20px);
+}
+.intro .term:not(.terminal) {
+    background: var(--background);
 }
 .example {
     --background: transparent;
@@ -12,7 +15,7 @@
 .full-screen  .intro {
     position: initial;
 }
-.intro .terminal,
+.intro .term,
 .intro .actions-wrapper,
 .intro .examples {
     max-width: 1000px;
@@ -82,6 +85,24 @@
 .intro .actions > li.zoom-out {
     background-position: -220px 0;
 }
+.intro .loader-container {
+    padding: 10px;
+}
+.intro .loader {
+    --frames: 6;
+    color: var(--color);
+    font-size: calc(var(--size, 1) * 14px);
+    height: 1lh;
+    overflow: hidden;
+}
+.intro .loader div {
+    animation: appear calc(var(--frames) * 0.4s) infinite steps(var(--frames));
+}
+@keyframes appear {
+    100% {
+        translate: 0 calc(var(--frames) * -100%);
+    }
+}
 .examples .list {
     padding-top: 30px;
 }
@@ -119,7 +140,7 @@
 .examples {
     position: relative;
 }
-.terminal, .examples, .pagination {
+.term, .examples, .pagination {
     text-align: left;
 }
 .run,

@@ -312,7 +312,18 @@ export default function Interpreter(): JSX.Element {
                 </li>
               </ul>
             </div>
-            <div className="term"/>
+            <div className="term">
+              <div className="loader-container">
+                <div className="loader">
+                  <div>.</div>
+                  <div>..</div>
+                  <div>...</div>
+                  <div>....</div>
+                  <div>.....</div>
+                  <div>......</div>
+                </div>
+              </div>
+            </div>
             <div className="examples">
               <button className="run">run</button>
               <ul className="list">
