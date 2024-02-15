@@ -11187,6 +11187,9 @@ function execError(e) {
 function init() {
     var lips_mimes = ['text/x-lips', 'text/x-scheme'];
     var bootstrapped;
+    function boostrap_attr(script) {
+        return script.getAttribute('data-bootstrap') ?? script.getAttribute('bootstrap');
+    }
     function load(script) {
         return new Promise(function(resolve) {
             var src = script.getAttribute('src');
@@ -11215,10 +11218,9 @@ function init() {
                 } else {
                     var type = script.getAttribute('type');
                     if (lips_mimes.includes(type)) {
-                        const bootstrap_attr = script.getAttribute('bootstrap') ??
-                              script.getAttribute('data-bootstrap');
-                        if (!bootstrapped && typeof bootstrap_attr === 'string') {
-                            return bootstrap(bootstrap_attr).then(function() {
+                        const attr = boostrap_attr(script);
+                        if (!bootstrapped && typeof attr === 'string') {
+                            return bootstrap(attr).then(function() {
                                 return load(script, function(e) {
                                     console.error(e);
                                 });
@@ -11241,9 +11243,9 @@ function init() {
         return Promise.resolve();
     } else if (currentScript) {
         var script = currentScript;
-        var bootstrap_attr = script.getAttribute('bootstrap');
-        if (typeof bootstrap_attr === 'string') {
-            return bootstrap(bootstrap_attr).then(function() {
+        const attr = boostrap_attr(script);
+        if (typeof attr === 'string') {
+            return bootstrap(attr).then(function() {
                 bootstrapped = true;
                 return loop();
             });

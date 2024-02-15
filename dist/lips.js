@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 15 Feb 2024 17:18:33 +0000
+ * build: Thu, 15 Feb 2024 18:14:14 +0000
  */
 
 (function (global, factory) {
@@ -15547,6 +15547,10 @@
   function init() {
     var lips_mimes = ['text/x-lips', 'text/x-scheme'];
     var bootstrapped;
+    function boostrap_attr(script) {
+      var _script$getAttribute;
+      return (_script$getAttribute = script.getAttribute('data-bootstrap')) !== null && _script$getAttribute !== void 0 ? _script$getAttribute : script.getAttribute('bootstrap');
+    }
     function load(script) {
       return new Promise(function (resolve) {
         var src = script.getAttribute('src');
@@ -15575,10 +15579,9 @@
           } else {
             var type = script.getAttribute('type');
             if (lips_mimes.includes(type)) {
-              var _script$getAttribute;
-              var _bootstrap_attr = (_script$getAttribute = script.getAttribute('bootstrap')) !== null && _script$getAttribute !== void 0 ? _script$getAttribute : script.getAttribute('data-bootstrap');
-              if (!bootstrapped && typeof _bootstrap_attr === 'string') {
-                return bootstrap(_bootstrap_attr).then(function () {
+              var attr = boostrap_attr(script);
+              if (!bootstrapped && typeof attr === 'string') {
+                return bootstrap(attr).then(function () {
                   return load(script);
                 }).then(loop);
               } else {
@@ -15596,9 +15599,9 @@
       return Promise.resolve();
     } else if (currentScript) {
       var script = currentScript;
-      var bootstrap_attr = script.getAttribute('bootstrap');
-      if (typeof bootstrap_attr === 'string') {
-        return bootstrap(bootstrap_attr).then(function () {
+      var attr = boostrap_attr(script);
+      if (typeof attr === 'string') {
+        return bootstrap(attr).then(function () {
           bootstrapped = true;
           return loop();
         });
@@ -15615,10 +15618,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 15 Feb 2024 17:18:33 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 15 Feb 2024 18:14:14 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 15 Feb 2024 17:18:33 +0000').valueOf();
+    var date = LString('Thu, 15 Feb 2024 18:14:14 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -15658,7 +15661,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Thu, 15 Feb 2024 17:18:33 +0000';
+  var date = 'Thu, 15 Feb 2024 18:14:14 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
