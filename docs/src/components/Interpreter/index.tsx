@@ -131,7 +131,7 @@ const examples = [
     },
     {
         description: 'With LIPS you can interact with JavaScript DOM and jQuery Terminal (REPL).',
-        code: `;; this will query the DOM and ivoke click method
+        code: `;; this will query the DOM and invoke click method
 (let ((selector "[class*=\\"colorModeToggle\\"] button"))
   (--> (document.querySelector selector)
        (click)))
