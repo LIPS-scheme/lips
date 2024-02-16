@@ -163,7 +163,7 @@ You can change that if you add dot (current working directory) to the `$PATH` en
 export $PATH=".:$PATH"
 ```
 
-### Executing LIPS prammatically
+## Executing LIPS prammatically
 
 You can also execute LIPS from JavaScript:
 
