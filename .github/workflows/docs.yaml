@@ -6,7 +6,7 @@ on:
       - 'docs/**'
       - ".github/workflows/docs.yaml"
     branches:
-      - lips-website/docusaurus
+      - docusaurus
 
 permissions:
   contents: write
@@ -27,6 +27,7 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: docs/package-lock.json
+        if: ${{ github.repository == 'jcubic/lips-website' }}
 
       - name: Install dependencies
         run: npm ci
