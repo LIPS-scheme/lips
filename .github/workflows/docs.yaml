@@ -1,5 +1,5 @@
 name: build docs
-
+run-name: ${{ github.actor }} building documentation 🚀
 on:
   push:
     paths:
