@@ -2,46 +2,187 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Getting Started
 
-Let's discover **Docusaurus in less than 5 minutes**.
+## Browser
 
-## Getting Started
+When using LIPS Scheme interpreter in browser you need to include the main script file.
 
-Get started by **creating a new site**.
-
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
-
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
+```html
+<script src="https://unpkg.com/@jcubic/lips@beta/dist/lips.min.js"></script>
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+or [jsDelivr](https://www.jsdelivr.com/) that is somewhat faster:
 
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
+```html
+<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"></script>
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+After adding script tag with main file, you can use Scheme code inside script tag:
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+### Running Scheme Code Inline
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+```html
+<script type="text/x-scheme" bootstrap>
+(let ((what "world")
+      (greet "hello"))
+   (display (string-append "hello" " " what))
+   (newline))
+</script>
+```
+
+**NOTE**: Only the core of LIPS is written in JavaScript, almost half of it it's written in Scheme.
+So if you want to load the standard library (to have full LIPS), you should use `bootstrap` or
+`data-bootstrap` attribute that will load it for you. You can optionaly specify the location of the
+file.
+
+```html
+<script type="text/x-scheme" bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb">
+(let ((what "world")
+      (greet "hello"))
+   (display (string-append "hello" " " what))
+   (newline))
+</script>
+```
+
+`xcb` file is simple binary format that LIPS uses to speed up parsing the the code. You can also use
+`.scm` file or `.min.scm` file that may be little bit bigger.
+
+**NOTE** The `bootstrap` attribute can also be included on main script tag with the JavaScript file.
+
+### Running External Scheme Code
+
+You can also use `src` attribute to link to source file. Like you normally do with JavaScript:
+
+```html
+<script type="text/x-scheme" src="example.scm"><script>
+```
+
+## NodeJS / Bun
+
+To install LIPS you can use NPM:
+
+```bash
+npm install -g @jcubic/lips@beta
+```
+
+You should use beta, because the so call stable version is really old and outdated. Because of so many
+breaking changes no new stable version was released and instead 1.0 beta started.
+
+If LIPS is installed globally just use `lips` command to start the REPL:
+
+```
+$ lips
+  __ __                          __
+ / / \ \       _    _  ___  ___  \ \
+| |   \ \     | |  | || . \/ __>  | |
+| |    > \    | |_ | ||  _/\__ \  | |
+| |   / ^ \   |___||_||_|  <___/  | |
+ \_\ /_/ \_\                     /_/   lexical scope
+
+LIPS Interpreter 1.0.0-beta (2024-02-16) <https://lips.js.org>
+Copyright (c) 2018-2024 Jakub T. Jankiewicz
+
+Type (env) to see environment with functions macros and variables. You can also
+use (help name) to display help for specific function or macro, (apropos name)
+to display list of matched names in environment and (dir object) to list
+properties of an object.
+
+lips>
+```
+
+By default splash screen is shown you can hide it with option `-q`. If you're using bash you can create an
+alias:
+
+```bash
+alias lips='lips -q'
+```
+
+and you will not see the splash again.
+
+### Executing files
+
+You can also execute scheme code with:
+
+```bash
+lips foo.scm
+```
+
+Note, that with lisp executable you don't need to manually bootstrap the standard library. But you can change
+which file is loaded or disable the loading of the file completely using `--bootstrap` flag.
+
+```bash
+lips --bootstrap dist/std.scm foo.scm
+```
+
+This will run foo.scm file and bootstrap from main scheme file.
+
+```bash
+lips --bootstrap none foo.scm
+```
+
+This will run the code without loading the standard library. So LIPS will have only functions
+and macros defined in JavaScript. This is called Core of LIPS with most of the essentials.
+
+### Executing expressions
+
+You can execute expression with `-e` flag (short of `eval`):
+
+```bash
+lips -e '(print "hello world")'
+```
+
+### Standalone scripts
+
+You can also write scripts using LIPS with [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)).
+This extension is defined in [SRFI-22](https://srfi.schemers.org/srfi-22/srfi-22.html).
+
+```scheme
+#!/usr/bin/env lips
+(let ((what "World"))
+  (print (string-append "Hello " what)))
+```
+
+If you write code like this and save it in `script.scm` on Unix like systems (Linux, MacOS, or Windows with WSL)
+you can change the execution permission:
+
+```bash
+chmod +x script.scm
+```
+
+and execute the script by providing the name:
+
+```bash
+./script.scm
+```
+
+**NOTE**: by default most systems don't execute files in current directory so you need to provide `./` in front.
+You can change that if you add dot (current working directory) to the `$PATH` environment variable:
+
+```bash
+export $PATH=".:$PATH"
+```
+
+### Executing LIPS prammatically
+
+You can also execute LIPS from JavaScript:
+
+```javascript
+const { exec } = require('@jcubic/lips');
+// or
+import { exec } from '@jcubic/lips';
+
+exec('(let ((a 10) (b 20)) (* a b))').then(result => {
+    results.forEach(function(result) {
+        if (typeof result !== 'undefined') {
+            console.log(result.toString());
+        }
+    });
+});
+```
+
+**Note**: that you also need to bootstrap the standard library to have fully working Scheme system.
+
+`exec` is the main function that can be used to evaluate expressions. It returns a Promise of Array
+of results.
+
