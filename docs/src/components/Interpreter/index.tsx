@@ -6,7 +6,7 @@ import './styles.css';
 
 const examples = [
     {
-        description: 'Mixing Scheme and JavaScript',
+        description: 'With LIPS you can mix Scheme and JavaScript. You can access all JavaScript objects. You can also call any functions from Scheme.',
         code: `;; &() is object literal used with quasiquote
 (let ((object \`&(:name "LIPS Scheme"
                  :version ,lips.version)))
@@ -21,7 +21,7 @@ const examples = [
                1000)))`
     },
     {
-        description: 'Filter function accept, regex or function. Curry is higher order function that create new function with defaults. Pluck return a function that extract fields from an object.',
+        description: 'Filter function accepts: regex or function. Curry is higher order function that creates a new function with default arguments. Pluck returns a function that extract fields from an object.',
         code: `(print (filter number? '(foo 10 bar 20 baz 30)))
 ;; ==> (10 20 30)
 (print (filter #/foo|bar/ '(foo bar baz quux)))
@@ -44,7 +44,7 @@ const examples = [
 ;; ==> ("John" "Paul" "Ringo" "George")`
     },
     {
-        description: 'Automagic async/await like resolving of promises and explicit promise quotation.',
+        description: 'LIPS do automagic async/await. It resolve all promises by default, but you can quote a promise and handle it like in JavaScript.',
         code: `;; JavaScript regular expression literal
 (define re #/<h1>([^>]+)<\\/h1>/)
 ;; --> is a macro that allow chaining
@@ -66,7 +66,7 @@ const examples = [
   (print (await promise)))`
     },
     {
-        description: 'Hygienic syntax-rules macro and few examples of Numeric Tower.',
+        description: 'You can use hygienic syntax-rules macro, here are also a few examples of Numeric Tower.',
         code: `;; show hygienic macro prints expression
 ;; and the result value
 (define-syntax show
@@ -88,6 +88,19 @@ const examples = [
       (acos -1)
       (+ 1/2 1/4)
       (* 3/4 1/10))`
+    },
+    {
+        description: 'LIPS also supports classic lisp macros. Here is example of anaphoric macro (a lambda shortcut similar)',
+        code: `(define-macro (λ . body)
+   \`(lambda ($1 $2 $3 $4 $5 $6 $7 $8 $8 $9) ,@body))
+
+(print (map (λ (+ $1 1)) (range 10)))
+;; ==> (1 2 3 4 5 6 7 8 9 10)
+(let ((x 10))
+  (print (map (λ (+ $1 $2))
+              (range x)
+              (cdr (range (+ x 1))))))
+;; ==> (1 3 5 7 9 11 13 15 17 19)`
     },
     {
         description: 'Syntax extensions and custom repr allow to create new homoiconic data types.',
@@ -116,7 +129,7 @@ const examples = [
 ;; ==> "jon"`
     },
     {
-        description: 'Interaction with JavaScript DOM and jQuery Terminal (REPL).',
+        description: 'With LIPS you can interact with JavaScript DOM and jQuery Terminal (REPL).',
         code: `;; this will query the DOM and ivoke click method
 (let ((selector "button[class*=\\"ColorModeToggle\\"]"))
   (--> (document.querySelector selector)
@@ -131,7 +144,7 @@ const examples = [
   (term.echo "This is LIPS Scheme" &(:typing #t)))`
     },
     {
-        description: 'Fibonacci Closure with swap! lisp style macro.',
+        description: 'Here is a fibonacci Closure with swap! lisp style macro.',
         code: `;; macro that swap first two variables
 ;; with the last two expressions
 (define-macro (swap! a b x y)
@@ -195,7 +208,7 @@ const examples = [
       (print (cdr (it)))))`
     },
     {
-        description: 'JavaScript generators (objects that implement iterator protocol)',
+        description: 'You can iterate over JavaScript generators (objects that implement iterator protocol)',
         code: `;; JavaScript generator create using JS eval
 (define gen (self.eval "
     (async function* gen(time, ...args) {
@@ -222,7 +235,7 @@ const examples = [
 (print (iterator->array '(1 2 3 4)))`
     },
     {
-        description: 'Y Combinator and inline factorial function.',
+        description: 'Example of Y Combinator and inline factorial function.',
         code: `(define Y
   (lambda (h)
     ((lambda (x) (x x))
