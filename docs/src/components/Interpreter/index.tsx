@@ -11,7 +11,7 @@ const examples = [
 (let ((object \`&(:name "LIPS Scheme"
                  :version ,lips.version)))
   ;; you can access JavaScript properties
-  ;; with dot notation
+  ;; with dot notation, print is display + newline
   (print (string-append object.name
                         " "
                         object.version))
@@ -123,7 +123,8 @@ const examples = [
    (new Person name))
 
 ;; we can use new syntax
-(print P:("jon"))
+(write P:("jon"))
+(newline)
 ;; ==> P:("jon")
 (print (. P:("jon") 'name))
 ;; ==> "jon"`
