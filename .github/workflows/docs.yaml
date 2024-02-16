@@ -6,7 +6,7 @@ on:
       - 'docs/**'
       - ".github/workflows/docs.yaml"
     branches:
-      - docusaurus
+      - lips-website/docusaurus
 
 permissions:
   contents: write
