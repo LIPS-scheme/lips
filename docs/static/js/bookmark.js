@@ -1,5 +1,5 @@
 (function() {
-    const url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@master/lib/js/bookmark.js';
+    const url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/bookmark.js';
     fetch(url).then(function(res) {
         return res.text();
     }).then(function(text) {
