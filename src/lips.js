@@ -2765,7 +2765,7 @@ function user_repr(obj) {
             // if key is Object it should only work for plain_object
             // because otherwise it will match every object
             // we don't use instanceof so it don't work for subclasses
-            if (obj.constructor === key &&
+            if (obj instanceof key &&
                 (key === Object && plain_object && !iterator || key !== Object)) {
                 fn = value;
             }

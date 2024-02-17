@@ -42,6 +42,7 @@
 * improve floating point representation and parsing
 * fix bookmark when hovering over boolean values
 * fix quoted cycle in REPL [#313](https://github.com/jcubic/lips/issues/313)
+* fix set-repr! on base class [#314](https://github.com/jcubic/lips/issues/314)
 
 ## 1.0.0-beta.18
 ### Breaking

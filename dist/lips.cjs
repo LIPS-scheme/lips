@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 15 Feb 2024 18:14:14 +0000
+ * build: Sat, 17 Feb 2024 11:49:49 +0000
  */
 
 'use strict';
@@ -6606,7 +6606,7 @@ function user_repr(obj) {
       // if key is Object it should only work for plain_object
       // because otherwise it will match every object
       // we don't use instanceof so it don't work for subclasses
-      if (obj.constructor === key && (key === Object && plain_object && !iterator || key !== Object)) {
+      if (obj instanceof key && (key === Object && plain_object && !iterator || key !== Object)) {
         fn = value;
       }
     });
@@ -15614,10 +15614,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 15 Feb 2024 18:14:14 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 17 Feb 2024 11:49:49 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 15 Feb 2024 18:14:14 +0000').valueOf();
+  var date = LString('Sat, 17 Feb 2024 11:49:49 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15657,7 +15657,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 15 Feb 2024 18:14:14 +0000';
+var date = 'Sat, 17 Feb 2024 11:49:49 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
