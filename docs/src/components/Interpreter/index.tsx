@@ -260,15 +260,15 @@ export default function Interpreter(): JSX.Element {
     useScripts([
         'https://code.jquery.com/jquery-3.7.1.min.js',
         'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
-        'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js',
-        'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js',
+        'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
+        'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js',
         `${siteConfig.baseUrl}js/interpreter.js`
     ]);
     return (
         <>
           <Head>
             <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-            <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/prismjs/themes/prism-coy.css,npm/terminal-prism/css/prism-coy.css" rel="stylesheet"/>
+            <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.0/css/prism-coy.css" rel="stylesheet"/>
             <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
                   rel="stylesheet"/>
             <link href="https://cdn.jsdelivr.net/gh/richleland/pygments-css/monokai.css"
