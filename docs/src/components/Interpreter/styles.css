@@ -8,6 +8,7 @@
 }
 .example {
     --background: transparent;
+    position: relative;
 }
 .intro {
     position: relative;

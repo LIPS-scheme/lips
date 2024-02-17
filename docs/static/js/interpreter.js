@@ -7,6 +7,13 @@ var term = terminal({
     name: 'demo',
     lips: lips
 });
+term.tooltips($('.example'), $node => $node.text(), function($node) {
+    const offset = $node.offset();
+    const top = offset.top;
+    const left = offset.left;
+    const right = offset.left + $node.width();
+    return { top, right, left };
+});
 
 const intro = `LIPS version ${lips.version}
 Copyright (c) 2018-${new Date().getFullYear()} [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]

@@ -316,7 +316,7 @@ export default function Interpreter(): JSX.Element {
                 </div>
               </div>
             </div>
-            <div className="examples">
+            <div className="examples terminal-external">
               <button className="run">run</button>
               <ul className="list">
                 {examples.map((example, index) => {
