@@ -90,7 +90,7 @@ const examples = [
       (* 3/4 1/10))`
     },
     {
-        description: 'LIPS also supports classic lisp macros. Here is example of anaphoric macro (a lambda shortcut similar)',
+        description: 'LIPS also supports classic lisp macros. Here is example of anaphoric macro (a lambda shortcut)',
         code: `(define-macro (λ . body)
    \`(lambda ($1 $2 $3 $4 $5 $6 $7 $8 $8 $9) ,@body))
 
