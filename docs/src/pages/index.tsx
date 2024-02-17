@@ -5,7 +5,6 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Interpreter from '@site/src/components/Interpreter';
 import Bookmark from '@site/src/components/Bookmark';
-
 import Heading from '@theme/Heading';
 
 import styles from './index.module.css';

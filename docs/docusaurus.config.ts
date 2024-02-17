@@ -75,6 +75,7 @@ const config: Config = {
           position: 'left',
           label: 'Documentation',
         },
+        {to: '/screenshooter', label: 'ScreenShooter', position: 'left'},
         {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/jcubuc/lips',

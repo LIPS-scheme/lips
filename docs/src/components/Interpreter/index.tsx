@@ -1,6 +1,6 @@
 import Head from '@docusaurus/Head';
-import { useEffect } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import useScripts from '@site/src/hooks/useScripts';
 
 import './styles.css';
 
@@ -253,28 +253,6 @@ const examples = [
 ;; ==> 3628800`
     }
 ];
-
-function getScript(script: string) {
-    return new Promise((resolve, reject) => {
-        const $script = document.createElement("script");
-        $script.onload = resolve;
-        $script.onerror = reject;
-        $script.src = script;
-        document.head.appendChild($script);
-    });
-}
-
-function useScripts(scripts: string[]) {
-    useEffect(() => {
-        (function loop() {
-            if (scripts.length) {
-                const script = scripts.shift();
-                getScript(script).then(loop);
-            }
-        })();
-    }, []);
-}
-
 
 export default function Interpreter(): JSX.Element {
     const { siteConfig } = useDocusaurusContext();
