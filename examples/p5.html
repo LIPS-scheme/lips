@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>P5.js Demo</title>
+    <meta name="Description" content=""/>
+    <link rel="shortcut icon" href=""/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script src="./dist/lips.js"></script>
+<script type="text/x-scheme">
+   (console.log ":1")
+</script>
+<script type="text/x-scheme" bootstrap>
+    (console.log ":2")
+    (define (setup)
+       (createCanvas 400 400))
+    
+    (define (draw)
+       (background 220)
+       (ellipse 50 50 80 80))
+    
+    (define (bootstrap-p5js)
+       (let ((script (document.createElement "script")))
+         (set! window.setup setup)
+         (set! window.draw draw)
+         (set! script.src "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js")
+         (--> document.head (appendChild script))))
+     (bootstrap-p5js)
+</script>
+<script type="text/x-scheme">
+    (console.log ":3")
+</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+</body>
+</html>
