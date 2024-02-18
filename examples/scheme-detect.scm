@@ -93,3 +93,6 @@
       (and (not memo)
            (set! memo (detect:match-signature)))
       memo)))
+
+(display (detect:name))
+(newline)
