@@ -269,18 +269,18 @@ const examples = [
              (else (* n (f (- n 1))))))))
  10)
 ;; ==> 3628800`
-    }
+  }
 ];
 
 export default function Interpreter(): JSX.Element {
-    const { siteConfig } = useDocusaurusContext();
-    //const prod = process.env.NODE_ENV === 'production';
-    useScripts([
+    const { siteConfig: { baseUrl } } = useDocusaurusContext();
+    const prod = process.env.NODE_ENV === 'production';
+    useScripts(prod ? [] : [
         'https://code.jquery.com/jquery-3.7.1.min.js',
         'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
         'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
         'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js',
-        `${siteConfig.baseUrl}js/interpreter.js`
+        `${baseUrl}js/interpreter.js`
     ]);
     return (
         <>
@@ -291,15 +291,13 @@ export default function Interpreter(): JSX.Element {
                   rel="stylesheet"/>
             <link href="https://cdn.jsdelivr.net/gh/richleland/pygments-css/monokai.css"
                   rel="stylesheet"/>
-            {/*prod && <>
-              <script src="https://code.jquery.com/jquery-3.7.1.min.js" />
-              <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />
-              <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js" />
-              <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js" />
-              <script src={`${siteConfig.baseUrl}/js/interpreter.js`} />
-            </>*/}
+            {prod && <script src="https://code.jquery.com/jquery-3.7.1.min.js" />}
+            {prod && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
+            {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
+            {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
             <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
                     data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
+            {prod && <script src={`${baseUrl}js/interpreter.js`} />}
           </Head>
           <div className="intro">
             <div className="actions-wrapper">
