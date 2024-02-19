@@ -1,0 +1,9 @@
+.svg {
+  height: 200px;
+  width: 200px;
+}
+.tools {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
+}

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Interpreter from '@site/src/components/Interpreter';
-import Bookmark from '@site/src/components/Bookmark';
+import Tools from '@site/src/components/Tools';
 import Heading from '@theme/Heading';
 import Version from '@site/src/components/Version';
 
@@ -31,7 +31,7 @@ export default function Home(): JSX.Element {
       description={siteConfig.tagline}>
       <HomepageHeader />
       <main>
-        <Bookmark />
+        <Tools />
       </main>
     </Layout>
   );
