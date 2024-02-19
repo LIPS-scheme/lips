@@ -43,6 +43,7 @@ function Screeshooter(): JSX.Element {
         <p>This tool allow you to create nice screenshot of code. The screenshot tool is aware of
         any syntax added on top of Scheme. The tool is created using Codemirror and custom style
         build on top of Scheme syntax.</p>
+        <p>You can use this tool to generate snippets of Scheme or LIPS Code and share it on social media.</p>
       </div>
     </section>
   );
