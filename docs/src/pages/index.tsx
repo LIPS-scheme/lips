@@ -1,30 +1,20 @@
 import clsx from 'clsx';
-import { useRef, useEffect } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Interpreter from '@site/src/components/Interpreter';
 import Bookmark from '@site/src/components/Bookmark';
 import Heading from '@theme/Heading';
+import Version from '@site/src/components/Version';
 
 import styles from './index.module.css';
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
-  const ref = useRef<HTMLSpanElement>();
-  useEffect(() => {
-    (function loop() {
-      if (!(window as any).lips) {
-        setTimeout(loop, 100);
-      } else {
-        ref.current.innerText = (window as any).lips.version;
-      }
-    })();
-  }, []);
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
         <Heading as="h1" className="hero__title">
-          {siteConfig.title} v.<span ref={ref}></span>
+          {siteConfig.title} v. <Version />
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <Interpreter/>
