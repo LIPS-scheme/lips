@@ -183,6 +183,24 @@ const examples = [
 ;;                     ()))`
     },
     {
+        description: 'Function that modify its source when when run',
+        code: `(define (repeater x)
+   "(repeater value)
+
+    Function prints the value 1 time and modifies itself
+     to repeat (+ n 1) times on the next call."
+   (for-each (lambda () (print x)) (range 1))
+   (let ((r (cadr (cdadddr (. repeater '__code__)))))
+     (set-cdr! r (list (+ (cadr r) 1)))))
+
+(print "1")
+(repeater 'hello)
+(print "2")
+(repeater 'hello)
+(print "3")
+(repeater 'hello)`
+    },
+    {
         description: 'Built in SRFI-139 syntax-parameterize allows creating anamorphic hygienic macros.',
         code: `;; define new syntax parameter
 (define-syntax-parameter it
