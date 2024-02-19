@@ -273,90 +273,90 @@ const examples = [
 ];
 
 export default function Interpreter(): JSX.Element {
-    const { siteConfig: { baseUrl } } = useDocusaurusContext();
-    const prod = process.env.NODE_ENV === 'production';
-    useScripts(prod ? [] : [
-        'https://code.jquery.com/jquery-3.7.1.min.js',
-        'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
-        'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
-        'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js',
-        `${baseUrl}js/interpreter.js`
-    ]);
-    return (
-        <>
-          <Head>
-            <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-            <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.0/css/prism-coy.css" rel="stylesheet"/>
-            <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
-                  rel="stylesheet"/>
-            <link href="https://cdn.jsdelivr.net/gh/richleland/pygments-css/monokai.css"
-                  rel="stylesheet"/>
-            {prod && <script src="https://code.jquery.com/jquery-3.7.1.min.js" />}
-            {prod && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
-            {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
-            {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
-            <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
-                    data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
-            {prod && <script src={`${baseUrl}js/interpreter.js`} />}
-          </Head>
-          <div className="intro">
-            <div className="actions-wrapper">
-              <ul className="actions cloak">
-                <li className="zoom-in icon">
-                  <a href="#">Zoom In</a>
+  const { siteConfig: { baseUrl } } = useDocusaurusContext();
+  const prod = process.env.NODE_ENV === 'production';
+  useScripts(prod ? [] : [
+    'https://code.jquery.com/jquery-3.7.1.min.js',
+    'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
+    'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
+    'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js',
+    `${baseUrl}js/interpreter.js`
+  ]);
+  return (
+    <>
+      <Head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+        <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.0/css/prism-coy.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
+              rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/gh/richleland/pygments-css/monokai.css"
+              rel="stylesheet"/>
+        {prod && <script src="https://code.jquery.com/jquery-3.7.1.min.js" />}
+        {prod && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
+        {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
+        {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
+        <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
+                data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
+        {prod && <script src={`${baseUrl}js/interpreter.js`} />}
+      </Head>
+      <div className="intro">
+        <div className="actions-wrapper">
+          <ul className="actions cloak">
+            <li className="zoom-in icon">
+              <a href="#">Zoom In</a>
+            </li>
+            <li className="zoom-out icon">
+              <a href="#">Zoom Out</a>
+            </li>
+            <li className="full-screen">
+              <ul>
+                <li className="full-screen icon">
+                  <a href="#">Full Screen</a>
                 </li>
-                <li className="zoom-out icon">
-                  <a href="#">Zoom Out</a>
-                </li>
-                <li className="full-screen">
-                  <ul>
-                    <li className="full-screen icon">
-                      <a href="#">Full Screen</a>
-                    </li>
-                    <li className="exit-full-screen icon">
-                      <a href="#">Exit Full Screen</a>
-                    </li>
-                  </ul>
+                <li className="exit-full-screen icon">
+                  <a href="#">Exit Full Screen</a>
                 </li>
               </ul>
-            </div>
-            <div className="term">
-              <div className="loader-container">
-                <div className="loader">
-                  <div>.</div>
-                  <div>..</div>
-                  <div>...</div>
-                  <div>....</div>
-                  <div>.....</div>
-                  <div>......</div>
-                </div>
-              </div>
-            </div>
-            <div className="examples terminal-external">
-              <button className="run">run</button>
-              <ul className="list">
-                {examples.map((example, index) => {
-                    return (
-                        <li key={index} className={index === 0 ? 'active' : undefined}>
-                          <div className="example">
-                            <pre>{example.code}</pre>
-                          </div>
-                          <div className="description">{example.description}</div>
-                        </li>
-                    );
-                })}
-              </ul>
-              <ul className="pagination">
-                {examples.map((_, index) => {
-                    return (
-                        <li key={index} className={index === 0 ? 'active' : undefined}>
-                          <a href="#">{ index + 1 }</a>
-                        </li>
-                    );
-                })}
-              </ul>
+            </li>
+          </ul>
+        </div>
+        <div className="term">
+          <div className="loader-container">
+            <div className="loader">
+              <div>.</div>
+              <div>..</div>
+              <div>...</div>
+              <div>....</div>
+              <div>.....</div>
+              <div>......</div>
             </div>
           </div>
-        </>
-    );
+        </div>
+        <div className="examples terminal-external">
+          <button className="run">run</button>
+          <ul className="list">
+            {examples.map((example, index) => {
+              return (
+                <li key={index} className={index === 0 ? 'active' : undefined}>
+                  <div className="example">
+                    <pre>{example.code}</pre>
+                  </div>
+                  <div className="description">{example.description}</div>
+                </li>
+              );
+            })}
+          </ul>
+          <ul className="pagination">
+            {examples.map((_, index) => {
+              return (
+                <li key={index} className={index === 0 ? 'active' : undefined}>
+                  <a href="#">{ index + 1 }</a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </>
+  );
 };
