@@ -1,4 +1,4 @@
-(() => {
+$(() => {
 $.terminal.syntax('scheme');
 $('.term').empty();
 var term = terminal({
@@ -91,4 +91,4 @@ $('.example pre').map(function() {
     self.html(highlight(self.text()));
 });
 
-})();
+});
