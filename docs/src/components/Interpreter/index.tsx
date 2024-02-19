@@ -5,9 +5,9 @@ import useScripts from '@site/src/hooks/useScripts';
 import './styles.css';
 
 const examples = [
-    {
-        description: 'With LIPS you can mix Scheme and JavaScript. You can access all JavaScript objects. You can also call any functions from Scheme.',
-        code: `;; &() is object literal used with quasiquote
+  {
+    description: 'With LIPS you can mix Scheme and JavaScript. You can access all JavaScript objects. You can also call any functions from Scheme.',
+    code: `;; &() is object literal used with quasiquote
 (let ((object \`&(:name "LIPS Scheme"
                  :version ,lips.version)))
   ;; you can access JavaScript properties
@@ -19,10 +19,10 @@ const examples = [
   (ignore (setTimeout (lambda ()
                 (alert (JSON.stringify object)))
                1000)))`
-    },
-    {
-        description: 'Filter function accepts: regex or function. Curry is higher order function that creates a new function with default arguments. Pluck returns a function that extract fields from an object.',
-        code: `(print (filter number? '(foo 10 bar 20 baz 30)))
+  },
+  {
+    description: 'Filter function accepts: regex or function. Curry is higher order function that creates a new function with default arguments. Pluck returns a function that extract fields from an object.',
+    code: `(print (filter number? '(foo 10 bar 20 baz 30)))
 ;; ==> (10 20 30)
 (print (filter #/foo|bar/ '(foo bar baz quux)))
 ;; ==> (foo bar)
@@ -42,10 +42,10 @@ const examples = [
 (write (map (pluck "fist") beatles))
 (newline)
 ;; ==> ("John" "Paul" "Ringo" "George")`
-    },
-    {
-        description: 'LIPS do automagic async/await. It resolve all promises by default, but you can quote a promise and handle it like in JavaScript.',
-        code: `;; JavaScript regular expression literal
+  },
+  {
+    description: 'LIPS do automagic async/await. It resolve all promises by default, but you can quote a promise and handle it like in JavaScript.',
+    code: `;; JavaScript regular expression literal
 (define re #/<h1>([^>]+)<\\/h1>/)
 ;; --> is a macro that allow chaining
 ;; of JavaScript methods calls
@@ -64,10 +64,10 @@ const examples = [
                     (then (lambda (x)
                             (. (x.match re) 1))))))
   (print (await promise)))`
-    },
-    {
-        description: 'You can use hygienic syntax-rules macro, here are also a few examples of Numeric Tower.',
-        code: `;; show hygienic macro prints expression
+  },
+  {
+    description: 'You can use hygienic syntax-rules macro, here are also a few examples of Numeric Tower.',
+    code: `;; show hygienic macro prints expression
 ;; and the result value
 (define-syntax show
   (syntax-rules ()
@@ -88,10 +88,10 @@ const examples = [
       (acos -1)
       (+ 1/2 1/4)
       (* 3/4 1/10))`
-    },
-    {
-        description: 'LIPS also supports classic lisp macros. Here is example of anaphoric macro (a lambda shortcut)',
-        code: `(define-macro (λ . body)
+  },
+  {
+    description: 'LIPS also supports classic lisp macros. Here is example of anaphoric macro (a lambda shortcut)',
+    code: `(define-macro (λ . body)
    \`(lambda ($1 $2 $3 $4 $5 $6 $7 $8 $8 $9) ,@body))
 
 (print (map (λ (+ $1 1)) (range 10)))
@@ -101,10 +101,10 @@ const examples = [
               (range x)
               (cdr (range (+ x 1))))))
 ;; ==> (1 3 5 7 9 11 13 15 17 19)`
-    },
-    {
-        description: 'Syntax extensions and custom repr allow to create new homoiconic data types.',
-        code: `;; Create new class using define-class macro
+  },
+  {
+    description: 'Syntax extensions and custom repr allow to create new homoiconic data types.',
+    code: `;; Create new class using define-class macro
 (define-class Person Object
    (constructor (lambda (self name)
                    (set! self.name name))))
@@ -128,10 +128,10 @@ const examples = [
 ;; ==> P:("jon")
 (print (. P:("jon") 'name))
 ;; ==> "jon"`
-    },
-    {
-        description: 'With LIPS you can interact with JavaScript DOM and jQuery Terminal (REPL).',
-        code: `;; this will query the DOM and invoke click method
+  },
+  {
+    description: 'With LIPS you can interact with JavaScript DOM and jQuery Terminal (REPL).',
+    code: `;; this will query the DOM and invoke click method
 (let ((selector "[class*=\\"colorModeToggle\\"] button"))
   (--> (document.querySelector selector)
        (click)))
@@ -143,10 +143,10 @@ const examples = [
 (ignore
   (term.css "--background" "#2E2E2E")
   (term.echo "This is LIPS Scheme" &(:typing #t)))`
-    },
-    {
-        description: 'Here is a fibonacci Closure with swap! lisp style macro.',
-        code: `;; macro that swap first two variables
+  },
+  {
+    description: 'Here is a fibonacci Closure with swap! lisp style macro.',
+    code: `;; macro that swap first two variables
 ;; with the last two expressions
 (define-macro (swap! a b x y)
   (let ((g_b (gensym)))
@@ -165,10 +165,10 @@ const examples = [
 
 (let ((f (fib)))
   (list (f) (f) (f) (f) (f)))`
-    },
-    {
-        description: 'Scheme hygienic macro that creates an assoc list, with macroexpand.',
-        code: `;; recursive hygienic syntax-rules macro
+  },
+  {
+    description: 'Scheme hygienic macro that creates an assoc list, with macroexpand.',
+    code: `;; recursive hygienic syntax-rules macro
 (define-syntax alist
   (syntax-rules ()
      ((_) ())
@@ -181,10 +181,10 @@ const examples = [
 ;; ==> (#:cons (#:cons "foo" 10)
 ;;             (#:cons (#:cons "bar" 20)
 ;;                     ()))`
-    },
-    {
-        description: 'Function that modify its source when when run',
-        code: `(define (repeater x)
+  },
+  {
+    description: 'Function that modify its source when when run',
+    code: `(define (repeater x)
    "(repeater value)
 
     Function prints the value 1 time and modifies itself
@@ -199,10 +199,10 @@ const examples = [
 (repeater 'hello)
 (print "3")
 (repeater 'hello)`
-    },
-    {
-        description: 'Built in SRFI-139 syntax-parameterize allows creating anamorphic hygienic macros.',
-        code: `;; define new syntax parameter
+  },
+  {
+    description: 'Built in SRFI-139 syntax-parameterize allows creating anamorphic hygienic macros.',
+    code: `;; define new syntax parameter
 (define-syntax-parameter it
    (syntax-rules ()
      ((_ . _)
@@ -225,10 +225,10 @@ const examples = [
 (let ((alist '((a . 10) (b . 20))))
   (aif (assoc 'a alist)
       (print (cdr (it)))))`
-    },
-    {
-        description: 'You can iterate over JavaScript generators (objects that implement iterator protocol)',
-        code: `;; JavaScript generator create using JS eval
+  },
+  {
+    description: 'You can iterate over JavaScript generators (objects that implement iterator protocol)',
+    code: `;; JavaScript generator create using JS eval
 (define gen (self.eval "
     (async function* gen(time, ...args) {
         function delay(time) {
@@ -252,10 +252,10 @@ const examples = [
 (write (iterator->array "hello"))
 (newline)
 (print (iterator->array '(1 2 3 4)))`
-    },
-    {
-        description: 'Example of Y Combinator and inline factorial function.',
-        code: `(define Y
+  },
+  {
+    description: 'Example of Y Combinator and inline factorial function.',
+    code: `(define Y
   (lambda (h)
     ((lambda (x) (x x))
      (lambda (g)
