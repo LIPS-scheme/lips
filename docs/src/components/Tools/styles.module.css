@@ -3,6 +3,8 @@
   width: 200px;
 }
 .tools {
+    margin: 10px auto;
+    max-width: 1000px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 10px;
