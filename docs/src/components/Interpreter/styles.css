@@ -162,6 +162,7 @@
     margin-left: -10px;
     cursor: pointer;
     transition: transform 100ms linear;
+    z-index: 100;
 }
 .run:active {
     transform: translate(-100%, 1px);
