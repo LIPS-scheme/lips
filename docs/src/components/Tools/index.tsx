@@ -24,7 +24,7 @@ function Bookmark(): JSX.Element {
               (at least in Chrome). Drag this link <a id="bookmark_link">LIPS REPL</a> to your
               bookmarks. When you click on the bookmark it will run the interpreter. You can also just
               click the link.</p> <p>The bookmark can also be used to add REPL to your LIPS Web
-              application.</p> <p>It may also not work no sites that are protected with{' '}
+              application.</p> <p>It may also not work on sites that are protected with{' '}
               <a href="https://en.wikipedia.org/wiki/Content_Security_Policy">
                 Content Security Policy
               </a>
