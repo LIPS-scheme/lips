@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 17 Feb 2024 11:49:49 +0000
+ * build: Tue, 20 Feb 2024 18:59:07 +0000
  */
 
 (function (global, factory) {
@@ -6776,14 +6776,18 @@
     if ([_nil, eof].includes(obj)) {
       return obj.toString();
     }
-    if (is_function(obj)) {
-      return function_to_string(obj);
-    }
     if (obj === root) {
       return '#<js:global>';
     }
     if (obj === null) {
       return 'null';
+    }
+    if (is_function(obj)) {
+      if (is_function(obj.toString) && obj.hasOwnProperty('toString')) {
+        // promises
+        return obj.toString().valueOf();
+      }
+      return function_to_string(obj);
     }
     if (_typeof$1(obj) === 'object') {
       var constructor = obj.constructor;
@@ -6807,7 +6811,7 @@
         name = constructor.name;
       }
       // user defined representation
-      if (is_function(obj.toString) && is_lambda(obj.toString)) {
+      if (is_function(obj.toString) && obj.hasOwnProperty('toString')) {
         return obj.toString().valueOf();
       }
       if (type(obj) === 'instance') {
@@ -15618,10 +15622,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 17 Feb 2024 11:49:49 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 20 Feb 2024 18:59:07 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 17 Feb 2024 11:49:49 +0000').valueOf();
+    var date = LString('Tue, 20 Feb 2024 18:59:07 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -15661,7 +15665,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sat, 17 Feb 2024 11:49:49 +0000';
+  var date = 'Tue, 20 Feb 2024 18:59:07 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

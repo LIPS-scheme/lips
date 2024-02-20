@@ -2926,14 +2926,18 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
     if ([nil, eof].includes(obj)) {
         return obj.toString();
     }
-    if (is_function(obj)) {
-        return function_to_string(obj);
-    }
     if (obj === root) {
         return '#<js:global>';
     }
     if (obj === null) {
         return 'null';
+    }
+    if (is_function(obj)) {
+        if (is_function(obj.toString) && obj.hasOwnProperty('toString')) {
+            // promises
+            return obj.toString().valueOf();
+        }
+        return function_to_string(obj);
     }
     if (typeof obj === 'object') {
         var constructor = obj.constructor;
@@ -2957,7 +2961,7 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
             name = constructor.name;
         }
         // user defined representation
-        if (is_function(obj.toString) && is_lambda(obj.toString)) {
+        if (is_function(obj.toString) && obj.hasOwnProperty('toString')) {
             return obj.toString().valueOf();
         }
         if (type(obj) === 'instance') {
