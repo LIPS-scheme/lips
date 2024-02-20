@@ -61,7 +61,7 @@ process.on('uncaughtException', function (err) {
 
 // -----------------------------------------------------------------------------
 function log_error(message) {
-    fs.appendFileSync('error.log', message + '\n');
+    fs.appendFileSync(path.join(os.homedir(), 'lips.error.log'), message + '\n');
 }
 // -----------------------------------------------------------------------------
 function debug(message) {
