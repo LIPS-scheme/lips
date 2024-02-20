@@ -213,7 +213,6 @@
       (lambda (t)
         (t.is (to.throw (let ((x '(1 2 . 3))) (apply + x))) true)))
 
-
 (test "core: async for-each"
       (lambda (t)
           (define (delay x)
@@ -341,6 +340,14 @@
                          (list x y)))
         (t.is (car result) "hello")
         (t.is (repr (cadr result)) "#<js-promise (pending)>")))
+
+(test "core: delay repr"
+      (lambda (t)
+        (t.is (repr (delay 10)) "#<promise - not forced>")
+        (define x (delay 10))
+        (t.is (repr x) "#<promise - not forced>")
+        (force x)
+        (t.is (repr x) "#<promise - forced with number>")))
 
 (test "core: regex"
       (lambda (t)
