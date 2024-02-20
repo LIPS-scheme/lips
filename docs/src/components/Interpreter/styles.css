@@ -1,7 +1,7 @@
 .intro .term {
     --background: #14232d;
     --color: white;
-    height: calc((var(--size, 1) * 14 * 14px) + 20px);
+    height: calc((var(--size, 1) * 14 * 12px) + 20px);
 }
 .intro .term:not(.terminal) {
     background: var(--background);
