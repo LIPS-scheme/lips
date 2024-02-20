@@ -290,7 +290,7 @@ in Web (e.g. in Web REPL) you can use URL:
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
-* [Twitter/X](https://twitter.com/lips_lang)
+* [Twitter/X](https://twitter.com/LIPS_scheme)
 
 ### Articles
 * [How to start learning Lisp](https://jcubic.pl/2019/05/jak-zaczac-nauke-lispa.html) (PL with translator widget)
