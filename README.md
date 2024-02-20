@@ -269,7 +269,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
 * [LIPS: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
-* [Twitter/X](https://twitter.com/lips_lang)
+* [Twitter/X](https://twitter.com/LIPS_scheme)
 
 ### Articles
 * [How to start learning Lisp](https://jcubic.pl/2019/05/jak-zaczac-nauke-lispa.html) (PL with translator widget)
