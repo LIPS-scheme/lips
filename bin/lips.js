@@ -61,6 +61,10 @@ process.on('uncaughtException', function (err) {
 
 // -----------------------------------------------------------------------------
 function log_error(message) {
+    const date = (new Date()).toISOString();
+    message = message.split('\n').map(line => {
+        return `${date}: ${line}`;
+    }).join('\n');
     fs.appendFileSync(path.join(os.homedir(), 'lips.error.log'), message + '\n');
 }
 // -----------------------------------------------------------------------------

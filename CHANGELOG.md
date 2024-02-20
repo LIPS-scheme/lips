@@ -18,6 +18,8 @@
 * update `log` to accept two arguments [#301](https://github.com/jcubic/lips/issues/301)
 * allow to use `data-bootstrap` attribute on script tags
 * make `atan` work for complex numbers
+* save error logs in home dir
+* add timestamp to error logs
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
