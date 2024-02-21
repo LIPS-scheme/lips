@@ -88,11 +88,11 @@ There are 3 types of comments in Scheme:
 
 1. `;`semicolon create comments to the end of the line
 2. `#;` quote single S-Expression (list)
-3. `#|   |#` those are multiline quotes that can wrap any text inside
+3. `#|   |#` those are multiline comments that can wrap any text inside
 
 ## Empty list
 
-An empty list os special object in Scheme that insidcate end of the list.
+An empty list is a special object in Scheme that indicates end of the list.
 
 ```scheme
 ()
