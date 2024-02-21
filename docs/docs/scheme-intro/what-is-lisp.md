@@ -56,9 +56,9 @@ implementation later lead to Scheme programming languages.
 
 ### Standards
 
-Scheme is standardized in form of R<sup>n</sup>RS documents. Revised<sup>n</sup> Report on the
-Algorithmic Language Scheme. Where power indicate how many times it was revisited. Power of 2 means
-Revisited Revisited.
+Scheme is standardized in form of [R<sup>n</sup>RS documents](https://standards.scheme.org/).
+Revised<sup>n</sup> Report on the Algorithmic Language Scheme. Where power indicate how many times
+it was revisited. Power of 2 means Revisited Revisited.
 
 The latest standard is R<sup>7</sup>RS Small and there is version large in the making.
 
