@@ -7,11 +7,15 @@ sidebar_position: 1
 ![Lisp cycle](./img/lisp_cycles.png)
 
 Lisp is second oldest programming language (after Fortran) that is still in use.  Lisp is an acronym
-for **LISt Processing**. The main feature of Lisp is it's lack of syntax.  The idea for Lisp
-langauge came from mathematics, to be exact [Lambda
+for **LISt Processing**. It was invented by [John
+McCarthy](https://en.wikipedia.org/wiki/John_McCarthy_(computer_scientist)) in 1958 at
+[MIT](https://en.wikipedia.org/wiki/Massachusetts_Institute_of_Technology). The main feature of Lisp
+is it's lack of syntax.  The idea for Lisp langauge came from mathematics, to be exact [Lambda
 Calculus](https://en.wikipedia.org/wiki/Lambda_calculus) defined by [Alonzo
 Church](https://en.wikipedia.org/wiki/Alonzo_Church), which was invented or discovered to prove that
 the [halting problem](https://en.wikipedia.org/wiki/Halting_problem) is unsolvable.
+
+## S-Expressions
 
 In Lisp everything is written as S-Expression which is a list wrapped in parentheses with space between elements.
 
