@@ -30,8 +30,33 @@ aliases. Some Scheme also define `true` and `false` without hash.
 Strings in Scheme use only double quote symbols. They can be multiline. If you want to add double
 quote you need to escape with with slash `"this is \"Scheme\" languguage"`.
 
-You can also inject hex represention of a character with `"\x1B;"` this will create string with
+You can also inject hex representation of a character with `"\x1B;"` this will create string with
 Escape character used by Terminal emulators to add formatting (like colors).
+
+## Characters
+
+You can define single character as data type
+
+```scheme
+#\A
+#\B
+#\c
+```
+
+you can use characters form a string:
+```scheme
+(string #\h #\e #\l #\l #\o)
+```
+
+This evaluates into string `"hello"`
+
+You can also split the string into individual characters:
+
+```scheme
+(string->vector "hello")
+```
+
+This evaluates into vector of characters: `#(#\h #\e #\l #\l #\o)`
 
 ## Symbols
 
@@ -134,7 +159,7 @@ This will create immutable vector that can't be changed. To create a vector that
 By default if you write lists they are treated as code. To create a data you need quotations.
 
 ### Base Quote
-To create basic quoation you use single quote character:
+To create basic quotation you use single quote character:
 
 ```scheme
 '(1 2 3 4)
@@ -155,6 +180,7 @@ is the same as:
 ```
 
 ### Quasiquote
+
 There is also different type of quotation that allow execute part of the expression. It's called quasi quote.
 To create quasi quote you need back tick symbol. That's why it's often called back quotation.
 
