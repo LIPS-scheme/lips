@@ -20,6 +20,9 @@ There is also notion of exactness in those numbers. Inexact numbers are floats, 
 numbers are exact because they don't give any rounding errors like floats do (this is how
 [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754) standard for floating numbers work).
 
+There are also special constant `+nan.0`, `-nan.0`, `+inf.0`, and `-inf.0`. Positive and negative
+Not a number object and negative and positive infinity.
+
 ## Boolean values
 
 Scheme define two boolean constants `#f` and `#t` but note that the only false value, according to
