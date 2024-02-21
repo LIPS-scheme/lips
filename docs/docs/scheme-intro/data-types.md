@@ -111,7 +111,7 @@ or with dot syntax:
 
 But the second example require quotation otherwise Scheme will try to evaluate 1 as a function.
 
-If cons cells are put into e sequance:
+If cons cells are put into e sequence:
 
 ```scheme
 (1 . (2 . (3 . ())))
