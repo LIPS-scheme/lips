@@ -129,6 +129,21 @@ To create the same list you can use `list` procedure
 (list 1 2 3)
 ```
 
+To get the first element of the list you use procedure `car` and to get the rest of the list you use `cdr`.
+So `car` and `cdr` returns first and second element of the Pair (cons cell).
+
+Scheme used `car` and `cdr` for historical reasons. The first lisp interpreter was using address
+registers of [IBM 704](https://en.wikipedia.org/wiki/IBM_704) mainframe computer.
+
+* car stands for **Contents of the Address part of Register**
+* cdr stands for **Contents of the Decrement part of Register**
+
+Scheme should also define abbreviations for list accessors:
+
+example `caddr` is third element of the list. It's the same as `(car (cdr (cdr x)))`. Often Scheme
+and lisp interpreters define up to 5 combinations of `d` and `a` to get different elements out of a
+list.
+
 ## Cycles
 
 You can create list cycles directly when definiting your data stracture with datum syntax.
