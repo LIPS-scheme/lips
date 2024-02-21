@@ -371,3 +371,102 @@ The second list have two values stop condition and result of the whole expressio
 that is executed on each iteration.
 
 So the code will print each number and return list of numbers.
+
+## List operations
+
+You can use `list-ref` to reference nth element of the list
+
+```scheme
+(let ((lst '(1 2 3 4 5 6 7)))
+  (print (cadddr lst))
+  (print (list-ref lst 3)))
+```
+
+Both expressions in let will print number `4` which is 4th element of the list.
+
+### Iterating over a list recursively
+
+This is basic pattern you use to iterate over a list using recursion:
+
+```scheme
+(define (operation lst)
+  (if (null? lst)
+      ...
+      (operation (cdr lst))))
+
+```
+
+Here is example of function that check if element is present in the list:
+
+
+```scheme
+(define (contains item lst)
+  (if (null? lst)
+      #f
+      (if (equal? item (car lst))
+          #t
+          (contains item (cdr lst)))))
+
+
+(let ((lst '(1 2 3 4 5 6 0 7 8 9)))
+  (print (contains 0 lst)))
+;; ==> #t
+
+(let ((lst '(1 2 3 4 5 6 0 7 8 9)))
+  (print (contains "x" lst)))
+;; ==> #f
+```
+
+### Alists
+
+Alists (or Association list) is a way to create objects in Scheme using lists. The alist is created with
+list of cons cells:
+
+```scheme
+(list (cons "x" 10) (cons "y" 20) (cons "z" 30))
+;; ==> (("x" . 10) ("y" . 20) ("z" . 30))
+```
+
+You can also create alist using quotation:
+
+```scheme
+'(("x" . 10) ("y" . 20) ("z" . 30))
+```
+
+You have 3 functions that operate on alists:
+
+* `assq`
+* `assv`
+* `assoc`
+
+The return pair that match first argument or `#f` if not found. The alist is passed as second
+argument.  They use `eq?`, `eqv?`, and `equal?` respectively.
+
+```scheme
+(let ((x '((foo . 10) (bar . 20) (baz . 30))))
+  (print (assoc 'bar x))
+  (print (assoc 'quux x)))
+;; ==> (bar . 20)
+;; ==> #f
+```
+
+First call will return pair `(bar . 20)` because it's `bar` symbol is present in the alist. And the
+second call will print `#f`.
+
+## Finding element in the list
+
+Similar to operation on alist there are 3 functions that find if element is present in the normal list
+
+* `memq`
+* `memv`
+* `member`
+
+The return cons cell where `car` match object passed as first argument or #f if not found:
+
+```scheme
+(let ((lst '(1 2 3 x y z)))
+  (print (member 'x lst))
+  (print (member 'foo lst)))
+;; ==> (x y z)
+;; ==> #f
+```
