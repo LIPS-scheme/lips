@@ -260,6 +260,8 @@ There is also a shortcut to define procedure/function:
 (define (square (x) (* x x)))
 ```
 
+There are no explicit `return` statement. Only the last expression of the function is the result value.
+
 ### Recursion
 You can define define a function that reference to itself:
 
