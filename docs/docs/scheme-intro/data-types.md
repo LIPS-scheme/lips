@@ -46,6 +46,14 @@ bar
 baz
 ```
 
+You can also convert string to symbol with:
+
+```scheme
+(string->symbol "hello")
+```
+
+Scheme have conversion of using `->` arrow to define procedure that convert types.
+
 ## Comments
 
 There are 3 types of comments in Scheme:
