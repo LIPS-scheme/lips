@@ -273,6 +273,6 @@ Most special symbols in Scheme start with a hash symbol. Example are Byte vector
 
 Above creates 8 bit byte vector of numbers. in R<sup>7</sup>RS only unsigned 8 bit vectors are
 defined. But in [SRFI-4](https://srfi.schemers.org/srfi-4/srfi-4.html) are more bit vectors types.
-They all starts with hash. In different SRFI there are no examples of syntax's that start with
+They all starts with hash. In different SRFI there are more examples of syntax's that start with
 hash. This is just a convention everything is using.
 
