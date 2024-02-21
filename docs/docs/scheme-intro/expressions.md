@@ -106,13 +106,17 @@ Scheme also define two functions `angle` and `magnitude` which can be used to ge
 ;; ==> 14.142135623730951
 ```
 
-## Equal operators
+## Predicates
+
+### Equal operation
 
 In Scheme there are different way to compare values:
 
 * `eq?` - compares if the values are the same object works only on basic types
 * `eqv?` - compares if the values have the same represention
 * `equal?` - also works any type of values, it can compare vectors and list if they are the same
+
+### String and character comparators
 
 In addition there are also comparators for strings:
 * `string=?`
@@ -142,8 +146,20 @@ characters:
 * `char-ci<=?`
 * `char-ci>=?`
 
-and symbols:
+### Symbols
 * `symbol=?`
+
+### Type Predicates
+* `pair?`
+* `list?`
+* `null?`
+* `symbol?`
+* `boolean?`
+* `number?`
+* `string?`
+* `char?`
+* `integer?`
+* `complex?`
 
 ## Variables
 
