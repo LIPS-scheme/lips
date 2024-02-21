@@ -262,6 +262,17 @@ There is also a shortcut to define procedure/function:
 
 There are no explicit `return` statement. Only the last expression of the function is the result value.
 
+### Nested Procedures
+
+You can define inner procedures inside other procedures:
+
+```scheme
+(define (cube x)
+  (define (square x)
+    (* x x))
+  (* x (square x)))
+```
+
 ### Recursion
 You can define define a function that reference to itself:
 
