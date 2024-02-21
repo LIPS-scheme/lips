@@ -24,8 +24,6 @@
 (define string-append concat)
 (define = ==)
 (define remainder %)
-(define -inf.0 Number.NEGATIVE_INFINITY)
-(define +inf.0 Number.POSITIVE_INFINITY)
 (define procedure? function?)
 (define expt **)
 (define list->vector list->array)
