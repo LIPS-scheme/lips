@@ -27,3 +27,7 @@
   --ifm-color-primary-lightest: #6fc5f0;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+.token {
+    background: transparent;
+}
