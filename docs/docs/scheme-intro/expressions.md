@@ -286,6 +286,19 @@ You can also define recursion using named `let` syntax:
 ;; ==> 3628800
 ```
 
+#### Local Recursive Functions
+
+By default you can define local variable with let that is an lambda that reference itself. But you can do this with `letrec` syntax:
+
+```scheme
+(letrec ((sum (lambda (x)
+                (if (zero? x)
+                    0
+                    (+ x (sum (- x 1)))))))
+  (sum 10))
+;; ==> 55
+```
+
 ### Tail Call Optimization
 
 When you create recursive function and with deeply nested calls you may run out of memory. This type of
