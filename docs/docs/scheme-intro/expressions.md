@@ -302,6 +302,9 @@ You can define define a function that reference to itself:
 ;; ==> 3628800
 ```
 
+There is main if statement that is called base condition. If the value `n` is less or equal 1 it
+stop recursion and return 1. If not it call itself recursively decreasing the value `n`.
+
 You can also define recursion using named `let` syntax:
 
 ```scheme
