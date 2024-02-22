@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# Core Expressions
+# Core of Scheme
 
 ## Printing values
 
