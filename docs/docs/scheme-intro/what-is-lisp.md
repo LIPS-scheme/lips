@@ -30,7 +30,10 @@ write the same expression as:
 1 + 2 + 3
 ```
 
-Is that in Lisp there are no operators. The above expression is just procedure application (invoking a function).
+Is that in Lisp there are no operators. The above expression is just procedure application (function call).
+
+**NOTE**: We will use procedure and function interchangeably in this tutorial.
+
 Plus is not an operator only a symbol that point into addition procedure that is executed. So in fact in other
 programming languages this should be written as:
 
