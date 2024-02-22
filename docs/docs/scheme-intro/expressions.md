@@ -183,7 +183,6 @@ This will evaluate to 10. Note that this:
 
 Will evaluate into symbol `number`.
 
-
 ### Modification of the variable
 
 To modify existing variable you use `set!` procedure. There is a conversion of using exclamation
@@ -256,6 +255,42 @@ Case is the last of basic condition expressions. It allow to check given express
 
 Symbol foo is of the second list so this expression will print `"second"`.
 
+## Boolean expressions
+Scheme provide 3 boolean special forms that can be used to combine other expressions:
+
+They are not functions but special forms that can be used to create [Short-circuit
+evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation) also called McCarthy evaluation
+from [John McCarthy](https://en.wikipedia.org/wiki/John_McCarthy_(computer_scientist)) inventor of
+Lisp.
+
+
+* `and` - returns `true` when all elements are true value (in Scheme all values are true except `#f`),
+  and stop evaluates when it find `#f`
+
+```scheme
+(if (and (< 1 2) (> 3 1))
+    (print "true"))
+;; ==> true
+```
+
+* `or` - returns `#f` when all elements are `#f`, and return `#t` immediately when any of the values is `true`.
+
+```scheme
+(if (or (< 1 2) (/ 1 0))
+    (print "true"))
+;; ==> true
+```
+
+This expression will not evaluate `(/ 1 0)` which will give **Division by zero** error because it
+stop evaluating when it finds first true value.
+
+* `not` - not negates the value. if the value is true it will return `#f` otherwise it will return `#t`.
+
+```scheme
+(if (not (zero? 10))
+    (print "not zero"))
+;; ==> not zero
+```
 
 ## Procedures
 
