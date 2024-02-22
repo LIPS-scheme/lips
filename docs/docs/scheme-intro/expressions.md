@@ -397,6 +397,24 @@ This function is similar to previous recursive function, but note that loop is t
 the result of loop don't need to wait on anything. This type of code is optimized by Scheme and can
 recur any number of types.
 
+## Higher order functions
+Functions in Scheme are [first class](https://en.wikipedia.org/wiki/First-class_citizen), which
+means that are the same as any other values like numbers. And can be passed around. You can create a
+function that accept other function or create a function that return a function. Functions that
+operate on functions are called [higher order
+functions](https://en.wikipedia.org/wiki/Higher-order_function) or higher order procedures.
+
+Scheme define few built in higher order functions like `map`, `for-each` they both accept a function
+and execute them for every element of the list. `map` return new list from the values and `for-each`
+return unspecified value.
+
+```scheme
+(map square '(1 2 3 4))
+;; ==> (1 4 9 16)
+(map (lambda (x) (* x 10)) '(1 2 3 4))
+;; ==> (10 20 30 40)
+```
+
 ## Loops
 Recursion is not the only way to create loops in Scheme. You also have `do` syntax:
 
