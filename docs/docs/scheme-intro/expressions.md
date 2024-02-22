@@ -324,6 +324,15 @@ You can define inner procedures inside other procedures:
   (* x (square x)))
 ```
 
+### Immediately invoked lambda
+When calling a function that first element doesn't need to be a symbol. It can be expression which evaluates
+to a function. So you can use lambda expression as first argument, but don't call it only evaluate it immediately, without saving it in a variable.
+
+```scheme
+((lambda (x) (* x x)) 10)
+;; ==> 100
+```
+
 ### Recursion
 You can define define a function that reference to itself:
 
