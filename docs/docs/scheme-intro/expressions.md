@@ -185,7 +185,7 @@ Will evaluate into symbol `number`.
 
 ### Modification of the variable
 
-To modify existing variable you use `set!` procedure. There is a conversion of using exclamation
+To modify (mutate) existing variable you use `set!` procedure. There is a conversion of using exclamation
 mark for destructive type of procedure. Which are procedures that modify it's arguments.
 
 ```scheme
