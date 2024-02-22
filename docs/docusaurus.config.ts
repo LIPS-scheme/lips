@@ -77,6 +77,16 @@ const config: Config = {
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
+          href: 'https://twitter.com/LIPS_scheme',
+          label: 'Twitter/X',
+          position: 'right'
+        },
+        {
+          href: 'https://gitter.im/jcubic/lips',
+          label: 'Chat',
+          position: 'right'
+        },
+        {
           href: 'https://github.com/jcubuc/lips',
           label: 'GitHub',
           position: 'right',
