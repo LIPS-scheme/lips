@@ -103,6 +103,10 @@ const config: Config = {
               label: 'Getting Started',
               to: '/docs/intro',
             },
+            {
+              label: 'Introduction to Scheme',
+              to: '/docs/scheme-intro/what-is-lisp'
+            },
           ],
         },
         {
