@@ -149,7 +149,7 @@ list.
 
 ## Cycles
 
-You can create list cycles directly when definiting your data stracture with datum syntax.
+You can create list cycles directly when defining your data structure with datum syntax.
 
 It looks like this:
 
