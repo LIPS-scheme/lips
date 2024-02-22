@@ -87,7 +87,8 @@ Example implementations:
 * [Chiken](https://www.call-cc.org/)
 * [LIPS](https://lips.js.org/)
 
-The official website for Scheme programming language is [scheme.org](https://www.scheme.org/).
+The official website for Scheme programming language is [scheme.org](https://www.scheme.org/), which
+containts more up to date [list of Scheme implemetnations](https://get.scheme.org/).
 
 ### SRFI Documents
 
