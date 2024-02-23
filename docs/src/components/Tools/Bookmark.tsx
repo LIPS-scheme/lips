@@ -1,25 +1,31 @@
-import styles from './styles.module.css';
+import { useEffect, useRef } from 'react';
 import Heading from '@theme/Heading';
-import Head from '@docusaurus/Head';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
+import styles from './styles.module.css';
 const BookmarkSVG = require('@site/static/img/bookmarklet.svg').default;
 
 export default function Bookmark(): JSX.Element {
-  const { siteConfig } = useDocusaurusContext();
+  const ref = useRef<HTMLAnchorElement>();
+  useEffect(() => {
+    const url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/bookmark.js';
+    fetch(url).then(function(res) {
+        return res.text();
+    }).then(text => {
+      if (ref.current) {
+        ref.current.href = text;
+      }
+    });
+  }, [ref.current]);
 
   return (
     <section id="bookmarklet">
       <div className="container">
         <BookmarkSVG className={styles.svg} role="img" />
         <Heading as="h3">Bookmarklet</Heading>
-        <Head>
-          <script src={`${siteConfig.baseUrl}/js/bookmark.js`}/>
-        </Head>
         <p>
           When you're learning Scheme language, you can run the REPL directly on any page that
           have Scheme tutorial you're learning from. It even work with PDF files and new empty tab
-          (at least in Chrome). Drag this link <a id="bookmark_link">LIPS REPL</a> to your
+          (at least in Chrome). Drag this link <a id="bookmark_link" ref={ref}>LIPS REPL</a> to your
           bookmarks. When you click on the bookmark it will run the interpreter. You can also just
           click the link.</p> <p>The bookmark can also be used to add REPL to your LIPS Web
           application.</p> <p>It may also not work on sites that are protected with{' '}
