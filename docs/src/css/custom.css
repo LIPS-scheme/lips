@@ -31,3 +31,6 @@
 .token {
     background: transparent;
 }
+.hero.hero--primary {
+    position: initial;
+}

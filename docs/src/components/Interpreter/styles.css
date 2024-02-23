@@ -26,11 +26,28 @@
 .actions-wrapper {
     position: relative;
 }
+body:not(.full-screen) .exit-full-screen {
+    display: none;
+}
+body.full-screen .full-screen.icon {
+    display: none;
+}
+body.full-screen .term {
+    position: absolute;
+    max-width: initial;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 300;
+    height: auto;
+}
 .full-screen .intro .actions-wrapper {
     max-width: initial;
     position: absolute;
     top: 0;
     right: 0;
+    z-index: 400;
 }
 .intro .actions {
     padding: 0;
@@ -64,10 +81,6 @@
     right: 0;
     top: 0;
     margin: 0;
-}
-.exit-full-screen,
-.full-screen li .full-screen {
-    display: none;
 }
 .intro .actions .icon,
 .top-bar .icons a {
@@ -125,7 +138,7 @@
 .example pre {
     --color: black;
     color: var(--color);
-    margin: 1em 0px;
+    margin: 1em;
     padding: 0;
     background-color: #eee;
     font-family: monospace;

@@ -28,7 +28,7 @@ export default function CodeBlockLine({
       ) : (
         lineTokens
       )}
-      <br />
+      {'\n'}
     </span>
   );
 }
