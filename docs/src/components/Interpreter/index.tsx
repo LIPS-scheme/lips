@@ -9,7 +9,7 @@ import examples from './examples';
 import './styles.css';
 
 export interface TerminalProps extends CSSProperties {
-  '--size': number;
+  '--size': string;
 }
 
 export default function Interpreter(): JSX.Element {
@@ -71,7 +71,7 @@ export default function Interpreter(): JSX.Element {
   }
 
   const terminalStyle = {
-    '--size': size
+    '--size': size.toFixed(1)
   } as TerminalProps;
 
   return (
