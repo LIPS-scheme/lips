@@ -92,7 +92,7 @@ export default function Interpreter(): JSX.Element {
       </Head>
       <div className="intro">
         <div className="actions-wrapper">
-          <ul className="actions cloak">
+          <ul className="actions">
             <li className="zoom-in icon">
               <a href="#" onClick={sizeInrement(0.1)}>Zoom In</a>
             </li>
