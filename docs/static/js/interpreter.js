@@ -85,10 +85,4 @@ $('.actions > li .full-screen').click(function() {
 $('.actions .exit-full-screen').click(function() {
     $(document.body).removeClass('full-screen');
 });
-
-$('.example pre').map(function() {
-    const self = $(this);
-    self.html(highlight(self.text()));
-});
-
 });

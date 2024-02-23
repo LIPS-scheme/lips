@@ -120,10 +120,17 @@
 .example {
     background: #eee;
     border-radius: 5px;
+    overflow: auto;
 }
 .example pre {
     --color: black;
     color: var(--color);
+    margin: 1em 0px;
+    padding: 0;
+    background-color: #eee;
+    font-family: monospace;
+    border-radius: 0;
+    overflow: visible;
 }
 .example pre .token {
   background: transparent;

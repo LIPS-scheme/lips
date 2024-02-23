@@ -17,7 +17,8 @@ the [halting problem](https://en.wikipedia.org/wiki/Halting_problem) is unsolvab
 
 ## S-Expressions
 
-In Lisp everything is written as S-Expression which is a list wrapped in parentheses with space between elements.
+In Lisp, everything is written as S-Expression which is a list wrapped in parentheses with space
+between elements.
 
 ```scheme
 (+ 1 2 3)

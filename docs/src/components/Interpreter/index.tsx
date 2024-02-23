@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useScripts from '@site/src/hooks/useScripts';
+import CodeBlock from '@theme/CodeBlock';
 
 import './styles.css';
 
@@ -282,11 +284,14 @@ export default function Interpreter(): JSX.Element {
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js',
     `${baseUrl}js/interpreter.js`
   ]);
+  useEffect(() => {
+    
+  });
   return (
     <>
       <Head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-        <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.0/css/prism-coy.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.1/css/prism-coy.css" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
               rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/gh/richleland/pygments-css/monokai.css"
@@ -297,7 +302,7 @@ export default function Interpreter(): JSX.Element {
         {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
         <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
                 data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
-        {prod && <script src={`${baseUrl}js/interpreter.js`} />}
+        {/* prod && <script src={`${baseUrl}js/interpreter.js`} /> */}
       </Head>
       <div className="intro">
         <div className="actions-wrapper">
@@ -339,7 +344,10 @@ export default function Interpreter(): JSX.Element {
               return (
                 <li key={index} className={index === 0 ? 'active' : undefined}>
                   <div className="example">
-                    <pre>{example.code}</pre>
+                    <CodeBlock language="scheme" className="lips">
+                      {example.code}
+                    </CodeBlock>
+                    {/* <pre>{example.code}</pre> */}
                   </div>
                   <div className="description">{example.description}</div>
                 </li>
