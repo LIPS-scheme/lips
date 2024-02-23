@@ -2,6 +2,9 @@
     --background: #14232d;
     --color: white;
     height: calc((var(--size, 1) * 14 * 12px) + 20px);
+    min-height: calc((var(--size, 1) * 5 * 12px) + 20px);
+    resize: vertical;
+    overflow: hidden;
 }
 .intro .term:not(.terminal) {
     background: var(--background);
