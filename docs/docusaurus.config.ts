@@ -87,7 +87,7 @@ const config: Config = {
           position: 'right'
         },
         {
-          href: 'https://github.com/jcubuc/lips',
+          href: 'https://github.com/jcubic/lips',
           label: 'GitHub',
           position: 'right',
         },
@@ -131,7 +131,7 @@ const config: Config = {
             },
             {
               label: 'GitHub',
-              href: 'https://github.com/jcubuc/lips',
+              href: 'https://github.com/jcubic/lips',
             },
           ],
         },
