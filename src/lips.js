@@ -7369,6 +7369,8 @@ var constants = {
     nil,
     'null': null,
     'undefined': undefined,
+    '+inf.0': Number.POSITIVE_INFINITY,
+    '-inf.0': Number.NEGATIVE_INFINITY,
     '+nan.0': nan,
     '-nan.0': nan
 };

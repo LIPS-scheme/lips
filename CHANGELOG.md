@@ -20,6 +20,7 @@
 * make `atan` work for complex numbers
 * save error logs in home dir
 * add timestamp to error logs
+* make `+inf.0` and `-inf.0` parser constants
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
