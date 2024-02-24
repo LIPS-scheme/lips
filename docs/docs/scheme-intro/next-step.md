@@ -1,5 +1,6 @@
 ---
 sidebar_position: 8
+description: Few resources how to learn more about Scheme
 ---
 
 # What Next

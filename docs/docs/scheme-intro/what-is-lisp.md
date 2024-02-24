@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: What is Lisp and what is Scheme and a bit of history
 ---
 
 # What is Lisp

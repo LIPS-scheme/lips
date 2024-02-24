@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+description: Main article that shows most of the features of Scheme
 ---
 
 # Core of Scheme

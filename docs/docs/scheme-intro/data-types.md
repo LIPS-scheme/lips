@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+description: All different data types you can have in Scheme
 ---
 
 # Data Types
