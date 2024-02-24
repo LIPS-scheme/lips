@@ -1,7 +1,6 @@
 import { useEffect, useState, MouseEvent, CSSProperties } from 'react';
 import Markdown from 'react-markdown';
 import Head from '@docusaurus/Head';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useScripts from '@site/src/hooks/useScripts';
 import CodeBlock from '@theme/CodeBlock';
 import initTerminal from './terminal';
@@ -16,7 +15,6 @@ export interface TerminalProps extends CSSProperties {
 export default function Interpreter(): JSX.Element {
   const [activeSnippet, setActiveSnippet] = useState(0);
   const [size, setSize] = useState(1);
-  const { siteConfig: { baseUrl } } = useDocusaurusContext();
 
   const prod = process.env.NODE_ENV === 'production';
 
