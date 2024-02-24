@@ -139,6 +139,21 @@ const examples = [
   (term.echo "This is LIPS Scheme" &(:typing #t)))`
   },
   {
+    description: 'Dynamic variables with R7RS parametrize',
+    code: `;; define new dynamic parameter
+(define x (make-parameter 10))
+(define (double-x)
+  (* (x) (x)))
+;; use default value
+(print (double-x))
+;; ==> 100
+;; change the value dynamically
+(parameterize ((x 20))
+  (print (double-x)))
+;; ==> 400
+`
+  },
+  {
     description: 'Here is a fibonacci Closure with swap! lisp style macro.',
     code: `;; macro that swap first two variables
 ;; with the last two expressions
