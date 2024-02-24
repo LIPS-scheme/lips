@@ -1,6 +1,8 @@
 const examples = [
   {
-    description: 'With LIPS you can mix Scheme and JavaScript. You can access all JavaScript objects. You can also call any functions from Scheme.',
+    description: `With LIPS you can mix Scheme and JavaScript. You can access all JavaScript objects. You can also call any functions from Scheme.
+
+**NOTE**: you can hover over Scheme symbols and get tooltip with documentation.`,
     code: `;; &() is object literal used with quasiquote
 (let ((object \`&(:name "LIPS Scheme"
                  :version ,lips.version)))

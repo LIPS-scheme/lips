@@ -1,4 +1,5 @@
 import { useEffect, useState, MouseEvent, CSSProperties } from 'react';
+import Markdown from 'react-markdown';
 import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useScripts from '@site/src/hooks/useScripts';
@@ -132,7 +133,7 @@ export default function Interpreter(): JSX.Element {
                       {example.code}
                     </CodeBlock>
                   </div>
-                  <div className="description">{example.description}</div>
+                  <div className="description"><Markdown>{example.description}</Markdown></div>
                 </li>
               );
             })}
