@@ -1,4 +1,4 @@
-;; parametrize tests taken on https://docs.racket-lang.org/guide/parameterize.html
+;; parametrize tests based on https://docs.racket-lang.org/guide/parameterize.html
 (test "parameterize: lexical"
       (lambda (t)
         (define location (make-parameter "here"))
