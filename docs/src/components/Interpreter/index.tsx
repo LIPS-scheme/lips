@@ -21,7 +21,7 @@ export default function Interpreter(): JSX.Element {
   const prod = process.env.NODE_ENV === 'production';
 
   useScripts(prod ? [] : [
-    'https://code.jquery.com/jquery-3.7.1.min.js',
+    'https://cdn.jsdelivr.net/npm/jquery',
     'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js'
@@ -82,7 +82,7 @@ export default function Interpreter(): JSX.Element {
         <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.1/css/prism-coy.css" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
               rel="stylesheet"/>
-        {prod && <script src="https://code.jquery.com/jquery-3.7.1.min.js" />}
+        {prod && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
         {prod && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
         {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
         {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
