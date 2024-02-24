@@ -333,6 +333,60 @@ to a function. So you can use lambda expression as first argument, but don't cal
 ;; ==> 100
 ```
 
+### Variable number of arguments
+Builtin `+` function allow to sum all it's arguments. You can create function that accept variable number of arguments yourself.
+
+```scheme
+(define sum (lambda args (apply + args)))
+```
+
+This function invokes a function `+` with its arguments. Note that are no parentheses around
+arguments. So all arguments will be saved inside `args` parameter.
+
+if you invoke
+```scheme
+(sum 1 2 3 4)
+```
+
+The `args` will contain a list `'(1 2 3 4)`. The same you can use improper list (with dot inside) as arguments:
+
+```scheme
+(define expression (lambda (first . rest) (/ first (apply + rest))))
+(expression 1 2 3 4)
+;; ==> 1/9
+```
+
+### Optional arguments
+When using improper lists as function parameter you can create optional arguments:
+
+```scheme
+(define (rational first . rest)
+  (let ((second (if (null? rest) 1 (car rest))))
+    (/ first second)))
+```
+
+This will create a procedure that have second argument optional. When invoking:
+
+```scheme
+(rational 10)
+```
+
+it will evaluate:
+
+```scheme
+(/ 10 1)
+;; ==> 10
+```
+
+and when you evaluate:
+
+```scheme
+(rational 1 2)
+;; ==> 1/2
+```
+
+If scheme provide rational numbers or it will return `0.5` otherwise.
+
 ### Recursion
 You can define define a function that reference to itself:
 
