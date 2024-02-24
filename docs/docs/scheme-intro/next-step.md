@@ -49,3 +49,6 @@ If you want to learn more about lisp macros there are two great books:
   You can also read this [discussion on Reddit](https://www.reddit.com/r/lisp/comments/l71amc/on_lisp_paperback_replica/).
 
 * Antoher great book about advanced lisp macros is [Let over Lambda](https://letoverlambda.com/) by [Doug Hoyte](https://hoytech.com/).
+
+
+**NOTE**: Unfortunetelly there are no good books about Scheme hygienic macros.
