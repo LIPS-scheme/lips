@@ -29,7 +29,7 @@ This is [offical website of the lectures](https://groups.csail.mit.edu/mac/class
 
 They are not very good quality, but they are great and you should have no problems in seeing the code on the blackboard.
 
-There are also more recent lectures from 2010 at Berkley by [Brian Harvey](https://people.eecs.berkeley.edu/~bh/).
+There are also more recent lectures from 2010 at [Berkley](https://www.berkeley.edu/) by [Brian Harvey](https://people.eecs.berkeley.edu/~bh/).
 Only a little bit better quality.
 
 [![UC Berkeley CS 61A The Structure and Interpretation of Computer Programs, Spring 2010](./img/SCIP-lectures-berkley.jpg)](https://www.youtube.com/playlist?list=PLhMnuBfGeCDNgVzLPxF9o5UNKG1b-LFY9)
