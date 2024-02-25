@@ -570,6 +570,8 @@ The return cons cell where `car` match object passed as first argument or #f if 
 ;; ==> #f
 ```
 
+## Vector operations
+## String operations
 ## Multiple values
 **TODO**
 
