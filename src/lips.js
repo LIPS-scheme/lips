@@ -4793,7 +4793,7 @@ function let_macro(symbol) {
         const { error, macro_expand, use_dynamic } = options
         var args;
         // named let:
-        // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
+        // (let loop ((x 10)) (iter (- x 1))) -> (letrec ((loop (lambda (x) ...
         if (code.car instanceof LSymbol) {
             if (!(is_pair(code.cdr.car) || is_nil(code.cdr.car))) {
                 throw new Error('let require list of pairs');
