@@ -610,3 +610,44 @@ You can also define your own higher order functions:
 (filter (lambda (x) (not (zero? x))) '(1 2 0 3 0 0 0 4 5 0 6 7))
 ;; ==> (1 2 3 4 5 6 7)
 ```
+
+You can use function that return lambda to create different list accessors for elements more than 4.
+
+```scheme
+(define (list-selector n)
+  (lambda (list)
+    (list-ref list n)))
+
+(define first car)
+(define rest cdr)
+(define second cadr)
+(define third caddr)
+(define fourth cadddr)
+(define fifth (list-selector 4))
+(define sixth (list-selector 5))
+(define seventh (list-selector 6))
+(define eighth (list-selector 7))
+(define ninth (list-selector 8))
+(define tenth (list-selector 9))
+```
+
+Another useful procedure is `alist-map`:
+
+```scheme
+(define (alist-map fun alist)
+  (map (lambda (item) (fun (car item) (cdr item))) alist))
+```
+
+You can use this procedure to map over values or keys inside alist.
+
+```scheme
+(define alist (map cons '(a b c d) '(1 2 3 4)))
+
+(alist-map (lambda (key value) (cons key (* value 10))) alist)
+;; ==> ((a . 10) (b . 20) (c . 30) (d . 40))
+(define (symbol-upcase symbol)
+  (string->symbol (string-upcase (symbol->string symbol))))
+
+(alist-map (lambda (key value) (cons (symbol-upcase key) value)) alist)
+;; ==> ((A . 1) (B . 2) (C . 3) (D . 4))
+```
