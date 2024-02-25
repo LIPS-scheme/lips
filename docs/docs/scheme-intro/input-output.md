@@ -230,7 +230,9 @@ You can simplify this function by using `for-each` higher order procedure.
 
 ```scheme
 (define (write-lines lst . rest)
-  (for-each (lambda (line) (apply write-line line rest)) lst))
+  (for-each (lambda (line)
+              (apply write-line line rest))
+            lst))
 ```
 
 You can use this with `call-with-output-file`:
@@ -245,7 +247,8 @@ You can use this with `call-with-output-file`:
      (write-lines beatles port))))
 
 (read-lines "test-3.scm")
-;; ==> ("John Lennon" "Paul McCartney" "Ringo Starr" "George Harrison")
+;; ==> ("John Lennon" "Paul McCartney"
+;; ==>  "Ringo Starr" "George Harrison")
 ```
 
 You can also write to standard output when you omit the port:
