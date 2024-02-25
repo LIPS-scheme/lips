@@ -20,7 +20,7 @@ There is also a function that write single character `(write-char x)`
 
 The standard input is a way to get stuff from the user. Scheme provide one function for this which
 is `read`. The function wait for the user to type something and return single
-[S-Expression](./docs/scheme-intro/what-is-lisp#s-expressions).
+[S-Expression](/docs/scheme-intro/what-is-lisp#s-expressions).
 
 Example:
 
