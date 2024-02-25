@@ -47,14 +47,14 @@ const examples = [
 ;; of JavaScript methods calls
 ;; no need to use Promises becasue of automagic
 ;; promise resolving
-(let ((msg (--> (fetch "https://scheme.org.pl")
+(let ((msg (--> (fetch "https://scheme.org.pl/test/")
                 (text)
                 (match re)
                 1)))
   (print msg))
 
 ;; explicit promise handling with quotation
-(let ((promise (--> '>(fetch "https://scheme.org.pl")
+(let ((promise (--> '>(fetch "https://scheme.org.pl/test/")
                     (then (lambda (res)
                             (res.text)))
                     (then (lambda (x)
