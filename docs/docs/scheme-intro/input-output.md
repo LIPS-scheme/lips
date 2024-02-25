@@ -240,3 +240,17 @@ You can use this with `call-with-output-file`:
 (read-lines "test-3.scm")
 ;; ==> ("John Lennon" "Paul McCartney" "Ringo Starr" "George Harrison")
 ```
+
+You can also write to standard output when you omit the port:
+
+```scheme
+(let ((beatles '("John Lennon"
+                 "Paul McCartney"
+                 "Ringo Starr"
+                 "George Harrison")))
+  (write-lines beatles))
+;; ==> John Lennon
+;; ==> Paul McCartney
+;; ==> Ringo Starr
+;; ==> George Harrison
+```
