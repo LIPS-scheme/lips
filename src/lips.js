@@ -9438,8 +9438,8 @@ var global_env = new Environment({
                         throw e;
                     }
                     body_error = true;
-                    var env = this.inherit('try');
                     if (catch_clause) {
+                        var env = this.inherit('try');
                         const name = catch_clause.cdr.car.car;
                         if (!(name instanceof LSymbol)) {
                             throw new Error('try: invalid syntax: catch require variable name');
@@ -9467,7 +9467,7 @@ var global_env = new Environment({
                         });
                     } else {
                         next(undefined, () => {
-                            throw e;
+                            reject(e);
                         });
                     }
                 }
