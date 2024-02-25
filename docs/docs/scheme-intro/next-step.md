@@ -53,3 +53,7 @@ If you want to learn more about lisp macros there are two great books:
 
 
 **NOTE**: Unfortunetelly there are no good books about Scheme hygienic macros.
+
+## More Resources
+You can find common recipes inside [Scheme Cookbook](https://cookbook.scheme.org/) and [more Books
+about Scheme](https://books.scheme.org/) on [official Scheme website](https://www.scheme.org/).
