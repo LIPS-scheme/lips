@@ -264,3 +264,70 @@ You can also write to standard output when you omit the port:
 ;; ==> Ringo Starr
 ;; ==> George Harrison
 ```
+
+## String ports
+You can also create ports as strings. You can use standard functions as with file I/O and stdin/stdout.
+
+### String Output Port
+
+Output string port act as a [buffer](https://en.wikipedia.org/wiki/Data_buffer). You can also use to to get string
+representation of different objects as a value.
+
+```
+(let ((port (open-output-string)))
+  (let ((beatles '("John Lennon"
+                 "Paul McCartney"
+                 "Ringo Starr"
+                 "George Harrison")))
+    (write-lines beatles port))
+  (write (get-output-string port))
+  (newline)
+  (close-output-port port))
+;; ==> "John Lennon
+;; ==> Paul McCartney
+;; ==> Ringo Starr
+;; ==> George Harrison
+;; ==> "
+```
+
+This prints a multi line string because `write` was used. Procedure `get-output-string` can be used to get the output string.
+
+And same as before you can use `call-with-port` to close the port after use:
+
+```scheme
+(call-with-port (open-output-string)
+  (lambda (p)
+    (display "hello" p)
+    (display " " p)
+    (display "there" p)
+    (get-output-string p)))
+;; ==> "hello there"
+```
+
+### String Input Port
+String input port can be used to parse expressions (to get Scheme representation of data that is given
+as a string literal inside the code.
+
+```scheme
+(let ((port (open-input-string "(1 2 3 4) (5 6 7 8)")))
+  (display (read port))
+  (newline)
+  (display (read port))
+  (newline)
+  (close-input-port port))
+;; ==> (1 2 3 4)
+;; ==> (5 6 7 8)
+```
+
+And same as with output port you can atomagically close the port after use with `call-with-port`.
+
+```scheme
+(call-with-port (open-input-string "100 10+10i")
+  (lambda (port)
+    (display (/ 1 (read port)))
+    (newline)
+    (display (/ 1 (read port)))
+    (newline)))
+;; ==> 1/100
+;; ==> 1/20-1/2i
+```
