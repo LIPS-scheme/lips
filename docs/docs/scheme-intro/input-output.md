@@ -134,6 +134,13 @@ You can use helper procedure that closes the port automatically:
     (newline port)))
 ```
 
+The output file will contain two files that have two literal strings (with quotes because write was used).
+
+```
+"hello"
+"there"
+```
+
 ## Reading from a file
 
 To read from a file you first need to open input port that points to a file. You can open input port with:
@@ -149,7 +156,7 @@ To read from a file you first need to open input port that points to a file. You
 ```
 
 If you first evaluated the code that writes into a file `test-2.scm` you should see same string that
-was written into it.
+was written into it. Note that `read` was called two times and read two expressions (two strings).
 
 Same as with output-port you need to call `close-input-port` procedure to close the input port. But
 Scheme, same as with output port have handy function that allow to close the port automagically.
