@@ -29,10 +29,12 @@ export default function Bookmark(): JSX.Element {
           bookmarks. When you click on the bookmark it will run the interpreter. You can also just
           click the link.</p> <p>The bookmark can also be used to add REPL to your LIPS Web
           application.</p> <p>It may also not work on sites that are protected with{' '}
-          <a href="https://en.wikipedia.org/wiki/Content_Security_Policy">
-            Content Security Policy
-          </a>
-          </p>
+          <a href="https://en.wikipedia.org/wiki/Content_Security_Policy">Content Security Policy</a>.
+          CSP was created as a security solution to prevent mostly
+          {' '}<abbr title="Cross-site scripting">XSS</abbr> vunerablities. You can disable this
+          mechanism with <a href="http://tinyurl.com/CSP-disable">Chrome Extension</a>,
+          but you do this on your own risk.
+        </p>
       </div>
     </section>
   );
