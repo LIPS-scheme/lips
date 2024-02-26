@@ -1150,7 +1150,11 @@ class Lexer {
         if (rule.length !== 5) {
             throw new Error(`Lexer: Invalid rule of length ${rule.length}`);
         }
-        if (!char.match(re)) {
+        if (is_string(re)) {
+            if (re !== char) {
+                return false;
+            }
+        } else if (!char.match(re)) {
             return false;
         }
         if (!match_or_null(prev_re, prev_char)) {
@@ -4460,6 +4464,10 @@ function is_nil(value) {
 // ----------------------------------------------------------------------
 function is_function(o) {
     return typeof o === 'function' && typeof o.bind === 'function';
+}
+// ----------------------------------------------------------------------------
+function is_string(o) {
+    return typeof o === 'string';
 }
 // ----------------------------------------------------------------------------
 function is_prototype(obj) {

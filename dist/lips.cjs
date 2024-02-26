@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 24 Feb 2024 18:13:25 +0000
+ * build: Mon, 26 Feb 2024 12:17:54 +0000
  */
 
 'use strict';
@@ -4608,7 +4608,11 @@ var Lexer = /*#__PURE__*/function () {
       if (rule.length !== 5) {
         throw new Error("Lexer: Invalid rule of length ".concat(rule.length));
       }
-      if (!_char4.match(re)) {
+      if (is_string(re)) {
+        if (re !== _char4) {
+          return false;
+        }
+      } else if (!_char4.match(re)) {
         return false;
       }
       if (!match_or_null(prev_re, prev_char)) {
@@ -8420,6 +8424,10 @@ function is_function(o) {
   return typeof o === 'function' && typeof o.bind === 'function';
 }
 // ----------------------------------------------------------------------------
+function is_string(o) {
+  return typeof o === 'string';
+}
+// ----------------------------------------------------------------------------
 function is_prototype(obj) {
   return obj && _typeof$1(obj) === 'object' && obj.hasOwnProperty && obj.hasOwnProperty("constructor") && typeof obj.constructor === "function" && obj.constructor.prototype === obj;
 }
@@ -8746,7 +8754,7 @@ function let_macro(symbol) {
       use_dynamic = options.use_dynamic;
     var args;
     // named let:
-    // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
+    // (let loop ((x 10)) (iter (- x 1))) -> (letrec ((loop (lambda (x) ...
     if (code.car instanceof LSymbol) {
       if (!(is_pair(code.cdr.car) || is_nil(code.cdr.car))) {
         throw new Error('let require list of pairs');
@@ -13590,8 +13598,8 @@ var global_env = new Environment({
           if (e instanceof IgnoreException) {
             throw e;
           }
-          var env = _this26.inherit('try');
           if (catch_clause) {
+            var env = _this26.inherit('try');
             var name = catch_clause.cdr.car.car;
             if (!(name instanceof LSymbol)) {
               throw new Error('try: invalid syntax: catch require variable name');
@@ -13616,7 +13624,7 @@ var global_env = new Environment({
             });
           } else {
             _next2(undefined, function () {
-              throw e;
+              reject(e);
             });
           }
         }
@@ -15620,10 +15628,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sat, 24 Feb 2024 18:13:25 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 26 Feb 2024 12:17:54 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sat, 24 Feb 2024 18:13:25 +0000').valueOf();
+  var date = LString('Mon, 26 Feb 2024 12:17:54 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15663,7 +15671,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sat, 24 Feb 2024 18:13:25 +0000';
+var date = 'Mon, 26 Feb 2024 12:17:54 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
