@@ -9,3 +9,7 @@
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 10px;
 }
+.header {
+    font-size: 2em;
+    grid-area: 1 / 1 / 2 / 3;
+}
