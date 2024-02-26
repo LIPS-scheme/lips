@@ -329,5 +329,5 @@ And same as with output port you can atomagically close the port after use with 
     (display (/ 1 (read port)))
     (newline)))
 ;; ==> 1/100
-;; ==> 1/20-1/2i
+;; ==> 1/20-1/20i
 ```
