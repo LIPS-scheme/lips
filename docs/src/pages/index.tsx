@@ -24,6 +24,7 @@ function HomepageHeader() {
 }
 
 import Video from '@site/src/components/Video';
+import Intro from '@site/src/components/Intro';
 
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
@@ -33,6 +34,7 @@ export default function Home(): JSX.Element {
       description={siteConfig.tagline}>
       <HomepageHeader />
       <main>
+        <Intro />
         <Tools />
         <Video />
       </main>
