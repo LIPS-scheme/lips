@@ -23,6 +23,8 @@ function HomepageHeader() {
   );
 }
 
+import Video from '@site/src/components/Video';
+
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
@@ -32,6 +34,7 @@ export default function Home(): JSX.Element {
       <HomepageHeader />
       <main>
         <Tools />
+        <Video />
       </main>
     </Layout>
   );

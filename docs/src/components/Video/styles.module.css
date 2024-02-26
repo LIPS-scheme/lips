@@ -1,0 +1,11 @@
+.video {
+    margin: 4em auto 2em auto;
+    max-width: 1000px;
+}
+.video video {
+    width: 100%;
+}
+.header {
+    text-align: center;
+    font-size: 2em;
+}
