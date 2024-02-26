@@ -18,7 +18,7 @@ export default function Bookmark(): JSX.Element {
   }, [ref.current]);
 
   return (
-    <section id="bookmarklet">
+    <section id="bookmark">
       <div className="container">
         <BookmarkSVG className={styles.svg} role="img" />
         <Heading as="h3">Bookmarklet</Heading>
