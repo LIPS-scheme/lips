@@ -571,9 +571,111 @@ The return cons cell where `car` match object passed as first argument or #f if 
 ```
 
 ## Vector operations
+Same as operation on list you can operate on list you have different procedure to operate on vectors.
+
+```scheme
+(let ((v (vector #\h #\e #\l #\l #\o)))
+  (write (vector-ref v 0))
+  (newline)
+  (vector-set! v 0 #\H)
+  (write (vector-ref v 0))
+  (newline)
+  (print (vector->string v))
+  (newline))
+;; ==> #\h
+;; ==> #\H
+;; ==> Hello
+```
+
+To check if option is a vector you can use `vector?` predicate.
+
 ## String operations
+Similar to operation on vectors and lists you have procedures to operate on strings.
+
+```scheme
+(let ((str (string #\h #\e #\l #\l #\o)))
+  (write (string-ref str 0))
+  (newline)
+  (string-set! str 0 #\H)
+  (write (string-ref str 0))
+  (newline)
+  (write str)
+  (newline))
+;; ==> #\h
+;; ==> #\H
+;; ==> "Hello"
+```
+
+To check if object is a string you can use `string?` predicate.
+
 ## Multiple values
-**TODO**
+By default functions in Scheme return single value, but you can return multiple values with `values` expression.
+
+```scheme
+(define (div-mul x y)
+  (values (/ x y) (* x y)))
+
+(define (plus-minus x y)
+  (values (+ x y) (- x y)))
+
+(display (div-mul 2 10))
+;; ==> 1/5 20
+(display (plus-minus 2 10))
+;; ==> 12 -8
+```
+
+When you try to use this value in expression:
+
+```scheme
+(let ((x (div-mul 2 10)))
+  (display (* x 2)))
+```
+
+Some Scheme implementation will evaluate that expression and get the first value. And some
+implementation will throw an error about expecting number but got multiple values.
+
+To safety access both values you can use `call-with-values` procedure:
+
+
+```scheme
+(call-with-values (lambda () (div-mul 2 10))
+  (lambda (div mul)
+    (display div)
+    (newline)
+    (display mul)
+    (newline)))
+;; ==> 1/5
+;; ==> 20
+```
+
+You also have `let-values` and `let*-values` expressions, that works similar to `let` and `let*`.
+
+```scheme
+(let-values (((plus minus) (plus-minus 2 10))
+             ((div mul) (div-mul 2 10)))
+  (+ div mul plus minus))
+;; ==> 121/5
+```
+
+Note that there are two open parentheses before div. The pair is like with let:
+
+```scheme
+(let ((x (div-mul 2 10)))
+  ...)
+```
+
+And instead of `x` you have list with two values that came from `values` expression.
+
+let-values also accept normal (single value expression like `let`) so you can mix them.
+Single expression still need to be a list but with a single value.
+
+```scheme
+(let*-values (((x) 2)
+              ((y) 10)
+              ((div mul) (div-mul x y)))
+  (+ div mul))
+;; ==> 101/5
+```
 
 ## Higher order functions
 
