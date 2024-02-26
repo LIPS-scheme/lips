@@ -49,6 +49,7 @@
 * fix `repr` of delay expressions [#315](https://github.com/jcubic/lips/issues/315)
 * fix `try..catch` [#317](https://github.com/jcubic/lips/issues/317)
 * fix handling `^` and `$` syntax extension [#318](https://github.com/jcubic/lips/issues/318)
+* fix mixed values in `let*-values` [#322](https://github.com/jcubic/lips/issues/322)
 
 ## 1.0.0-beta.18
 ### Breaking

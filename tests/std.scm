@@ -102,6 +102,17 @@
                 (cons x (cons y (cons z a))))
               '(1 2 3 4 5))))
 
+(test "std: let*-values mixed values"
+      (lambda (t)
+        (define (div-mul x y)
+          (values (/ x y) (* x y)))
+
+        (t.is (let*-values (((x) 2)
+                            ((y) 10)
+                            ((div mul) (div-mul x y)))
+                (+ div mul))
+              101/5)))
+
 (test "std: should render SXML string"
       (lambda (t)
         (define preact (require "preact"))

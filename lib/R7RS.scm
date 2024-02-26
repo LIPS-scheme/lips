@@ -210,13 +210,15 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values
-  (syntax-rules ()
+  (syntax-rules (multi single)
     ((_ ()) nil)
     ((_ () body ...) (begin body ...))
-    ((_ ((bind values) rest ...) . body)
+    ((_ ((bind obj) rest ...) . body)
      (apply (lambda bind
               (let*-values (rest ...) . body))
-            (vector->list ((. values "valueOf"))))))
+            (if (instanceof lips.Values obj)
+                (vector->list (obj.valueOf))
+                (list obj)))))
   "(let*-values binding body ...)
 
    The macro work similar to let* but variable is list of values and value
