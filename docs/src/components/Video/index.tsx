@@ -5,7 +5,7 @@ import styles from './styles.module.css';
 export default function Video(): JSX.Element {
   return (
     <div className={styles.video}>
-      <Heading as="h3" className={styles.header}>Video Presentation about LIPS Scheme</Heading>
+      <Heading as="h2" className={styles.header}>Video Presentation about LIPS Scheme</Heading>
       <p>
         Video presentation given during <a href="https://archive.fosdem.org/2023/">FOSDEM
         2023</a>. It discuss different aspect of LIPS Scheme. It first gives quick intro to Lisp and
