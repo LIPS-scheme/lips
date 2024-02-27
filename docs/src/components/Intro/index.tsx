@@ -21,7 +21,7 @@ export default function Intro(): JSX.Element {
         <li>Great integration with JavaScript. You can use any JS library out of the box.</li>
         <li>Asynchronous execution (auto resolving of promises with optional promise quotation).</li>
         <li>Literal regular expression.</li>
-        <li>Functional helpers (inspired by <a href="https://ramdajs.com/">RamdaJS</a>).</li>
+        <li>Functional helpers (inspired by <a href="https://ramdajs.com/">RamdaJS</a> and <a href="https://lodash.com/">Lodash</a>).</li>
         <li>Possibility modify the parser at runtime (add new syntax, similar to vectors and object).</li>
         <li>Possibility to set represention of new data types for write and display. Witth parser extensions you can make new data types have different syntax and still be homoicoic.</li>
         <li>Small JavaScript core with Standard Library implemented in basic Scheme.</li>
