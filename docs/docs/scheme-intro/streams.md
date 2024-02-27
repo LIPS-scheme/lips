@@ -198,12 +198,12 @@ So you can implement stream-take with above procedures:
 Another useful procedure is `stream-reduce` in Scheme often called `fold`:
 
 ```scheme
-(define (stream-reduce fun init stream)
-  (let loop ((result init)
-             (stream stream))
+(define (stream-reduce fun stream)
+  (let iter ((result (stream-car stream))
+             (stream (stream-cdr stream)))
     (if (empty-stream? stream)
         result
-        (loop (fun result (stream-car stream))
+        (iter (fun result (stream-car stream))
               (stream-cdr stream)))))
 ```
 
@@ -211,7 +211,7 @@ You can implement factorial function using streams:
 
 ```scheme
 (define (! n)
-  (stream-reduce * 1 (stream-limit n integers)))
+  (stream-reduce * (stream-limit n integers)))
 
 (! 10)
 ;; ==> 3628800
