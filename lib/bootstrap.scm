@@ -842,6 +842,18 @@
         (iter (cons (car lst) result) (- i 1) (cdr lst)))))
 
 ;; -----------------------------------------------------------------------------
+(define (zip . lists)
+  "(zip list1 list2 ...)
+
+   Return list where elements are taken from each list.
+   e.g.:
+   (zip '(1 2 3) '(2 3 4))
+   ;; ==> '((1 2) (2 3) (3 4))"
+  (if (or (null? lists) (some null? lists))
+      '()
+      (cons (map car lists) (apply zip (map cdr lists)))))
+
+;; -----------------------------------------------------------------------------
 (define unary (%doc "(unary fn)
 
                      Returns a new function with arguments limited to one."

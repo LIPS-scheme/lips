@@ -61,6 +61,7 @@
 (define (defmacro? obj) "(defmacro? expression)\u000A\u000AChecks if object is a macro and it's expandable." (and (macro? obj) (. obj (quote defmacro))))
 (define (n-ary n fn) "(n-ary n fn)\u000A\u000AReturns a new function that limits the number of arguments to n." (lambda args (apply fn (take n args))))
 (define (take n lst) "(take n list)\u000A\u000AReturns n first values of the list." (let iter ((result (quote ())) (i n) (lst lst)) (if (or (null? lst) (<= i 0)) (reverse result) (iter (cons (car lst) result) (- i 1) (cdr lst)))))
+(define (zip . lists) "(zip list1 list2 ...)\u000A\u000AReturn list where elements are taken from each list.\u000Ae.g.:\u000A(zip '(1 2 3) '(2 3 4))\u000A;; ==> '((1 2) (2 3) (3 4))" (if (or (null? lists) (some null? lists)) (quote ()) (cons (map car lists) (apply zip (map cdr lists)))))
 (define unary (%doc "(unary fn)\u000A\u000AReturns a new function with arguments limited to one." (curry n-ary 1)))
 (define binary (%doc "(binary fn)\u000A\u000AReturns a new function with arguments limited to two." (curry n-ary 2)))
 (define (%class-lambda expr) "(class-lambda expr)\u000A\u000AReturns a lambda expression where input expression lambda have `this` as first argument." (let ((args (gensym (quote args)))) (quasiquote (lambda (unquote args) (apply (unquote (cadr expr)) this (unquote args))))))
