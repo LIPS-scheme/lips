@@ -6,7 +6,8 @@ description: Feature of scheme that allow to create lazy lists
 # Streams
 
 Streams (also called delayed Lists or lazy lists) are a data structure described in
-[SICP](https://web.mit.edu/6.001/6.037/sicp.pdf) Chapter 3.5.
+[SICP](https://web.mit.edu/6.001/6.037/sicp.pdf) Chapter 3.5. It also appear in Chapter 21 of
+[Functional Programming in Scheme](https://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html).
 
 The base of those data structures are two expressions `delay` and `force`.
 
