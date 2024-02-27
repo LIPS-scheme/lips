@@ -13,7 +13,8 @@ The base of those data structures are two expressions `delay` and `force`.
 
 The result of delay is often called a Promise.
 
-To create a lazy pair you use cons with first element (`car`) and the rest (`cdr`) is a delay expression:
+To create a lazy pair you use cons with first element (`car`) and the rest (`cdr`) is a delay
+expression:
 
 ```scheme
 (define s (cons 1 (delay 2)))
@@ -47,7 +48,7 @@ Lets define some helper procedures:
   `(cons ,x (delay ,y)))
 ```
 
-This is lazy version of cons that utilize lisp macro.
+This is lazy version of cons that utilize [lisp macro](/docs/scheme-intro/macros).
 
 You can also define `car` and `cdr` versions that work with streams:
 
