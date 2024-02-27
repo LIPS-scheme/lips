@@ -33,7 +33,7 @@
 (define (stream-take n stream)
   (if (<= n 0)
       '()
-      (cons (head stream) (take (- n 1) (tail stream)))))
+      (cons (head stream) (stream-take (- n 1) (tail stream)))))
 
 ;; -----------------------------------------------------------------------------
 (define (stream-section n stream)
