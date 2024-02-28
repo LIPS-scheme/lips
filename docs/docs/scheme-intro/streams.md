@@ -6,21 +6,21 @@ description: Feature of scheme that allow to create lazy lists
 # Streams
 
 Streams (also called delayed Lists or lazy lists) are a data structure described in
-[SICP](https://web.mit.edu/6.001/6.037/sicp.pdf) Chapter 3.5. It also appear in Chapter 21 of
+[SICP](https://web.mit.edu/6.001/6.037/sicp.pdf) Chapter 3.5. It also appears in Chapter 21 of
 [Functional Programming in Scheme](https://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html).
 
 The base of those data structures are two expressions `delay` and `force`.
 
-The result of delay is often called a Promise.
+The result of a delay is often called a Promise.
 
-To create a lazy pair you use cons with first element (`car`) and the rest (`cdr`) is a delay
+To create a lazy pair, you use cons with the first element (`car`) and the rest (`cdr`) is a delay
 expression:
 
 ```scheme
 (define s (cons 1 (delay 2)))
 ```
 
-If you print this expression you will get something like this (it depends on Scheme implementation)
+If you print this expression, you will get something like this (it depends on Scheme implementation)
 
 ```scheme
 (write (cons 1 (delay 2)))
@@ -41,7 +41,7 @@ The cdr is a promise that needs to be forced to get evaluated.
 
 With this you can create infinite lists because the delay can point into the same object.
 
-Lets define some helper procedures:
+Let's define some helper procedures:
 
 ```scheme
 (define-macro (stream-cons x y)
@@ -81,7 +81,7 @@ To create infinite stream of ones you can use code like this:
 ;; ==> 1
 ```
 
-Lets write a procedure that take a stream and return a list of first n elements.
+Let's write a procedure that take a stream and return a list of first n elements.
 
 ```scheme
 (define (stream-take n stream)
@@ -111,7 +111,7 @@ You can sue this function to create stream of integers:
 (define integers (stream-cons 1 (stream-add integers ones)))
 ```
 
-To prove that it work you can get first 10 elements with `stream-take`:
+To prove that it works you can get first 10 elements with `stream-take`:
 
 ```scheme
 (display (stream-take 10 integers))
@@ -130,7 +130,7 @@ We can also define higher order procedures that operate on streams. They will no
   (single-map proc (apply stream-zip streams)))
 ```
 
-It require helper procedure that combine two streams by taking each element from every stream and
+It requires helper procedure that combine two streams by taking each element from every stream and
 creates a single list in output stream.
 
 ```scheme
@@ -148,7 +148,7 @@ The function work like this:
 ;; ==> ((1 1 1) (2 2 1) (3 3 1) (4 4 1) (5 5 1))
 ```
 
-With map you can simplify `stream-add` with `stream-map`:
+With map, you can simplify `stream-add` with `stream-map`:
 
 ```scheme
 (define (streams-add s1 s2)
@@ -175,12 +175,12 @@ Another useful procedures that accept stream are stream-limit and force-stream:
 ```
 
 If you call `force-stream` on infinite stream it will create infinite loop, but note that the
-procedure force-stream is not tail recursive. Recursive call to named let is not the last
+procedure force-stream is not tail recursive. The recursive call to named `let` is not the last
 expression. The last expression is `cons`.
 
 You can try to create Tail recursive version of the procedure as an exercise.
 
-If you combine both procedures you can create same effect as with stream-take
+If you combine both procedures, you can create the same effect as with `stream-take`:
 
 ```scheme
 (stream-force (stream-limit 10 integers))
@@ -201,11 +201,11 @@ Another useful procedure is `stream-reduce` in Scheme often called `fold`:
 
 ```scheme
 (define (stream-reduce fun stream)
-  (let iter ((result (stream-car stream))
+  (let loop ((result (stream-car stream))
              (stream (stream-cdr stream)))
     (if (empty-stream? stream)
         result
-        (iter (fun result (stream-car stream))
+        (loop (fun result (stream-car stream))
               (stream-cdr stream)))))
 ```
 
@@ -219,7 +219,7 @@ You can implement factorial function using streams:
 ;; ==> 3628800
 ```
 
-and you can use this procedure to create stream of factorials:
+and you can use this procedure to create a stream of factorials:
 
 ```scheme
 (define factorials
