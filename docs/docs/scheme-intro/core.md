@@ -753,3 +753,6 @@ You can use this procedure to map over values or keys inside alist.
 (alist-map (lambda (key value) (cons (symbol-upcase key) value)) alist)
 ;; ==> ((A . 1) (B . 2) (C . 3) (D . 4))
 ```
+
+## Dynamic variables
+**TODO**
