@@ -141,7 +141,7 @@ const examples = [
   (term.echo "This is LIPS Scheme" &(:typing #t)))`
   },
   {
-    description: 'Dynamic variables with R7RS parametrize',
+    description: 'Dynamic variables with R7RS parameterize',
     code: `;; define new dynamic parameter
 (define x (make-parameter 10))
 (define (double-x)
