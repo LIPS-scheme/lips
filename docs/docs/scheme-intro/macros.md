@@ -314,7 +314,7 @@ the first element of the pattern is often `_` it matches against the name of the
 ### Elipsis
 
 In lisp macros if you wanted to define a list of any values (including no values) you use [improper
-list](docs/scheme-intro/data-types#improper-list) (list with dot). In syntax-rules pattern you use elipsis to indicate list of items. The elipsis is afte the symbol.
+list](/docs/scheme-intro/data-types#improper-list) (list with dot). In syntax-rules pattern you use elipsis to indicate list of items. The elipsis is afte the symbol.
 
 Example of usage of elipsis:
 
