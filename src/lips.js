@@ -8384,8 +8384,19 @@ var global_env = new Environment({
         The lambda macro creates a new anonymous function. If the first element of
         the body is a string and there is more elements the string is used as the
         documentation string, that can be read using (help fn).`),
-    'macroexpand': new Macro('macroexpand', macro_expand()),
-    'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
+    // ------------------------------------------------------------------
+    'macroexpand': doc(
+        new Macro('macroexpand', macro_expand()),
+        `(macroexpand expr)
+
+         Macro that expand all macros inside and return single expression as output.`),
+    // ------------------------------------------------------------------
+    'macroexpand-1': doc(
+        new Macro('macroexpand-1', macro_expand(true)),
+        `(macroexpand-1 expr)
+
+         Macro similar to macroexpand but it expand macros only one level
+         and return single expression as output.`),
     // ------------------------------------------------------------------
     'define-macro': doc(new Macro(macro, function(macro, { use_dynamic, error }) {
         if (is_pair(macro.car) && macro.car.car instanceof LSymbol) {
