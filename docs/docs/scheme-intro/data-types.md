@@ -151,6 +151,15 @@ Example `caddr` is the third element of the list. It's the same as `(car (cdr (c
 Scheme and lisp interpreters define up to 5 combinations of `d` and `a` to get different elements
 out of a list.
 
+## List Modification
+
+You can modify the lists (cons cells) using two functions:
+
+* `set-car!`
+* `set-cdr!`
+
+By convention if a procedure modifies something it's indicated with an exclamation mark.
+
 ## Improper list
 
 Proper list is a list with each cdr be a list or empty list at the end:
