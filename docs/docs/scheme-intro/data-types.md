@@ -151,6 +151,21 @@ Example `caddr` is the third element of the list. It's the same as `(car (cdr (c
 Scheme and lisp interpreters define up to 5 combinations of `d` and `a` to get different elements
 out of a list.
 
+## Improper list
+
+Proper list is a list with each cdr be a list or empty list at the end:
+
+```scheme
+'(1 2 3 4 5)
+```
+
+in the other hand, if you have a list that end with something else then an empty list, you have not
+a valid list. This list is often called improper list. It looks like this:
+
+```scheme
+'(1 2 3 . 4)
+```
+
 ## Cycles
 
 You can create list cycles directly when defining your data structure with datum syntax.
