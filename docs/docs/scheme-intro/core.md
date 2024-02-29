@@ -754,5 +754,124 @@ You can use this procedure to map over values or keys inside alist.
 ;; ==> ((A . 1) (B . 2) (C . 3) (D . 4))
 ```
 
+## Closures
+Scheme have lexical scope. Which means that if functions don't define a variable Scheme search them
+outside in the place where procedure was defined. This allow to create closures. Wich are basically
+functions that have access to variables defined outside. Scheme need to keep environment in where
+procedure was defined together with a procedure.
+
+```scheme
+(define counter (let ((count 0))
+                  (lambda ()
+                    (set! count (+ count 1))
+                    count)))
+```
+
+This creates a function that have access to variable defined ouside in let expression.
+
+```scheme
+(counter)
+;; ==> 1
+(counter)
+;; ==> 2
+(counter)
+;; ==> 3
+```
+
+With this you can create functions that create counters that starts with given number:
+
+```scheme
+(define (make-counter n)
+  (let ((count n))
+    (lambda ()
+      (set! count (+ count 1))
+      count)))
+
+(define counter-1 (make-counter 100))
+(define counter-2 (make-counter 0))
+
+(counter-1)
+;; ==> 101
+(counter-1)
+;; ==> 102
+(counter-2)
+;; ==> 1
+(counter-1)
+;; ==> 103
+(counter-2)
+;; ==> 2
+```
+
+Each counter has its own local state and its own counter variable.
+
 ## Dynamic variables
-**TODO**
+Even that Scheme has lexical scope, you can define dynamic variables. They are the opposite of
+lexical variables. When you define dynamic variable Scheme will search for them not in the place
+where function is defined but in place where it's called. That's why if you have fully dynamic lisp
+you can't have closures. Unless you can somehow add lexical variables. This is the case of
+[Emacs Lisp](https://en.wikipedia.org/wiki/Emacs_Lisp), lisp that is embedded into an
+[Emacs editor](https://en.wikipedia.org/wiki/Emacs).
+
+To create dynamic variable in scheme you can code like this:
+
+```scheme
+(define x (make-parameter 0))
+
+(define (add-x y)
+  (+ (x) y))
+
+(add-x 10)
+;; ==> 10
+(parameterize ((x 10))
+  (add-x 10))
+;; ==> 20
+```
+
+Parameters works like procedures. Do define new dynamic parameter you use `make-parameter` and to
+change its value you can use `parameterize` that works like `let`. You can also call the parameter
+with different value and the parameter will use this value as default.
+
+```scheme
+(x 10)
+(add-x 10)
+;; ==> 20
+(parameterize ((x 3))
+  (add-x 3))
+;; ==> 6
+```
+
+## Portable code
+
+Scheme implementation differ. And it's hard to write code that will work on multiple Scheme
+Interpreters.  Luckily in [SRFI-0](https://srfi.schemers.org/srfi-0/srfi-0.html) (first SRFI ever
+created). There is defined special syntax called `cond-expand`. A lot of Scheme implementations have
+this SRFI built-in so you can use it to detect different Scheme and create code that will match that
+Implementation.
+
+You can use it like this:
+
+```scheme
+(cond-expand
+ (kawa)
+ (guile)
+ (lips)
+ (gauche)
+ (else))
+```
+
+`cond-expand` have list of lists in format `(identifer . code)`. Example if you want to add `print`
+function that is defined in `LIPS`, not in other implementations, you can use code like this:
+
+```scheme
+(cond-expand
+ (lips)
+ (else
+  (define (print . args)
+    (for-each (lambda (arg)
+                (display arg)
+                (newline))
+              args))))
+```
+
+It will evaluate an empty list for `LIPS` and `define` a new `print` procedure for other
+implementations.
