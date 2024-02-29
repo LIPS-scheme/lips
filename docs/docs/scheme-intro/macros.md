@@ -23,7 +23,7 @@ If you have code like this
 (foo (+ 1 2))
 ```
 
-and `foo` is a function the `(+ 1 2)` will be evaluated and 3 will be passed to the function. But if
+And `foo` is a function the `(+ 1 2)` will be evaluated and 3 will be passed to the function. But if
 `foo` is a macro, the data structure `(+ 1 2)` will be passed to the macro.
 
 To define a macro, you use usually use `define-macro` syntax. Lisp macros in Scheme are not standard,
@@ -51,6 +51,24 @@ if you use minus symbol it will add up the numbers:
 ```scheme
 (foo (- 1 2))
 ;; ==> 3
+```
+
+Instead of modification of existin code you can also create new list:
+
+```scheme
+(define-macro (foo expr)
+  (list (case (car expr) ((+) '-) ((-) '+))
+        (cadr expr)
+        (caddr expr)))
+```
+
+It will work similarly but only with two numbers:
+
+```scheme
+(foo (- 1 2))
+;; ==> 3
+(foo (+ 1 2))
+;; ==> -1
 ```
 
 ### Macroexpand
