@@ -123,3 +123,5 @@ This procedure allow defining generators:
       (iter (counter) (cons i result))))
 ;; ==> (0 1 2)
 ```
+
+With continuations, you can do a lot of cool new flow control structures.
