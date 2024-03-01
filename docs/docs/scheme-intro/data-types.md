@@ -84,6 +84,24 @@ You can also convert string to symbol with:
 
 Scheme have conversion of using `->` arrow to define procedure that convert types.
 
+In R<sub>7</sub>RS spec there is also a way to define symbols with special characters. Those symbols start and end with a vertical bar character.
+
+```scheme
+(define |foo bar| 10)
+(define |foo () bar| 20)
+(display |foo bar|)
+;; ==> 10
+(display |foo () bar|)
+;; ==> 20
+```
+
+You can also put escaped characters in symbol, like in strings:
+
+```scheme
+(symbol=? '|\x3BB;| 'λ)
+;; ==> #t
+```
+
 ## Comments
 
 There are 3 types of comments in Scheme:
