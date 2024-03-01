@@ -451,6 +451,10 @@ This function is similar to previous recursive function, but note that loop is t
 the result of loop don't need to wait on anything. This type of code is optimized by Scheme and can
 recur any number of types.
 
+If you need to create a recursive procedure that accumulate something, like create a list of create
+a value, you need to add additional variable where you will old that value, the local variable is
+ofen called result, but you can name it like you want.
+
 ## Loops
 Recursion is not the only way to create loops in Scheme. You also have `do` syntax:
 
