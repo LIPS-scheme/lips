@@ -844,6 +844,78 @@ with different value and the parameter will use this value as default.
 ;; ==> 6
 ```
 
+## Loading of external code
+You can execute external code inside Scheme by using `load` procedure.
+
+```scheme
+(load "file.scm")
+```
+
+This will load an external file named `file.scm`. Scheme files often end with `scm`, but different
+scheme implementation may use different convention.
+
+## Eval
+The `eval` procedure is used to evaluate code that is written as data.
+
+```scheme
+(define expr '(+ 1 2))
+(eval expr)
+;; ==> 3
+```
+
+Some scheme implementation may require to specify second argument which is environment.
+
+You can use those procedures to get different environments:
+* `(interaction-environment)` - this return environment for the REPL
+* `(scheme-report-environment <number>)` - creates environment with functions from a given
+  R<sup>n</sup>RS specification
+
+## Scheme libraries
+R<sup>7</sup>RS standard of Scheme also define a way to define libraries. This is a common way to
+create modules that can be used inside your project or my other people.
+
+To import a library that is part of the scheme implementation, you use `import` expression:
+
+```scheme
+(import (srfi 1))
+
+(zip '(1 2 3)
+     '(foo bar baz)
+     '(one two three))
+;; ==> ((1 foo one) (2 bar two) (3 baz three))
+```
+
+[SRFI-1](https://srfi.schemers.org/srfi-1/srfi-1.html) is SRFI that defines a library of procedures
+that operate on lists (like `zip` procedure that join multiple lists).
+
+You can define your own libraries with `define-library` expression:
+
+```scheme
+(define-library (example factorial)
+  (export !)
+  (import (scheme base))
+  (begin
+    (define (range n)
+      (let loop ((n n) (result '()))
+        (if (<= n 0)
+            result
+            (loop (- n 1) (cons n result)))))
+    (define (! n)
+      (apply * (range n)))))
+```
+
+This is definition of library `(example factorial)` that define single procedure `!` that calculate
+factorial of a number. It defines helper hidden (not exported) procedure `range` that creates a list
+of numbers from `1` to `n`.
+
+You can use this library like this:
+
+```scheme
+(import (example factorial))
+(! 10)
+;; ==> 3628800
+```
+
 ## Portable code
 
 Scheme implementation differ. And it's hard to write code that will work on multiple Scheme
