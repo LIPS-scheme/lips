@@ -7,23 +7,23 @@ description: What is Lisp and what is Scheme and a bit of history
 
 ![Lisp cycle](./img/lisp_cycles.png)
 
-Lisp is second oldest programming language (after Fortran) that is still in use.  Lisp is an acronym
-for **LISt Processing**. It was invented by [John
-McCarthy](https://en.wikipedia.org/wiki/John_McCarthy_(computer_scientist)) in 1958 at
+Lisp is the second-oldest programming language (after Fortran) that is still in use.  Lisp is an
+acronym for **LISt Processing**. It was invented by
+[John McCarthy](https://en.wikipedia.org/wiki/John_McCarthy_(computer_scientist)) in 1958 at
 [MIT](https://en.wikipedia.org/wiki/Massachusetts_Institute_of_Technology). The main feature of Lisp
-is it's lack of syntax.  The idea for Lisp langauge came from mathematics, to be exact [Lambda
-Calculus](https://en.wikipedia.org/wiki/Lambda_calculus) defined by [Alonzo
-Church](https://en.wikipedia.org/wiki/Alonzo_Church), which was invented or discovered to prove that
-the [halting problem](https://en.wikipedia.org/wiki/Halting_problem) is unsolvable.
+is its lack of syntax.  The idea for Lisp language came from mathematics, to be exact
+[Lambda Calculus](https://en.wikipedia.org/wiki/Lambda_calculus) defined by
+[Alonzo Church](https://en.wikipedia.org/wiki/Alonzo_Church), which was invented or discovered to
+prove that the [halting problem](https://en.wikipedia.org/wiki/Halting_problem) is unsolvable.
 
 The most distinguishing things about lisp is a notion that code and data are represented using the
 same [data structures](https://en.wikipedia.org/wiki/Data_structure), in lisp they are lists. This
-is very importent characteristic and it's called
+is a very important characteristic, and it's called
 [Homoiconicity](https://en.wikipedia.org/wiki/Homoiconicity).
 
 ## S-Expressions
 
-In Lisp, everything is written as S-Expression which is a list wrapped in parentheses with space
+In Lisp, everything is written as S-Expression, which is a list wrapped in parentheses with space
 between elements.
 
 ```scheme
@@ -41,8 +41,8 @@ Is that in Lisp there are no operators. The above expression is just procedure a
 
 **NOTE**: We will use procedure and function interchangeably in this tutorial.
 
-Plus is not an operator only a symbol that point into addition procedure that is executed. So in fact in other
-programming languages this should be written as:
+Plus is not an operator, only a symbol that point into an addition procedure that is executed. So in
+fact in other programming languages this should be written as:
 
 ```javascript
 +(1, 2, 3)
@@ -58,10 +58,11 @@ The S-Expressions can be nested:
 (+ (* 3 (/ 1 2)) (+ 1 2))
 ```
 
-But you can't add parentheses randomly to wrap expressions, like in other languages. Parentheses is always
-procedure application (or special form that will be described later).
+But you can't add parentheses randomly to wrap expressions, like in other languages. Parentheses are
+always procedure application (or special form that will be described later).
 
-S-Expression is most efficient way to write function application, and you can form with it any nested trees.
+S-Expression is the most efficient way to write function application, and you can form with it any
+nested trees.
 
 ## What is Scheme
 
@@ -69,9 +70,9 @@ So now what is Scheme. Scheme is a dialect of Lisp, there are other well known d
 like Common Lisp, Racket, Clojure. They all have one in common, they all use S-Expressions for
 syntax (or lack of).
 
-Scheme was designed by ''Guy L. Steele'' and ''Gerald Jay Sussman'' in 1970s. They were playing with
+Scheme was designed by *Guy L. Steele* and *Gerald Jay Sussman* in a 1970s. They were playing with
 an idea called the actor model and trying to understand it by creating simple implementation. That
-implementation later lead to Scheme programming languages.
+implementation later led to Scheme programming languages.
 
 ### Standards
 
@@ -79,11 +80,11 @@ Scheme is standardized in form of [R<sup>n</sup>RS documents](https://standards.
 Revised<sup>n</sup> Report on the Algorithmic Language Scheme. Where power indicate how many times
 it was revisited. Power of 2 means Revisited Revisited.
 
-The latest standard is R<sup>7</sup>RS Small and there is version large in the making.
+The latest standard is R<sup>7</sup>RS Small, and there is version large in the making.
 
 ### Scheme Implementations
 
-You can find different implementations of the Programming language that re more or less compatible
+You can find different implementations of the programming language that re more or less compatible
 with specification.
 
 Example implementations:
@@ -95,7 +96,7 @@ Example implementations:
 * [LIPS](https://lips.js.org/)
 
 The official website for Scheme programming language is [scheme.org](https://www.scheme.org/), which
-containts more up to date [list of Scheme implemetnations](https://get.scheme.org/).
+contains more up to date [list of Scheme implementations](https://get.scheme.org/).
 
 ### SRFI Documents
 
