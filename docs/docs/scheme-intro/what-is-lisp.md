@@ -5,7 +5,7 @@ description: What is Lisp and what is Scheme and a bit of history
 
 # What is Lisp and Scheme
 
-![Lisp cycle](./img/lisp_cycles.png)
+[![Lisp cycle](./img/lisp_cycles.png)](https://xkcd.com/297/)
 
 Lisp is the second-oldest programming language (after Fortran) that is still in use.  Lisp is an
 acronym for **LISt Processing**. It was invented by
