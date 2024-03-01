@@ -16,6 +16,11 @@ Calculus](https://en.wikipedia.org/wiki/Lambda_calculus) defined by [Alonzo
 Church](https://en.wikipedia.org/wiki/Alonzo_Church), which was invented or discovered to prove that
 the [halting problem](https://en.wikipedia.org/wiki/Halting_problem) is unsolvable.
 
+The most distinguishing things about lisp is a notion that code and data are represented using the
+same [data structures](https://en.wikipedia.org/wiki/Data_structure), in lisp they are lists. This
+is very importent characteristic and it's called
+[Homoiconicity](https://en.wikipedia.org/wiki/Homoiconicity).
+
 ## S-Expressions
 
 In Lisp, everything is written as S-Expression which is a list wrapped in parentheses with space
