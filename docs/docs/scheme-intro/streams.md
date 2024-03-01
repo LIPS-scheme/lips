@@ -73,7 +73,7 @@ We also need an empty stream and predicate that check if stream is empty:
 (define the-empty-stream '())
 ```
 
-To create infinite stream of ones you can use code like this:
+To create an infinite stream of ones, you can use code like this:
 
 ```scheme
 (define ones (stream-cons 1 ones))
@@ -94,7 +94,7 @@ Let's write a procedure that take a stream and return a list of first n elements
 ;; ==> (1 1 1 1 1 1 1 1 1 1)
 ```
 
-You can define procedures that operate on streams like procedure that add two streams:
+You can define procedures that operate on streams, like procedure that add two streams:
 
 ```scheme
 (define (stream-add s1 s2)
@@ -118,7 +118,8 @@ To prove that it works you can get first 10 elements with `stream-take`:
 ;; ==> (1 2 3 4 5 6 7 8 9 10)
 ```
 
-We can also define higher order procedures that operate on streams. They will not execute until you use `force`. Example cam be `stream-map`:
+We can also define higher order procedures that operate on streams. They will not execute until you
+use `force`. Example cam be `stream-map`:
 
 ```scheme
 (define (stream-map proc . streams)
@@ -178,7 +179,7 @@ If you call `force-stream` on infinite stream it will create infinite loop, but 
 procedure force-stream is not tail recursive. The recursive call to named `let` is not the last
 expression. The last expression is `cons`.
 
-You can try to create Tail recursive version of the procedure as an exercise.
+You can try to create a tail recursive version of the procedure as an exercise.
 
 If you combine both procedures, you can create the same effect as with `stream-take`:
 

@@ -7,7 +7,7 @@ description: Main article that shows most of the features of Scheme
 
 ## Printing values
 
-To print a value you can use two type of expressions:
+To print a value, you can use two type of expressions:
 
 ```scheme
 (display "hello")
@@ -20,9 +20,9 @@ and
 ```
 
 The first will print text hello without quotations. But the second will include the quotes. The
-second expression allow to save the expression and later read it as Scheme code.
+second expression allows saving the expression and later read it as Scheme code.
 
-Both expression don't add newline at the end. To add a newline you need to use:
+Both expression don't add newline at the end. To add a newline, you need to use:
 
 ```scheme
 (newline)
@@ -36,15 +36,15 @@ Or you can use escape newline character:
 
 ## Math expressions
 
-Scheme define standard Math operations:
-* `+` - sum all it's arguments
+Scheme defines standard Math operations:
+* `+` - sum all its arguments
 * `-` - subtract the arguments
 * `/` - divide the arguments
-* `*` - multiple the arguments
+* `*` - multiply the arguments
 
 All the above can accept zero or more arguments.
 
-trigonometry functions:
+Trigonometry functions:
 * `sin`
 * `cos`
 * `tan`
@@ -61,7 +61,7 @@ Exponentiation function:
 Exponential function
 * `exp`
 
-It also define:
+It also defines:
 * `square`
 * `sqrt`
 
@@ -76,9 +76,9 @@ Expressions that returns `true` or `false` and operate on numbers
 
 ### Functions that returns part of the number
 
-Rational and complex numbers are create from two different numbers.
+Rational and complex numbers are created from two different numbers.
 
-Rational numbers are created from numerator and denominator and you can get those numbers from a single rational:
+Rational numbers are created from numerator and denominator, and you can get those numbers from a single rational:
 
 ```scheme
 (numerator 1/2)
@@ -89,7 +89,7 @@ Rational numbers are created from numerator and denominator and you can get thos
 
 **NOTE:** The result values of those expressions are written as comments.
 
-Complex numbers are created with real and imaginary parts and you can also extract those parts:
+Complex numbers are created with real and imaginary parts, and you can also extract those parts:
 
 ```scheme
 (imag-part 10+2i)
@@ -111,15 +111,15 @@ Scheme also define two functions `angle` and `magnitude` which can be used to ge
 
 ### Equal operation
 
-In Scheme there are different way to compare values:
+In Scheme there are a different way to compare values:
 
 * `eq?` - compares if the values are the same object works only on basic types
-* `eqv?` - compares if the values have the same represention
+* `eqv?` - compares if the values have the same representation
 * `equal?` - also works any type of values, it can compare vectors and list if they are the same
 
 ### String and character comparators
 
-In addition there are also comparators for strings:
+In addition, there are also comparators for strings:
 * `string=?`
 * `string<?`
 * `string>?`
@@ -133,7 +133,7 @@ characters:
 * `char<=?`
 * `char>=?`
 
-String and characters also have counterpart procedures for compare with case insensitive way:
+String and characters also have counterpart procedures for compare with case-insensitive way:
 * `string-ci=?`
 * `string-ci<?`
 * `string-ci>?`
@@ -186,15 +186,15 @@ Will evaluate into symbol `number`.
 
 ### Modification of the variable
 
-To modify (mutate) existing variable you use `set!` procedure. There is a conversion of using exclamation
-mark for destructive type of procedure. Which are procedures that modify it's arguments.
+To modify (mutate) existing variable, you use `set!` procedure. There is a conversion of using exclamation
+mark for destructive type of procedure. Which are procedures that modify its arguments.
 
 ```scheme
 (define number 10)
 (set! number (+ number 1))
 ```
 
-In above expression the number is increased by `1`. The number in `(+ number 1)` reference old value
+In the above expression, the number is increased by `1`. The number in `(+ number 1)` reference old value
 of the variable. And `set!` special form update the variable with new value.
 
 ## Local variables
@@ -231,7 +231,6 @@ expect single expression) you can use begin:
 
 The else part is optional.
 
-
 `cond` is another expression that allow to add multiple conditions:
 
 ```scheme
@@ -241,9 +240,9 @@ The else part is optional.
          (display "other")))
 ```
 
-The first two expressions return false, so cond will evaluate the else condition and display `"other"`.
+The first two expressions return false, so `cond` will evaluate the `else` condition and display `"other"`.
 
-Case is the last of basic condition expressions. It allow to check given expression is one of the given values.
+Case is the last of basic condition expressions. It allows checking given expression is one of the given values.
 
 ```scheme
 (let ((x 'foo))
@@ -254,7 +253,7 @@ Case is the last of basic condition expressions. It allow to check given express
        (display "other"))))
 ```
 
-Symbol foo is of the second list so this expression will print `"second"`.
+Symbol foo is of the second list, so this expression will print `"second"`.
 
 ## Boolean expressions
 Scheme provide 3 boolean special forms that can be used to combine other expressions:
@@ -266,7 +265,7 @@ Lisp.
 
 
 * `and` - returns `true` when all elements are true value (in Scheme all values are true except `#f`),
-  and stop evaluates when it find `#f`
+  and stop evaluates when it finds `#f`
 
 ```scheme
 (if (and (< 1 2) (> 3 1))
@@ -283,9 +282,9 @@ Lisp.
 ```
 
 This expression will not evaluate `(/ 1 0)` which will give **Division by zero** error because it
-stop evaluating when it finds first true value.
+stop evaluating when it finds the first true value.
 
-* `not` - not negates the value. if the value is true it will return `#f` otherwise it will return `#t`.
+* `not` - not negates the value. If the value is true it will return `#f` otherwise it will return `#t`.
 
 ```scheme
 (if (not (zero? 10))
@@ -295,14 +294,14 @@ stop evaluating when it finds first true value.
 
 ## Procedures
 
-To define a procedure or a function you use `lambda` expression:
+To define a procedure or a function, you use `lambda` expression:
 
 ```scheme
 (define square (lambda (x) (* x x)))
 ```
 
-This define a function square that multiple it's argument by itself. Lambda is a way to create
-anonymous function and define assign it to the symbol square. Name lambda is nowadays common name to
+This defines a function square that multiply its argument by itself. Lambda is a way to create
+anonymous function and define assign it to the symbol square. The name `lambda` is nowadays common name to
 define anonymous function (example in languages like python or Java), but the name came from [Lambda
 Calculus](https://en.wikipedia.org/wiki/Lambda_calculus)
 
@@ -326,7 +325,7 @@ You can define inner procedures inside other procedures:
 ```
 
 ### Immediately invoked lambda
-When calling a function that first element doesn't need to be a symbol. It can be expression which evaluates
+When calling a function, that first element doesn't need to be a symbol. It can be expression which evaluates
 to a function. So you can use lambda expression as first argument, but don't call it only evaluate it immediately, without saving it in a variable.
 
 ```scheme
@@ -335,7 +334,7 @@ to a function. So you can use lambda expression as first argument, but don't cal
 ```
 
 ### Variable number of arguments
-Builtin `+` function allow to sum all it's arguments. You can create function that accept variable number of arguments yourself.
+Built-in `+` function allow summing all its arguments. You can create function that accept variable number of arguments yourself.
 
 ```scheme
 (define sum (lambda args (apply + args)))
@@ -349,7 +348,7 @@ if you invoke
 (sum 1 2 3 4)
 ```
 
-The `args` will contain a list `'(1 2 3 4)`. The same you can use improper list (with dot inside) as arguments:
+The `args` will contain a list `'(1 2 3 4)`. The same, you can use improper list (with dot inside) as arguments:
 
 ```scheme
 (define expression (lambda (first . rest) (/ first (apply + rest))))
@@ -358,7 +357,7 @@ The `args` will contain a list `'(1 2 3 4)`. The same you can use improper list 
 ```
 
 ### Optional arguments
-When using improper lists as function parameter you can create optional arguments:
+When using improper lists as function parameter, you can create optional arguments:
 
 ```scheme
 (define (rational first . rest)
@@ -386,10 +385,10 @@ and when you evaluate:
 ;; ==> 1/2
 ```
 
-If scheme provide rational numbers or it will return `0.5` otherwise.
+If scheme provide rational numbers, or it will return `0.5` otherwise.
 
 ### Recursion
-You can define define a function that reference to itself:
+You can define a function that reference to itself:
 
 ```scheme
 (define (factorial n)
@@ -401,8 +400,8 @@ You can define define a function that reference to itself:
 ;; ==> 3628800
 ```
 
-There is main if statement that is called base condition. If the value `n` is less or equal 1 it
-stop recursion and return 1. If not it call itself recursively decreasing the value `n`.
+There is a main if statement that is called base condition. If the value `n` is less or equal 1 it
+stop recursion and return 1. If not, it calls itself recursively decreasing the value `n`.
 
 You can also define recursion using named `let` syntax:
 
@@ -419,7 +418,7 @@ You can also define recursion using named `let` syntax:
 
 #### Local Recursive Functions
 
-By default you can define local variable with let that is an lambda that reference itself. But you can do this with `letrec` syntax:
+By default, you can define a local variable with let that is a `lambda` that reference itself. But you can do this with `letrec` syntax:
 
 ```scheme
 (letrec ((sum (lambda (x)
@@ -432,11 +431,11 @@ By default you can define local variable with let that is an lambda that referen
 
 ### Tail Call Optimization
 
-When you create recursive function and with deeply nested calls you may run out of memory. This type of
+When you create recursive function and with deeply nested calls, you may run out of memory. This type of
 error is called [Stack Overflow](https://en.wikipedia.org/wiki/Stack_buffer_overflow).
 
 Scheme have unique feature called TCO and optimize the code and don't consume the stack when
-calculation deeply recursive function. The code written in TCO will never lead to Stack Overflow errors.
+calculation, deeply recursive function. The code written in TCO will never lead to Stack Overflow errors.
 
 This is an example of Tail Call:
 
@@ -464,12 +463,12 @@ Recursion is not the only way to create loops in Scheme. You also have `do` synt
 ```
 
 First list of do expression have variable initialization and increment, there can be more
-expressions. In above example we have `i` and `result` variables. The `i` variable is incremented by
+expressions. In the above example, we have `i` and `result` variables. The `i` variable is incremented by
 1 starting from 1. And `result` starts from empty list and add element to the list using `cons`.
-The second list have two values stop condition and result of the whole expression. The rest is body
+The second list have two values, stop condition and result of the whole expression. The rest is body
 that is executed on each iteration.
 
-So the code will print each number and return list of numbers.
+So the code will print each number and return a list of numbers.
 
 ## List operations
 
@@ -481,11 +480,11 @@ You can use `list-ref` to reference nth element of the list
   (print (list-ref lst 3)))
 ```
 
-Both expressions in let will print number `4` which is 4th element of the list.
+Both expressions in let will print number `4` which is the 4th element of the list.
 
 ### Iterating over a list recursively
 
-This is basic pattern you use to iterate over a list using recursion:
+This is the basic pattern you use to iterate over a list using recursion:
 
 ```scheme
 (define (operation lst)
@@ -495,7 +494,7 @@ This is basic pattern you use to iterate over a list using recursion:
 
 ```
 
-Here is example of function that check if element is present in the list:
+Here is an example of a function that check if an element is present in the list:
 
 
 ```scheme
@@ -549,12 +548,12 @@ argument.  They use `eq?`, `eqv?`, and `equal?` respectively.
 ;; ==> #f
 ```
 
-First call will return pair `(bar . 20)` because it's `bar` symbol is present in the alist. And the
+First call will return pair `(bar . 20)` because its `bar` symbol is present in the alist. And the
 second call will print `#f`.
 
 ## Finding element in the list
 
-Similar to operation on alist there are 3 functions that find if element is present in the normal list
+Similar to operation on alist there are 3 functions that find if the element is present in the normal list
 
 * `memq`
 * `memv`
@@ -571,7 +570,7 @@ The return cons cell where `car` match object passed as first argument or #f if 
 ```
 
 ## Vector operations
-Same as operation on list you can operate on list you have different procedure to operate on vectors.
+Same as operation on list you can operate on list, you have different procedure to operate on vectors.
 
 ```scheme
 (let ((v (vector #\h #\e #\l #\l #\o)))
@@ -587,10 +586,10 @@ Same as operation on list you can operate on list you have different procedure t
 ;; ==> Hello
 ```
 
-To check if option is a vector you can use `vector?` predicate.
+To check if an option is a vector, you can use `vector?` predicate.
 
 ## String operations
-Similar to operation on vectors and lists you have procedures to operate on strings.
+Similar to operation on vectors and lists, you have procedures to operate on strings.
 
 ```scheme
 (let ((str (string #\h #\e #\l #\l #\o)))
@@ -606,10 +605,10 @@ Similar to operation on vectors and lists you have procedures to operate on stri
 ;; ==> "Hello"
 ```
 
-To check if object is a string you can use `string?` predicate.
+To check if an object is a string, you can use `string?` predicate.
 
 ## Multiple values
-By default functions in Scheme return single value, but you can return multiple values with `values` expression.
+By default, functions in Scheme return a single value, but you can return multiple values with `values` expression.
 
 ```scheme
 (define (div-mul x y)
@@ -634,7 +633,7 @@ When you try to use this value in expression:
 Some Scheme implementation will evaluate that expression and get the first value. And some
 implementation will throw an error about expecting number but got multiple values.
 
-To safety access both values you can use `call-with-values` procedure:
+To safety access both values, you can use `call-with-values` procedure:
 
 
 ```scheme
@@ -664,9 +663,9 @@ Note that there are two open parentheses before div. The pair is like with let:
   ...)
 ```
 
-And instead of `x` you have list with two values that came from `values` expression.
+And instead of `x` you have a list with two values that came from `values` expression.
 
-let-values also accept normal (single value expression like `let`) so you can mix them.
+The `let-values` also accept normal (single value expression like `let`) so you can mix them.
 Single expression still need to be a list but with a single value.
 
 ```scheme
@@ -740,7 +739,7 @@ Another useful procedure is `alist-map`:
   (map (lambda (item) (fun (car item) (cdr item))) alist))
 ```
 
-You can use this procedure to map over values or keys inside alist.
+You can use this procedure to map over values or keys inside an alist.
 
 ```scheme
 (define alist (map cons '(a b c d) '(1 2 3 4)))
@@ -756,7 +755,7 @@ You can use this procedure to map over values or keys inside alist.
 
 ## Closures
 Scheme have lexical scope. Which means that if functions don't define a variable Scheme search them
-outside in the place where procedure was defined. This allow to create closures. Wich are basically
+outside in the place where procedure was defined. This allows to create closures. Which are basically
 functions that have access to variables defined outside. Scheme need to keep environment in where
 procedure was defined together with a procedure.
 
@@ -767,7 +766,7 @@ procedure was defined together with a procedure.
                     count)))
 ```
 
-This creates a function that have access to variable defined ouside in let expression.
+This creates a function that have access to a variable defined outside in let expression.
 
 ```scheme
 (counter)
@@ -778,7 +777,7 @@ This creates a function that have access to variable defined ouside in let expre
 ;; ==> 3
 ```
 
-With this you can create functions that create counters that starts with given number:
+With this, you can create functions that create counters that start with a given number:
 
 ```scheme
 (define (make-counter n)
@@ -804,15 +803,16 @@ With this you can create functions that create counters that starts with given n
 
 Each counter has its own local state and its own counter variable.
 
+
 ## Dynamic variables
 Even that Scheme has lexical scope, you can define dynamic variables. They are the opposite of
-lexical variables. When you define dynamic variable Scheme will search for them not in the place
-where function is defined but in place where it's called. That's why if you have fully dynamic lisp
+lexical variables. When you define a dynamic variable, Scheme will search for them not in the place
+where function is defined, but in the place where it's called. That's why if you have fully dynamic lisp
 you can't have closures. Unless you can somehow add lexical variables. This is the case of
 [Emacs Lisp](https://en.wikipedia.org/wiki/Emacs_Lisp), lisp that is embedded into an
 [Emacs editor](https://en.wikipedia.org/wiki/Emacs).
 
-To create dynamic variable in scheme you can code like this:
+To create dynamic variable in Scheme, you can code like this:
 
 ```scheme
 (define x (make-parameter 0))
