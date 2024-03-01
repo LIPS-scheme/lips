@@ -28,14 +28,14 @@ Not a number object and negative and positive infinity.
 ## Boolean values
 
 Scheme define two boolean constants `#f` and `#t` but note that the only false value, according to
-R<sup>7</sup>RS specification, should be `#f`. Specification also defines `#true` and `#false`
+R<sup>7</sup>RS specification, should be `#f`. The specification also defines `#true` and `#false`
 aliases. Some Scheme also defines `true` and `false` without hash.
 
 ## Strings
 Strings in Scheme use only double quote symbols. They can be multiline. If you want to add double
-quote you need to escape with the slash `"this is \"Scheme\" languguage"`.
+quote, you need to escape with the slash `"this is \"Scheme\" language"`.
 
-You can also inject hex representation of a character with `"\x1B;"` this will create string with
+You can also inject hex representation of a character with `"\x1B;"` this will create a string with
 Escape character used by Terminal emulators to add formatting (like colors).
 
 ## Characters
@@ -48,7 +48,7 @@ You can define single character as data type
 #\c
 ```
 
-you can use characters form a string:
+you can use characters to form a string:
 ```scheme
 (string #\h #\e #\l #\l #\o)
 ```
@@ -148,7 +148,7 @@ when printed:
 (1 2 3)
 ```
 
-To create the same list you can use `list` procedure
+To create the same list, you can use `list` procedure:
 
 ```scheme
 (list 1 2 3)
@@ -176,7 +176,7 @@ You can modify the lists (cons cells) using two functions:
 * `set-car!`
 * `set-cdr!`
 
-By convention if a procedure modifies something it's indicated with an exclamation mark.
+By convention, if a procedure modifies something it's indicated with an exclamation mark.
 
 ## Improper list
 
@@ -203,7 +203,7 @@ It looks like this:
 #0=(1 2 . #0#)
 ```
 
-This will create an infinite list of values `(1 2 1 2 1 2 ...)`. `#0` indicate pointer and `#0#` a
+This will create an infinite list of values `(1 2 1 2 1 2 ...)`. `#0` indicate a pointer and `#0#` a
 reference to the beginning of the list.
 
 ## Vectors
@@ -214,7 +214,7 @@ Vectors are created like list, but they have hash in front:
 #(1 2 3 4)
 ```
 
-This will create immutable vector that can't be changed. To create a vector that can be modified you
+This will create an immutable vector that can't be changed. To create a vector that can be modified you
 can use:
 
 ```scheme
