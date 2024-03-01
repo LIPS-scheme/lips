@@ -297,6 +297,15 @@ This will be the output:
 (quasiquote (1 2 3 (unquote (+ 1 2)) (unquote-splicing (list 4 5))))
 ```
 
+Quasiquote also works with vector literals.
+
+```scheme
+`#(1 2 ,(+ 1 2))
+;; ==> #(1 2 3)
+`#(1 2 ,@(list 3 4))
+;; ==> #(1 2 3 4)
+```
+
 ## Special symbols
 
 Most special symbols in Scheme start with a hash symbol. Example are Byte vectors
