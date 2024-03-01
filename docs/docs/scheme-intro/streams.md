@@ -27,7 +27,7 @@ If you print this expression, you will get something like this (it depends on Sc
 ;; ==> (1 . #<promise - not forced>)
 ```
 
-The cdr is a promise that needs to be forced to get evaluated.
+The `cdr` is a promise that needs to be forced to get evaluated.
 
 ```scheme
 (let ((x (cons 1 (delay 2))))
@@ -111,7 +111,7 @@ You can sue this function to create stream of integers:
 (define integers (stream-cons 1 (stream-add integers ones)))
 ```
 
-To prove that it works you can get first 10 elements with `stream-take`:
+To prove that it works, you can get first 10 elements with `stream-take`:
 
 ```scheme
 (display (stream-take 10 integers))

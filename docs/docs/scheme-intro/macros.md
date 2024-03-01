@@ -6,12 +6,12 @@ description: Macros are the most powerful feature of Lisp and Scheme
 # Macros
 
 Macros are the most powerful feature of the language (both lisp and Scheme).  Macros allows you to add
-new syntax to the language, it also alows to make code simpler and reduce
+new syntax to the language, it also allows making simpler code and reduce
 [boilerplate](https://en.wikipedia.org/wiki/Boilerplate_code).
 
 Macros works like a function, but the arguments of the macro are not evaluated before passing the
 value to the function. But instead the code of the arguments are passed to the macro, the macro then
-can manipulate the code and return new code that is then evaluated. This happens during expantion
+can manipulate the code and return new code that is then evaluated. This happens during expansion
 time before evaluation even happen.
 
 ## Lisp Macros
@@ -53,7 +53,7 @@ if you use minus symbol it will add up the numbers:
 ;; ==> 3
 ```
 
-Instead of modification of existin code you can also create new list:
+Instead of modification of existing code you can also create new list:
 
 ```scheme
 (define-macro (foo expr)
@@ -87,8 +87,8 @@ expand just your macro.
 
 ### New Control Follow Constructs
 
-With macros, you can define new control flow (e.g. like `if` statements). Here is example of `when`
-macro that is part of R7RS standard.
+With macros, you can define new control flow (e.g. like `if` statements). Here is an example of
+`when` macro that is part of R7RS standard.
 
 ```scheme
 (define-macro (when test . body)
@@ -162,7 +162,7 @@ of symbols called `gensyms`. Each gensym is a unique symbol.
 Notice that let that call `gensym` is outside quasiquote so it will be evaluated when macro is
 executed by the output code will have a unique symbol instead of hard coded symbol `tmp`.
 
-If you try to evaluate the macro you will get proper results:
+If you try to evaluate the macro, you will get proper results:
 
 ```scheme
 (let ((tmp 1000))
@@ -174,8 +174,8 @@ If you try to evaluate the macro you will get proper results:
 
 ### Anaphoric Macros
 
-Anaphoric macros are special kind of macros that leverage the leaking if internal data outside of
-macro. This is called intentional capture of identifiers. They often expose one or more variable
+Anaphoric macros are special kind of macros that leverage the leaking of internal data outside
+the macro. This is called intentional capture of identifiers. They often expose one or more variable
 that can be used by the users of the macro.
 
 Example of such macro is `aif`:
@@ -188,7 +188,7 @@ Example of such macro is `aif`:
          ,false)))
 ```
 
-This macro uses `it` variable to hold the testing value that can be used sindie user code:
+This macro uses `it` variable to hold the testing value that can be used inside user code:
 
 ```scheme
 (let ((alist '((a . 10) (b . 20) (c . 30))))
@@ -221,14 +221,14 @@ The problem with Lisp macros is that they are not hygienic. But what it means?
 
 ### Hygiene
 
-If macro is hygienic, it means that it guaranty no leaking of internal code outside of macro. In other
-words guaranteed not to cause the accidental capture of identifiers. Scheme standard define new macro
-system called `syntax-rules` that is hygienic.
+If macro is hygienic, it means that it guaranty no leaking of internal code outside of macro. In
+other words guaranteed not to cause the accidental capture of identifiers. Scheme standard define
+new macro system called `syntax-rules` that is hygienic.
 
 But we have `gensym` is this not enough to make the macros safe? No
 
-Here is example implementation of `unless` macro that is part of Scheme that fails because it's not
-hygienic.
+Here is an example implementation of `unless` macro that is part of Scheme that fails because it's
+not hygienic.
 
 ```scheme
 (define-macro (unless test . body)
@@ -252,10 +252,10 @@ user code. Hygiene of macros means that something like this can't happen.
 
 ### Syntax-rules
 
-The `syntax-rules` in Scheme is different type of macros than lisp macros. It uses special pattern
+The `syntax-rules` in Scheme is different type of macros than lisp macros. It uses a special pattern
 matching language. Syntax-rules is guarantee by the sec to be hygienic.
 
-Here is simple definition of a hygienic macro in Scheme:
+Here is the simple definition of a hygienic macro in Scheme:
 
 ```scheme
 (define-syntax unless
@@ -331,10 +331,11 @@ the first element of the pattern is often `_` it matches against the name of the
 
 ### Elipsis
 
-In lisp macros if you wanted to define a list of any values (including no values) you use [improper
-list](/docs/scheme-intro/data-types#improper-list) (list with dot). In syntax-rules pattern you use elipsis to indicate list of items. The elipsis is afte the symbol.
+In lisp macros if you wanted to define a list of any values (including no values) you use
+[improper list](/docs/scheme-intro/data-types#improper-list) (list with dot). In syntax-rules
+pattern you use an ellipsis to indicate a list of items. The ellipsis is after the symbol.
 
-Example of usage of elipsis:
+Example of usage of ellipsis:
 
 ```scheme
 (define-syntax values
@@ -343,7 +344,8 @@ Example of usage of elipsis:
      '(a ...))))
 ```
 
-This macro use Alist as a pattern and only return the values. Note that it doesn't work on varaible that hold the alist only for alist defined inside the code:
+This macro use an alist as a pattern and only return the values. Note that it doesn't work on a
+variable that hold the alist only for alist defined inside the code:
 
 ```scheme
 (values ((foo . "lorem") (bar . "ipsum") (baz . "dolor")))
@@ -375,7 +377,7 @@ Implementation">SRFI</abbr>:
               body ...)))))))
 ```
 
-`syntax-paremetirize` works similar to
+The `syntax-paremetirize` works similar to
 [parameters from R<sup>7</sup>RS](/docs/scheme-intro/core#dynamic-variables).
 
 You can use this macro like this:
