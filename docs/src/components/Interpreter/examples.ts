@@ -194,7 +194,7 @@ const examples = [
 ;;                     ()))`
   },
   {
-    description: 'Function that modify its source when when run',
+    description: 'Function that modify its source code when run',
     code: `(define (repeater x)
    "(repeater value)
 
