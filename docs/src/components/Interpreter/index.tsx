@@ -40,7 +40,9 @@ export default function Interpreter(): JSX.Element {
     const term = $.terminal.active();
     term.echo(term.get_prompt(), { formatters: false });
     term.exec(code, true);
-    setTimeout(() => term.focus(), 0);
+    if (typeof screen.orientation === 'undefined') {
+      setTimeout(() => term.focus(), 0);
+    }
   }
 
   function makeChangeSnippet(index: number) {
