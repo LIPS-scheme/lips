@@ -18,7 +18,7 @@ function HomepageHeader() {
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
         <Heading as="h1" className="hero__title">
-          {siteConfig.title} v. <Version />
+          {siteConfig.title} v.&nbsp;<Version />
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <Interpreter/>

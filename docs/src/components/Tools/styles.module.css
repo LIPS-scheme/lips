@@ -9,6 +9,17 @@
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 10px;
 }
+@media (max-width: 1000px) {
+    .tools {
+        margin: 10px 1em;
+    }
+}
+@media (max-width: 620px) {
+    .tools {
+        display: flex;
+        flex-direction: column;
+    }
+}
 .header {
     font-size: 2em;
     grid-area: 1 / 1 / 2 / 3;

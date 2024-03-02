@@ -197,6 +197,9 @@ body.full-screen .term {
     position: absolute;
     top: 10px;
     left: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-right: 10px;
 }
 .examples .pagination li {
     width: 26px;
@@ -206,9 +209,6 @@ body.full-screen .term {
 }
 .examples .pagination li:active {
     cursor: pointer;
-}
-.examples .pagination li + li {
-    margin-left: 10px;
 }
 .examples .pagination a {
     display: block;
@@ -230,4 +230,37 @@ body.full-screen .term {
   color: #1d6aa1;
   background: white;
   font-weight: bold;
+}
+@media (max-width: 700px) {
+    .example, .description {
+        width: 100%;
+        margin-top: 10px;
+        padding: 0;
+    }
+    .examples .list > li.active {
+        flex-direction: column;
+    }
+    .run {
+        left: 100%;
+        margin-left: -30px;
+        top: 70px;
+    }
+}
+@media (max-width: 640px) {
+    header .container, .intro .term, .intro .actions-wrapper, .intro .examples {
+        margin: 0;
+        max-width: none;
+        padding: 0;
+    }
+    .heroBanner_src-pages-index-module {
+        padding: 0 !important;
+    }
+}
+@media (max-width: 530px) {
+    .examples .list {
+        padding-top: 60px;
+    }
+    .run {
+        top: 100px;
+    }
 }
