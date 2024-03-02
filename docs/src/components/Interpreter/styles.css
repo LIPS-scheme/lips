@@ -252,7 +252,7 @@ body.full-screen .term {
         max-width: none;
         padding: 0;
     }
-    .heroBanner_src-pages-index-module {
+    .hero--primary {
         padding: 0 !important;
     }
 }
