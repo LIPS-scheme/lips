@@ -1,10 +1,14 @@
 import clsx from 'clsx';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import Heading from '@theme/Heading';
 import Layout from '@theme/Layout';
+
 import Interpreter from '@site/src/components/Interpreter';
 import Tools from '@site/src/components/Tools';
-import Heading from '@theme/Heading';
 import Version from '@site/src/components/Version';
+import Acknowledgment from '@site/src/components/Acknowledgment';
+import License from '@site/src/components/License';
+
 
 import styles from './index.module.css';
 
@@ -37,6 +41,8 @@ export default function Home(): JSX.Element {
         <Intro />
         <Tools />
         <Video />
+        <Acknowledgment />
+        <License />
       </main>
     </Layout>
   );

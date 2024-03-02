@@ -1,10 +1,10 @@
 import Heading from '@theme/Heading';
 
-import styles from './styles.module.css';
+import styles from '../styles.module.css';
 
 export default function Intro(): JSX.Element {
   return (
-    <div className={styles.intro}>
+    <div className={styles.section}>
       <Heading as="h2" className={styles.header}>Summary</Heading>
       <p>
         LIPS Scheme is powerful lisp interpreter written in JavaScript. The aim of the project
