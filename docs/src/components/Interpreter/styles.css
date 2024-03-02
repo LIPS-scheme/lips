@@ -9,10 +9,6 @@
 .intro .term:not(.terminal) {
     background: var(--background);
 }
-.example {
-    --background: transparent;
-    position: relative;
-}
 .intro {
     position: relative;
 }
@@ -135,9 +131,12 @@ body.full-screen .term {
     display: flex;
 }
 .example {
+    --background: transparent;
     background: #eee;
     border-radius: 5px;
-    overflow: auto;
+    position: relative;
+    overflow-x: auto;
+    width: 60%;
 }
 .example pre {
     --color: black;
@@ -151,9 +150,6 @@ body.full-screen .term {
 }
 .example pre .token {
   background: transparent;
-}
-.example {
-    width: 60%;
 }
 .description {
     width: 40%;
