@@ -1,4 +1,3 @@
-
 <h1 align="center">
   <img src="https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
@@ -8,7 +7,7 @@
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.18.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&b45e3dcaf9e09d64c80e17a3b78970d5)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&bcebc65f86e73741ee60ce9aba45accd)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -22,7 +21,7 @@
 
 [LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
 It is based on the Scheme dialect of lisp and the R5RS/R7RS specifications. It has extensions to make it easier
-to interact with JavaScript and extend the language. It work both in the browser and with Node.js.
+to interact with JavaScript and extend the language. It works both in the browser and with Node.js.
 
 The aim of the project is to support full R7RS specification and be compatible with [Scheme programming language](https://www.scheme.org/).
 
@@ -81,12 +80,12 @@ You can also run the REPL on any page while you learn Scheme using the bookmarkl
 https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
-Create any link in your bookmarks, edit it and copy paste the content of that file.
+Create any link in your bookmarks, edit it and copy-paste the content of that file.
 After you click on the link it will create the REPL at the bottom of the page.
 (NOTE: It may not work on every page because of content security policy;
 e.g. google.com or gihub.com)
 
-If you have trouble with creating the bookmarklet you can open
+If you have trouble with creating the bookmarklet, you can open
 [LISP Scheme home page](https://lips.js.org/#bookmark) where you can
 find a link that you can drag to your bookmarks.
 
@@ -112,7 +111,7 @@ or use the `src` attribute:
 
 Big part of LIPS is written in LIPS itself, but to use full power of LIPS you need
 to load those additional Scheme files. The easiest way is to add `bootstrap` attribute
-on first script tag with `text/x-scheme` type. By default it will use CDN from
+on first script tag with `text/x-scheme` type. By default, it will use CDN from
 [jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
 (that will fetch the file using AJAX and evaluate it).
 
@@ -207,7 +206,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ## Limitations
 
 ### Performance
-Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
+Because LIPS is tree walking interpreter, sometimes it may be slow. Especially if you want to
 process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
@@ -231,7 +230,7 @@ Another example of slow performance is using LIPS with React, the more code you 
 the slower the app will become.
 
 Examples:
-* [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires to use debounce.
+* [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires using debounce.
 * [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnings in dev tools.
 
 The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
@@ -241,7 +240,7 @@ The issue with performance is tracked in [#197](https://github.com/jcubic/lips/i
 Another limitation is when using JavaScript libraries that require normal values but get a Promise instead.
 This can happen with React/Preact and when the component returns a Promise. Some macros can be async
 (return a Promise), which will break the React app when used in components. An example of a macro that is async is
-`do` macro. So when using React/Preact and when you need to use a promise use promise quotation and `useEffect`.
+`do` macro. So when using React/Preact and when you need to use a promise, use promise quotation and `useEffect`.
 
 ## Supported SRFI
 
@@ -252,13 +251,14 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Feature-based conditional expansion construct | [SRFI-0](https://srfi.schemers.org/srfi-0/) |
 | Homogeneous numeric vector datatypes | [SRFI-4](https://srfi.schemers.org/srfi-4/) |
 | Basic String Ports | [SRFI-6](https://srfi.schemers.org/srfi-6/) |
-| Running Scheme Scripts on Unix  | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
+| Running Scheme Scripts on Unix | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
 | Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
 | Basic Format Strings | [SRFI-28](https://srfi.schemers.org/srfi-28/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
 | Syntax parameters | [SRFI-139](https://srfi.schemers.org/srfi-139/) |
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
+| Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
 
 ### require `(load "./lib/srfi/<number>.scm")`
 
@@ -275,7 +275,6 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
-| Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
 | Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |
 | Procedures and Syntax for Multiple Values | [SRFI-210](https://srfi.schemers.org/srfi-210/) |
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
@@ -322,18 +321,18 @@ in Web (e.g. in Web REPL) you can use URL:
 - [ ] All recursive function in JS don't consume stack.
 
 ### WIP Side projects
-- [ ] [KISS](https://github.com/jcubic/kiss) (chrome extension REPL).
+- [ ] [KISS](https://github.com/jcubic/kiss) (Chrome extension REPL).
 - [ ] [SMILE](https://github.com/jcubic/smile) (Web IDE), need to start over.
 
 ## How you can help
 
-I'm working on version 1.0. If you find any bugs you can help by reporting them.
+I'm working on version 1.0. If you find any bugs, you can help by reporting them.
 If you have some Scheme code that doesn't work (note about the limitations)
 don't hesitate to [report an issue](https://github.com/jcubic/lips/issues/new).
 
 You can also propose a feature or improvement to the library, it doesn't always have to be defects.
 
-If you enjoy the library you can write about it in a blog post and share information about it or write on Social Media.
+If you enjoy the library, you can write about it on a blog post and share information about it or write on Social Media.
 Don't forget to link to the project website (it's
 [good for SEO](https://itnext.io/seo-for-open-source-projects-1a6b17ffeb8b)).
 
