@@ -156,7 +156,7 @@
 
         (define (foo x) x)
 
-        (t.is (eval (cadr (bar))) '(list 1 2 3))))
+        (t.is (eval (cadr (bar)) (current-environment)) '(list 1 2 3))))
 
 (let ((fun (lambda (a b)
           (if (number? a)
