@@ -8280,7 +8280,7 @@ var global_env = new Environment({
         If no parent frame can be found it returns nil.`),
     // ------------------------------------------------------------------
     'eval': doc('eval', function(code, env) {
-        env = env || this.get('current-environment').call(this);
+        env = env || this.get('interaction-environment').call(this);
         return evaluate(code, {
             env,
             dynamic_env: env,
