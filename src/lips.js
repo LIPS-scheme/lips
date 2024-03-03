@@ -7835,7 +7835,7 @@ var global_env = new Environment({
     'do': doc(new Macro('do', async function(code, { use_dynamic, error }) {
         const self = this;
         const dynamic_env = self;
-        const scope = self.inherit('do');
+        let scope = self.inherit('do');
         const vars = code.car;
         const test = code.cdr.car;
         let body = code.cdr.cdr;
@@ -7844,6 +7844,7 @@ var global_env = new Environment({
         }
         let eval_args = { env: self, dynamic_env, use_dynamic, error };
         let node = vars;
+        // init variables
         while (!is_nil(node)) {
             const item = node.car;
             scope.set(item.car, await evaluate(item.cdr.car, eval_args));
@@ -7856,6 +7857,7 @@ var global_env = new Environment({
             }
             let node = vars;
             const next = {};
+            // next value of variables
             while (!is_nil(node)) {
                 const item = node.car;
                 if (!is_nil(item.cdr.cdr)) {
@@ -7865,6 +7867,8 @@ var global_env = new Environment({
                 node = node.cdr;
             }
             const symbols = Object.getOwnPropertySymbols(next);
+            // new scope for new iteration
+            eval_args.env = scope = self.inherit('do');
             Object.keys(next).concat(symbols).forEach(key => {
                 scope.set(key, next[key]);
             });

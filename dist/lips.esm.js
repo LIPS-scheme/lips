@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 26 Feb 2024 12:17:54 +0000
+ * build: Sun, 03 Mar 2024 12:02:14 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -12187,7 +12187,7 @@ var global_env = new Environment({
                 use_dynamic: use_dynamic,
                 error: error
               };
-              node = vars;
+              node = vars; // init variables
             case 9:
               if (is_nil(node)) {
                 _context19.next = 20;
@@ -12223,7 +12223,7 @@ var global_env = new Environment({
                       return lips.evaluate(body, eval_args);
                     case 3:
                       node = vars;
-                      next = {};
+                      next = {}; // next value of variables
                     case 5:
                       if (is_nil(node)) {
                         _context18.next = 15;
@@ -12244,11 +12244,12 @@ var global_env = new Environment({
                       _context18.next = 5;
                       break;
                     case 15:
-                      symbols = Object.getOwnPropertySymbols(next);
+                      symbols = Object.getOwnPropertySymbols(next); // new scope for new iteration
+                      eval_args.env = scope = self.inherit('do');
                       Object.keys(next).concat(symbols).forEach(function (key) {
                         scope.set(key, next[key]);
                       });
-                    case 17:
+                    case 18:
                     case "end":
                       return _context18.stop();
                   }
@@ -12718,8 +12719,10 @@ var global_env = new Environment({
     // wrap and decorate with __doc__
     return doc(set_fn_length(lambda, length), __doc__, true);
   }, "(lambda (a b) body)\n        (lambda args body)\n        (lambda (a b . rest) body)\n\n        The lambda macro creates a new anonymous function. If the first element of\n        the body is a string and there is more elements the string is used as the\n        documentation string, that can be read using (help fn)."),
-  'macroexpand': new Macro('macroexpand', macro_expand()),
-  'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
+  // ------------------------------------------------------------------
+  'macroexpand': doc(new Macro('macroexpand', macro_expand()), "(macroexpand expr)\n\n         Macro that expand all macros inside and return single expression as output."),
+  // ------------------------------------------------------------------
+  'macroexpand-1': doc(new Macro('macroexpand-1', macro_expand(true)), "(macroexpand-1 expr)\n\n         Macro similar to macroexpand but it expand macros only one level\n         and return single expression as output."),
   // ------------------------------------------------------------------
   'define-macro': doc(new Macro(macro, function (macro, _ref36) {
     var use_dynamic = _ref36.use_dynamic,
@@ -15625,10 +15628,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 26 Feb 2024 12:17:54 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 03 Mar 2024 12:02:14 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 26 Feb 2024 12:17:54 +0000').valueOf();
+  var date = LString('Sun, 03 Mar 2024 12:02:14 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15668,7 +15671,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 26 Feb 2024 12:17:54 +0000';
+var date = 'Sun, 03 Mar 2024 12:02:14 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

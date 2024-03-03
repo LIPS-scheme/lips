@@ -181,6 +181,14 @@
         (t.is (do ((i 0) (j 10 (- j 1))) (undefined j)) 10)
         (t.is (do ((i 0) (j 10 (- j 1))) ((zero? j) 10)) 10)))
 
+(test "core: do macro scope (#325)"
+      (lambda (t)
+        (t.is ((do ((f (lambda () 0)
+                       (lambda () j))
+                    (j 2 (- j 1)))
+                 ((= j 0) f)))
+              1)))
+
 (test "core: eq?/eqv?"
       (lambda (t)
         ;; TODO
