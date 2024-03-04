@@ -7,7 +7,7 @@
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.18.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&bcebc65f86e73741ee60ce9aba45accd)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&06ccb272e936c17b9a3f585130040d01)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -255,6 +255,7 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
 | Basic Format Strings | [SRFI-28](https://srfi.schemers.org/srfi-28/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
+| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Syntax parameters | [SRFI-139](https://srfi.schemers.org/srfi-139/) |
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
@@ -272,7 +273,6 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | `#,` external form | [SRFI-10](https://srfi.schemers.org/srfi-10/) |
 | Notation for Specializing Parameters without Currying | [SRFI-26](https://srfi.schemers.org/srfi-26/) |
 | Basic hash tables | [SRFI-69](https://srfi.schemers.org/srfi-69/) |
-| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
 | Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |

@@ -255,6 +255,7 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
 | Basic Format Strings | [SRFI-28](https://srfi.schemers.org/srfi-28/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
+| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Syntax parameters | [SRFI-139](https://srfi.schemers.org/srfi-139/) |
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
@@ -272,7 +273,6 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | `#,` external form | [SRFI-10](https://srfi.schemers.org/srfi-10/) |
 | Notation for Specializing Parameters without Currying | [SRFI-26](https://srfi.schemers.org/srfi-26/) |
 | Basic hash tables | [SRFI-69](https://srfi.schemers.org/srfi-69/) |
-| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
 | Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |

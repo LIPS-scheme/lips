@@ -3,6 +3,7 @@
 * change `get-environment-variables` and `get-environment-variable` returns nil and undefined in the browser
 * `true`, `false`, and `NaN` are no longer parser constants [#292](https://github.com/jcubic/lips/issues/292)
 * get rid of node polyfills from output files
+* `eval` use `interaction-environment` stead of `current-environment` by default
 ### Features
 * add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
