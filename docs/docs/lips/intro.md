@@ -204,6 +204,43 @@ In both browser and Node.js you can execute `console.log`:
 
 ### Callbacks
 
+You can use Scheme functions as callbacks to JavaScript functions:
+
+```scheme
+(--> #("1" "2" "3") (map string->number))
+;; ==> #(1 +nan.0 +nan.0)
+```
+
+This is classic issue with functions that accept more than one argument. You have samilar issue
+in JavaScript:
+
+```javascript
+["1", "2", "3"].map(parseInt)
+;; ==> [1, NaN, NaN]
+```
+
+**NOTE**: the value are differnet becaseu in Shceme i
+
+To fix the issue you can
+deifne lambda with single argument:
+
+```scheme
+(--> #(1 2 3) (map (lambda (number) (number->string number))))
+;; ==> #("1" "2" "3")
+```
+
+You can also use one of functional helpers insprired by [Ramda](https://ramdajs.com/):
+
+```scheme
+(--> #(1 2 3) (map (unary number->string)))
+;; ==> #("1" "2" "3")
+```
+
+The `unary` [higher-order procedure](docs/scheme-intro/core#higher-order-functions) acept a singe
+procedure and return new procedure that accept only one argumnet.
+
+To read more check [Functional helpers](/docs/lips/functional-helpers).
+
 **WARNING** be carful when using scheme callback functions inside JavaScript.
 Since some code may be `async` and your code may break.
 
