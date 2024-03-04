@@ -207,6 +207,16 @@ automatic async/await you can use `(await)` procedure
 ;; ==> hello LIPS
 ```
 
+### Promises vs Delay expression
+Don't confuse JavaScript promises with `delay` expressions. They representation looks similar:
+
+```scheme
+(delay 10)
+;; ==> #<promise - not forced>
+'>(Promise.resolve 10)
+;; ==> #<js-promise resolved (number)>
+```
+
 ## Classes
 
 In LIPS, you can define JavaScript classes with `define-class` macro:
