@@ -162,6 +162,57 @@ so you were not able to put space after `/` to distingish from divide procedure.
 Later the syntax was renamed into form that start with hash `#/[0-9]/`. The same
 syntax is used by [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) implementation. But LIPS supports more flags (same as JavaScript).
 
+### Vectors
+In LIPS Scheme vectors are JavaScript arrays. So you can execute methods on them with `-->` macro:
+
+```scheme
+(--> #("one" "two" "three") (join ":"))
+;; ==> "one:two:three"
+```
+
+### Object literals
+In LIPS you can define object literals with `&`
+[syntax extension](/docs/lips/extension#syntax-extensions):
+
+```scheme
+(define obj &(:name "Jack" :age 22))
+(write obj)
+;; ==> &(:name "Jack" :age 22)
+(console.log obj)
+;; ==> { name: 'Jack', age: 22 }
+```
+
+You can nested object literals and mix them with different object:
+
+```scheme
+(define obj &(:name "Jack" :hobbies #("swiming" "programming")))
+(write obj.hobbies)
+;; ==> #("swiming" "programming")
+(console.log obj)
+;; ==> { name: 'Jack', hobbies: [ 'swiming', 'programming' ] }
+```
+
+Object similar to Scheme vectors are immutable and everything inside is quoted.
+
+```scheme
+(define obj &(:name Jack))
+(write obj)
+;; ==> &(:name "Jack")
+```
+
+But to make it possible to share objects with JavaScript, native LIPS values are automatically unboxed.
+So instead of symbol represention you get a JavaScript string.
+
+You can also use quasiquote on object literals:
+
+```scheme
+(define jack (let ((name "Jack")
+                   (age 22))
+               `&(:name ,name :age ,age)))
+(write jack)
+;; ==> &(:name "Jack" :age 22)
+```
+
 ### Automagic async/await
 LIPS do automatic async/await so it waits for any promise before evaluating
 next expression.
@@ -251,6 +302,8 @@ The class always need to have a base class (parent) or you need to use `null`. C
 (jack.run)
 ;; ==> "run, Jack"
 ```
+
+To create new instance of a Class you can use `new` procedure.
 
 ## Node.js
 
