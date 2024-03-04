@@ -11,12 +11,14 @@ To print a value, you can use two type of expressions:
 
 ```scheme
 (display "hello")
+;; ==> hello
 ```
 
 and
 
 ```scheme
 (write "hello")
+;; ==> "hello"
 ```
 
 The first will print text hello without quotations. But the second will include the quotes. The
@@ -192,6 +194,8 @@ mark for destructive type of procedure. Which are procedures that modify its arg
 ```scheme
 (define number 10)
 (set! number (+ number 1))
+(display number)
+;; ==> 11
 ```
 
 In the above expression, the number is increased by `1`. The number in `(+ number 1)` reference old value
@@ -204,6 +208,7 @@ You can create local variables with `let` syntax:
 ```scheme
 (let ((x 10) (y 20))
   (+ x y))
+;; ==> 30
 ```
 
 This will create two variables `x` and `y` with values `10` and `20` respectively and sum those with
@@ -215,8 +220,8 @@ In Scheme there are 3 ways to define conditionals. The basic expression is `if` 
 
 ```scheme
 (if (< 1 2)
-    (display "this is true")
-    (display "this is false"))
+    (write "this is true")
+    (write "this is false"))
 ```
 
 If you need to put more than one expression inside if statement (or any other expression that
@@ -225,19 +230,39 @@ expect single expression) you can use begin:
 ```scheme
 (if (< 1 2)
     (begin
-      (display "this is true")
+      (write "this is true")
       (newline)))
+;; ==> "this is true"
 ```
 
 The else part is optional.
 
+You also have a shortcut for this case in `when`:
+
+```scheme
+(when (< 1 2)
+     (write "this is true")
+     (newline))
+;; ==> "this is true"
+```
+
+There is also create the oposite with `unless`:
+
+```scheme
+(unless #f
+     (write "this is true")
+     (newline))
+;; ==> "this is true"
+```
+
 `cond` is another expression that allow to add multiple conditions:
 
 ```scheme
-(cond ((< 2 2) (display "first"))
-      ((< 2 1) (display "second"))
+(cond ((< 2 2) (write "first"))
+      ((< 2 1) (write "second"))
       (else
-         (display "other")))
+         (write "other")))
+;; ==> "other"
 ```
 
 The first two expressions return false, so `cond` will evaluate the `else` condition and display `"other"`.
@@ -251,6 +276,7 @@ Case is the last of basic condition expressions. It allows checking given expres
     ((foo bar) (display "second"))
     (else
        (display "other"))))
+;; ==> second
 ```
 
 Symbol foo is of the second list, so this expression will print `"second"`.
@@ -269,7 +295,7 @@ Lisp.
 
 ```scheme
 (if (and (< 1 2) (> 3 1))
-    (print "true"))
+    (display "true"))
 ;; ==> true
 ```
 
@@ -277,7 +303,7 @@ Lisp.
 
 ```scheme
 (if (or (< 1 2) (/ 1 0))
-    (print "true"))
+    (display "true"))
 ;; ==> true
 ```
 
@@ -288,7 +314,7 @@ stop evaluating when it finds the first true value.
 
 ```scheme
 (if (not (zero? 10))
-    (print "not zero"))
+    (display "not zero"))
 ;; ==> not zero
 ```
 
