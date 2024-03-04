@@ -23,7 +23,7 @@ If you have code like this
 (foo (+ 1 2))
 ```
 
-And `foo` is a function the `(+ 1 2)` will be evaluated and 3 will be passed to the function. But if
+And `foo` is a function, the `(+ 1 2)` will be evaluated and `3` will be passed to the function. But if
 `foo` is a macro, the data structure `(+ 1 2)` will be passed to the macro.
 
 To define a macro, you use usually use `define-macro` syntax. Lisp macros in Scheme are not standard,

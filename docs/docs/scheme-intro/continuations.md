@@ -35,9 +35,33 @@ first argument:
            ...))
 ```
 
-The continuation saved in `c` capture whole state of the Scheme interpreter. The continuation act as a
-procedure that you can pass a single value to it and Scheme will jump in to the place where
+The continuation saved in `c` capture whole state of the Scheme interpreter. The continuation act as
+a procedure that you can pass a single value to it and Scheme will jump in to the place where
 continuation was captured with a given value.
+
+## Calling continuations
+
+You can save continuation inside a variable and call it later like a procedure.
+
+```scheme
+(define k #f)
+
+(+ 1 (call/cc
+       (lambda (continuation)
+         (set! k continuation)
+         2)))
+;; ==> 3
+(k 10)
+;; ==> 11
+```
+
+The continuation act like a procedure and return `#t` with `procedure?` predicate:
+
+```scheme
+(define k (call/cc (lambda (c) c)))
+(procedure? k)
+;; ==> #t
+```
 
 ## Early exit
 
