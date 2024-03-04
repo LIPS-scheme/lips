@@ -123,7 +123,7 @@ You should not confuse boxing with boxes ([SRFI-111](https://srfi.schemers.org/s
 [SRFI-195](https://srfi.schemers.org/srfi-195)). LIPS boxes are part of implementation of Scheme
 data types. And SRFI boxes are containers written in Scheme.
 
-### Macros
+### Helper macros and functions
 The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it
 acts like a chain of method calls in JavaScript
 
