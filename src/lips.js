@@ -5204,6 +5204,8 @@ function LNumber(n, force = false) {
     }
     if (Number.isNaN(n)) {
         return LFloat(n);
+    } else if (parsable && Number.isNaN(parseInt(str, radix))) {
+        return nan;
     } else if (typeof BigInt !== 'undefined') {
         if (typeof n !== 'bigint') {
             if (parsable) {

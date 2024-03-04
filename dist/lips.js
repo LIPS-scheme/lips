@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 03 Mar 2024 12:09:06 +0000
+ * build: Mon, 04 Mar 2024 20:21:13 +0000
  */
 
 (function (global, factory) {
@@ -9247,6 +9247,8 @@
     }
     if (Number.isNaN(n)) {
       return LFloat(n);
+    } else if (parsable && Number.isNaN(parseInt(str, radix))) {
+      return nan;
     } else if (typeof BigInt !== 'undefined') {
       if (typeof n !== 'bigint') {
         if (parsable) {
@@ -15635,10 +15637,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 03 Mar 2024 12:09:06 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 04 Mar 2024 20:21:13 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 03 Mar 2024 12:09:06 +0000').valueOf();
+    var date = LString('Mon, 04 Mar 2024 20:21:13 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -15678,7 +15680,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 03 Mar 2024 12:09:06 +0000';
+  var date = 'Mon, 04 Mar 2024 20:21:13 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

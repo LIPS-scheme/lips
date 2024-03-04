@@ -52,6 +52,8 @@
 * fix `try..catch` [#317](https://github.com/jcubic/lips/issues/317)
 * fix handling `^` and `$` syntax extension [#318](https://github.com/jcubic/lips/issues/318)
 * fix mixed values in `let*-values` [#322](https://github.com/jcubic/lips/issues/322)
+* fix `do` macro [#324](https://github.com/jcubic/lips/issues/324)
+* fix `string->number` that leads to NaN [#326](https://github.com/jcubic/lips/issues/326)
 
 ## 1.0.0-beta.18
 ### Breaking
