@@ -4,6 +4,33 @@ sidebar_position: 1
 
 # Core features
 
+## null and undefined
+LIPS define those values as Parser constants so they can be used inside quoted expressions:
+
+```scheme
+(let ((lst '(undefined null)))
+  (write (symbol? (car lst)))
+  (newline)
+  (write (symbol? (cadr lst)))
+  (newline))
+;; ==> #f
+;; ==> #f
+```
+
+**NOTE** that they are not false values. LIPS follows R<sup>7</sup>RS spec and `#f` is the only falsy
+value. This may change when final 1.0 is released. It's not yet decided if those should also be falsy
+values, since they are part of JavaScript and it would simplify the code.
+
+## Print procedure
+LIPS define helper `print` procedure that display all its arguments with newline after each element.
+
+```scheme
+(print 1 2 3)
+;; ==> 1
+;; ==> 2
+;; ==> 3
+```
+
 ## Macros
 LIPS define both Lisp macros and Scheme hygienic macros (`syntax-rules`).
 
