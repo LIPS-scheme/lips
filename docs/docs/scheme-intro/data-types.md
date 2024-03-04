@@ -257,13 +257,13 @@ quotation.
 ```
 
 A comma is special syntax that can be used inside quasi quote to indicate that the expression after
-it should be evaluated and inserted into the list. This will evaluate into same expression as:
+it should be evaluated and inserted into the list. This will evaluate into the same expression as:
 
 ```scheme
 '(1 2 3)
 ```
 
-There is also another escape symbol which is `,@`. It works similar to a comma but the data inside (it
+There is also another escape symbol which is `,@`. It works similar to a comma, but the data inside (it
 must be a list) is spliced into the outer list.
 
 ```scheme
@@ -290,7 +290,7 @@ This will evaluate into vector with 3 elements:
 
 ### Quotation of quotation
 
-If you quote the quotation you will get expression that change special symbols with S-Expressions:
+If you quote the quotation, you will get expression that change special symbols with S-Expressions:
 
 ```scheme
 ''(1 2 3)
@@ -303,7 +303,7 @@ Will return:
 ```
 
 Because comma is just an alias for quote. You can use them interchangeably. But using symbols is
-faster to type. If you quote quasi quote expression you will also get symbols expanded:
+faster to type. If you quote quasi quote expression, you will also get symbols expanded:
 
 ```scheme
 '`(1 2 3 ,(+ 1 2) ,@(list 4 5))
@@ -314,6 +314,8 @@ This will be the output:
 ```scheme
 (quasiquote (1 2 3 (unquote (+ 1 2)) (unquote-splicing (list 4 5))))
 ```
+
+### Quotation on vector literals
 
 Quasiquote also works with vector literals.
 
