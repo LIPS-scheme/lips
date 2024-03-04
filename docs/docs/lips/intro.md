@@ -39,6 +39,25 @@ LIPS define helper `print` procedure that display all its arguments with newline
 ;; ==> 3
 ```
 
+## Emoji
+LIPS fully supports all unicode characters including emoji:
+
+```scheme
+(define smiley #\😀)
+(define poo #\💩)
+(write (string-append (string smiley) " " (string poo)))
+;; ==> "😀 💩"
+```
+
+You can also use them as part of symbols (e.g. as variables name):
+
+```scheme
+(define (⏏️)
+  (print "ejecting"))
+(⏏️)
+;; ==> ejecting
+```
+
 ## Macros
 LIPS define both Lisp macros and Scheme hygienic macros (`syntax-rules`).
 
