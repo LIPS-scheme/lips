@@ -59,6 +59,10 @@ In both platforms you can access global JavaScript objects like normal variables
 LIPS have its own representation for numbers, strings and characters. And when
 interacting with JavaScript the values may get boxed or unboxed automatigally.
 
+You should not confuse boxing with boxes ([SRFI-111](https://srfi.schemers.org/srfi-111/) and
+[SRFI-195](https://srfi.schemers.org/srfi-195)). LIPS boxes are part of implementation of Scheme
+data types. And SRFI boxes are containers written in Scheme.
+
 ### Macros
 The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it
 acts like a chain of method calls in JavaScript
