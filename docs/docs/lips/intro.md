@@ -131,6 +131,13 @@ You can call JavaScript functions from Scheme, the same as you call Scheme proce
 ;; ==> #<HTMLBodyElement>
 ```
 
+In both browser and Node.js you can execute `console.log`:
+
+```scheme
+(console.log "hello, LIPS")
+;; ==> hello, LIPS
+```
+
 ### Callbacks
 
 **WARNING** be carful when using scheme callback functions inside JavaScript.
