@@ -236,7 +236,7 @@ You can also use one of functional helpers insprired by [Ramda](https://ramdajs.
 ;; ==> #("1" "2" "3")
 ```
 
-The `unary` [higher-order procedure](docs/scheme-intro/core#higher-order-functions) acept a singe
+The `unary` [higher-order procedure](/docs/scheme-intro/core#higher-order-functions) acept a singe
 procedure and return new procedure that accept only one argumnet.
 
 To read more check [Functional helpers](/docs/lips/functional-helpers).
