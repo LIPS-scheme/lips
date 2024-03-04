@@ -313,6 +313,15 @@ There is also a shortcut to define procedure/function:
 
 There are no explicit `return` statement. Only the last expression of the function is the result value.
 
+You can also add more arguments:
+
+```scheme
+(define (sum a b)
+             (+ a b))
+(sum 10 20)
+;; ==> 30
+```
+
 ### Nested Procedures
 
 You can define inner procedures inside other procedures:
