@@ -21,6 +21,14 @@ LIPS define those values as Parser constants so they can be used inside quoted e
 value. This may change when final 1.0 is released. It's not yet decided if those should also be falsy
 values, since they are part of JavaScript and it would simplify the code.
 
+## Numerical tower
+LIPS support full numerical tower (not yet 100% unit tested):
+
+* integers - using BitInt
+* floats - using JavaScript numbers
+* rationals
+* complex numbers (that can use integers, floats, or rationals)
+
 ## Print procedure
 LIPS define helper `print` procedure that display all its arguments with newline after each element.
 
