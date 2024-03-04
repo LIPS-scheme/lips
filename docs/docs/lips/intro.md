@@ -61,6 +61,12 @@ You can also use them as part of symbols (e.g. as variables name):
 ## Macros
 LIPS define both Lisp macros and Scheme hygienic macros (`syntax-rules`).
 
+It also implements:
+* [SRFI-46](https://srfi.schemers.org/srfi-46/) which allows to change ellipsis symbol for nested syntax-rules.
+* [SRFI-139](https://srfi.schemers.org/srfi-139/) which allows to define
+  [anaphoric syntax-rules macros](/docs/scheme-intro/macros#anaphoric-hygienic-macros).
+* [SRFI-147](https://srfi.schemers.org/srfi-147/) which allows to define new syntax-rules macros to define syntax-rules macros.
+
 ### Gensyms
 With lisp macros you can use gensyms they are special Scheme symbols that use JavaScript symbols
 behind the sceen so they are proven to be unique. Additionaly you can use named gensym if you pass
