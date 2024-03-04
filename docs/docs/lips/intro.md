@@ -287,6 +287,8 @@ In LIPS, you can define JavaScript classes with `define-class` macro:
             (string-append "hello, " self.name))))
 
 (define jack (new Person "Jack"))
+(write jack)
+;; ==> #<Person>
 (jack.greet)
 ;; ==> "hello, Jack"
 ```
@@ -304,6 +306,19 @@ The class always need to have a base class (parent) or you need to use `null`. C
 ```
 
 To create new instance of a Class you can use `new` procedure.
+
+You can also manipulate JavaScript prototypes directly:
+
+```scheme
+(write Person.prototype)
+;; ==> #<prototype>
+(set! Person.prototype.toString (lambda () (string-append "#<Person (" this.name ")>")))
+(display (jack.toString))
+;; ==> #<Person (Jack)>
+```
+
+By default toString is not used for represention of objects, but you add representation if you want.
+See [Homoiconic data types](/docs/lips/extension#new-homoiconic-data-types).
 
 ## Node.js
 
