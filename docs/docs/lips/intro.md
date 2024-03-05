@@ -462,6 +462,66 @@ You can check if a value is a promise by quoting the expression and using `promi
 ;; ==> #t
 ```
 
+### Exceptions
+LIPS Scheme use JavaSript exception system. To throw an exception you use:
+
+```scheme
+(throw "This is error")
+;; ==> Error: This is error
+```
+
+or
+
+```scheme
+(raise (new Error "error"))
+```
+
+The `raise` procedure throw any object and `throw` wraps the argumnet in `new Error`.
+
+You can catch exceptions with LIPS specific try..catch..finally:
+
+```scheme
+(try
+ (throw "nasty")
+ (catch (e)
+        (print (string-append "error " e.message " was caught"))))
+;; ==> error nasty was caught
+```
+
+You can also have finally expression:
+
+```scheme
+(try
+ (throw "nasty")
+ (catch (e)
+        (print (string-append "error " e.message " was caught")))
+ (finally
+  (print "nothing happened")))
+;; ==> error nasty was caught
+;; ==> nothing happened
+```
+
+You can also define finaly with `catch`:
+
+```scheme
+(try
+ (throw "nasty")
+ (finally
+  (print "after error")))
+;; ==> after error
+;; ==> nasty
+```
+
+**NOTE** the order of execution is not expected, but it may change in the future.
+
+LIPS also define R<sup>7</sup>RS guard `procedure` that is just a macro that use try..catch behind the scene:
+
+```scheme
+(guard (e ((list? e) (print (string-append "Error: " (car e)))))
+       (raise '("error")))
+;; ==> Error: error
+```
+
 ### JavaScript Generars and interators
 Right now there is no way to define JavaScript generators inside LIPS. You can create iterator using
 [iteration prorocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols),
