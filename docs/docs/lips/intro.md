@@ -227,15 +227,15 @@ To fix the issue you can
 deifne lambda with single argument:
 
 ```scheme
-(--> #(1 2 3) (map (lambda (number) (number->string number))))
-;; ==> #("1" "2" "3")
+(--> #("1" "2" "3") (map (lambda (str) (string->number str))))
+;; ==> #(1 2 3)
 ```
 
 You can also use one of functional helpers insprired by [Ramda](https://ramdajs.com/):
 
 ```scheme
-(--> #(1 2 3) (map (unary number->string)))
-;; ==> #("1" "2" "3")
+(--> #("1" "2" "3") (map (unary string->number)))
+;; ==> #(1 2 3)
 ```
 
 The `unary` [higher-order procedure](/docs/scheme-intro/core#higher-order-functions) acept a singe
