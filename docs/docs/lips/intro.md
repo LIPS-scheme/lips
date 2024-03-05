@@ -435,10 +435,12 @@ In Node.js you can load JavaScript modules with `require`:
 ;; ==> "hello LIPS"
 ```
 
+In above code can see example of [automagic async/await](#automagic-asyncawait).
+
 If you have to use callback based API in Node use
 [promisify function](https://nodejs.org/api/util.html#utilpromisifyoriginal) from Module util.
 
-You can also use Promise contructor yourself. Here is example `async` lisp macro:
+You can also use Promise contructor yourself:
 
 ```scheme
 (define fs (require "fs"))
@@ -457,3 +459,6 @@ You can also use Promise contructor yourself. Here is example `async` lisp macro
   (write (async (fs.readFile fname "utf-8"))))
 ;; ==> "Hello, LIPS!"
 ```
+
+In above example, we import regular callback based fs module and use Promise constructor abstracted
+away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
