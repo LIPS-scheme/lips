@@ -313,3 +313,18 @@
         (define-values (a . b)
           (values 1 2))
         (t.is (cons a b) '(1 2))))
+
+(test "std: iterators"
+      (lambda (t)
+        (let ((obj (object))
+              (max 5))
+          (set-obj! obj Symbol.iterator
+                    (lambda ()
+                      (let ((i 0))
+                        (object :next (lambda ()
+                                        (set! i (+ i 1))
+                                        (if (> i max)
+                                            `&(:done #t)
+                                            `&(:done #f :value ,(/ 1 i))))))))
+          (t.is (iterator->array obj) #(1 1/2 1/3 1/4 1/5))
+          (t.is (Array.from (iterator->array obj)) #(1 0.5 0.3333333333333333 0.25 0.2)))))
