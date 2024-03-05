@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 05 Mar 2024 13:03:01 +0000
+ * build: Tue, 05 Mar 2024 15:58:24 +0000
  */
 
 'use strict';
@@ -13301,6 +13301,18 @@ var global_env = new Environment({
     typecheck('replace', pattern, ['regex', 'string']);
     typecheck('replace', replacement, ['string', 'function']);
     typecheck('replace', string, 'string');
+    if (is_function(replacement)) {
+      // ref: https://stackoverflow.com/a/48032528/387194
+      var replacements = [];
+      string.replace(pattern, function () {
+        replacements.push(replacement.apply(void 0, arguments));
+      });
+      return unpromise(replacements, function (replacements) {
+        return string.replace(pattern, function () {
+          return replacements.shift();
+        });
+      });
+    }
     return string.replace(pattern, replacement);
   }, "(replace pattern replacement string)\n\n        Function that changes pattern to replacement inside string. Pattern can be a\n        string or regex and replacement can be function or string. See Javascript\n        String.replace()."),
   // ------------------------------------------------------------------
@@ -15582,10 +15594,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 05 Mar 2024 13:03:01 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 05 Mar 2024 15:58:24 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 05 Mar 2024 13:03:01 +0000').valueOf();
+  var date = LString('Tue, 05 Mar 2024 15:58:24 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15625,7 +15637,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 05 Mar 2024 13:03:01 +0000';
+var date = 'Tue, 05 Mar 2024 15:58:24 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

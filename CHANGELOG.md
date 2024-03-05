@@ -56,6 +56,7 @@
 * fix `do` macro [#324](https://github.com/jcubic/lips/issues/324)
 * fix `string->number` that leads to NaN [#326](https://github.com/jcubic/lips/issues/326)
 * fix unintentional unboxing in `iterator->array` [#328](https://github.com/jcubic/lips/issues/328)
+* fix `replace` with async `lambda` [#319](https://github.com/jcubic/lips/issues/319)
 
 ## 1.0.0-beta.18
 ### Breaking

@@ -736,6 +736,10 @@
         (t.is (number->string 1.0e+27 16) "3.3b2e3c9fd0804e+16")
         (t.is (number->string 1000000000000000000000000000 16) "33b2e3c9fd0803ce8000000")))
 
+(test "core: replace async"
+      (lambda (t)
+        (t.is (replace #/foo/ (lambda () (Promise.resolve "lips")) "foo bar") "lips bar")))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean

@@ -9076,6 +9076,16 @@ var global_env = new Environment({
         typecheck('replace', pattern, ['regex', 'string']);
         typecheck('replace', replacement, ['string', 'function']);
         typecheck('replace', string, 'string');
+        if (is_function(replacement)) {
+            // ref: https://stackoverflow.com/a/48032528/387194
+            const replacements = [];
+            string.replace(pattern, function(...args) {
+                replacements.push(replacement(...args));
+            });
+            return unpromise(replacements, replacements => {
+                return string.replace(pattern, () => replacements.shift());
+            });
+        }
         return string.replace(pattern, replacement);
     }, `(replace pattern replacement string)
 

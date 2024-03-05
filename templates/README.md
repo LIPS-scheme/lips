@@ -354,7 +354,8 @@ I would also love to see if you use the library, I may even share the links of p
 * [StackOverlow](https://stackoverflow.com) code was used for functions:
   * [fworker](https://stackoverflow.com/a/10372280/387194),
   * [flatten](https://stackoverflow.com/a/27282907/387194),
-  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
+  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194),
+  * [async replace](https://stackoverflow.com/a/48032528/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
 

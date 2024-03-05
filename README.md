@@ -7,7 +7,7 @@
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.18.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&a520631e7f12f3eda2816e5633437fc8)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&6d6875155398b050c8cd14e1bcc09224)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -354,7 +354,8 @@ I would also love to see if you use the library, I may even share the links of p
 * [StackOverlow](https://stackoverflow.com) code was used for functions:
   * [fworker](https://stackoverflow.com/a/10372280/387194),
   * [flatten](https://stackoverflow.com/a/27282907/387194),
-  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
+  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194),
+  * [async replace](https://stackoverflow.com/a/48032528/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
 
