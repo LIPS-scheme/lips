@@ -275,6 +275,15 @@ Example of procedures that are not wise to use are:
 "[object Promise] bar"
 ```
 
+Instead of `Array::replace` you should use LIPS Scheme `replace` procedure that works with async `lambda`:
+
+```scheme
+(replace #/[a-z]+/g (lambda ()
+                  (Promise.resolve "lips"))
+         "foo bar")
+;; ==> "lips lips"
+```
+
 ### Regular Expressions
 LIPS define regular expressions it uses native JavaScript regular expressions.
 At first, the syntax looked like in JavaScript. It was problematic for the parser
