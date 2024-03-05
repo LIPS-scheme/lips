@@ -174,7 +174,7 @@ LIPS don't check the number of argumnents when calling a procedure:
 ;; ==> #<undefined>
 ```
 
-The same as with JavaScript if you don't pass an argument it will be undefined. But you still have full compatible with Scheme and use [arguments with variable artity](docs/scheme-intro/core#variable-number-of-arguments):
+The same as with JavaScript if you don't pass an argument it will be undefined. But you still have full compatible with Scheme and use [arguments with variable artity](/docs/scheme-intro/core#variable-number-of-arguments):
 
 ```scheme
 (let ((test (lambda (first . rest)
