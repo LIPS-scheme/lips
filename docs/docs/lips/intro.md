@@ -125,6 +125,21 @@ data types. And SRFI boxes are containers written in Scheme. Name boxing came fr
 primitive values are wrapped in objects when you try to use them in object context (like accessing
 a property).
 
+You need to be careful with some of the JavaScript native methods, since they can unbox the value when you don't
+when them to be unboxed.
+
+Example is `Array::push` using with native LIPS types:
+
+```scheme
+(let ((v (vector)))
+  (v.push 1/2)
+  (print v))
+;; ==> #(0.5)
+```
+As you can see the rational number got unboxed and converted into JavaScript float numbers.
+Unboxing always can make you loose some information becase LIPS types needs to be converted into native JavaScript
+data types. And JavaScript doesn't have a notion of rationals, there are only floating point numbers, and big ints.
+
 ### Helper macros and functions
 The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it
 acts like a chain of method calls in JavaScript
