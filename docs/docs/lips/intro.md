@@ -543,42 +543,33 @@ Here is example of creating iterator in LIPS:
 
 ```scheme
 (let ((obj (object))
-      (max 10))
-  (set-obj! obj Symbol.iterator
-        (lambda ()
-          (let ((i 0))
-            (object :next (lambda ()
-                            (set! i (+ i 1))
-                            (if (> i max)
-                                `&(:done #t)
-                                `&(:done #f :value ,i)))))))
-  (print (iterator->array obj))
-  (print (Array.from (iterator->array obj))))
-;; ==> #(1 2 3 4 5 6 7 8 9 10)
-;; ==> #(1 2 3 4 5 6 7 8 9 10)
-```
-
-JavaScript `Array.from` can't be used for all cases like if you want LIPS native types inside objects.
-
-```scheme
-(let ((obj (object))
       (max 5))
   (set-obj! obj Symbol.iterator
-        (lambda ()
-          (let ((i 0))
-            (object :next (lambda ()
+            (lambda ()
+              (let ((i 0))
+                `&(:next ,(lambda ()
                             (set! i (+ i 1))
                             (if (> i max)
                                 `&(:done #t)
                                 `&(:done #f :value ,(/ 1 i))))))))
   (print (iterator->array obj))
-  (print (Array.from (iterator->array obj))))
+  (print (Array.from obj)))
 ;; ==> #(1 1/2 1/3 1/4 1/5)
-;; ==> #(1 0.5 0.3333333333333333 0.25 0.2)
+;; ==> #(1 1/2 1/3 1/4 1/5)
 ```
 
-As you can see `Array.from` can't be used for every possible case becase it will unbox the values
-(and convert rational to float).
+`Array.from` can't be used for every possible case becase it will unbox the values (and convert
+rational to float), here it doesn't happen becase LIPS don't treat JavaScript iterators in any
+special way (it may change in the future). But `Array.from` will convert the array of rationals to
+float if used on normal vector:
+
+```scheme
+(Array.from #(1/2 1/3 1/4 1/5))
+;; ==> #(0.5 0.3333333333333333 0.25 0.2)
+```
+
+**NOTE**: be carful when using iterator protocol becase any function side Scheme can return a promise. If you would change
+quoted object literal `` `&() `` with longhand `object` you will get an error becasue `object` is async.
 
 You can abstract the use of iteration protocol with a macro, but to have real `yeild` keyword like
 syntax you need `call/cc`.
