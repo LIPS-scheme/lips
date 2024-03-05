@@ -117,11 +117,13 @@ In both platforms you can access global JavaScript objects like normal variables
 
 ### Boxing
 LIPS have its own representation for numbers, strings and characters. And when
-interacting with JavaScript the values may get boxed or unboxed automatigally.
+interacting with JavaScript the values may get boxed or unboxed automagically.
 
 You should not confuse boxing with boxes ([SRFI-111](https://srfi.schemers.org/srfi-111/) and
 [SRFI-195](https://srfi.schemers.org/srfi-195)). LIPS boxes are part of implementation of Scheme
-data types. And SRFI boxes are containers written in Scheme.
+data types. And SRFI boxes are containers written in Scheme. Name boxing came from JavaScript, when
+primitive values are wrapped in objects when you try to use them in object context (like accessing
+a property).
 
 ### Helper macros and functions
 The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it
