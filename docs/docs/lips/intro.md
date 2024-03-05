@@ -395,7 +395,79 @@ Don't confuse JavaScript promises with `delay` expressions. Their representation
 ;; ==> #<js-promise resolved (number)>
 ```
 
-## Classes
+### JavaScript Generars and interators
+Right now there is no way to define JavaScript generators inside LIPS. You can create iterator using
+[iteration prorocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols),
+But to have yeild keyword you need [continuations](/docs/scheme-intro/continuations), they are part of the
+LIPS Roadmap.
+
+Here is example of creating iterator in LIPS:
+
+
+```scheme
+(let ((obj (object))
+      (max 10))
+  (set-obj! obj Symbol.iterator
+        (lambda ()
+          (let ((i 0))
+            (object :next (lambda ()
+                            (set! i (+ i 1))
+                            (if (> i max)
+                                `&(:done #t)
+                                `&(:done #f :value ,i)))))))
+  (print (iterator->array obj))
+  (print (Array.from (iterator->array obj))))
+;; ==> #(1 2 3 4 5 6 7 8 9 10)
+;; ==> #(1 2 3 4 5 6 7 8 9 10)
+```
+
+JavaScript `Array.from` can't be used for all cases like if you want LIPS native types inside objects.
+
+```scheme
+(let ((obj (object))
+      (max 5))
+  (set-obj! obj Symbol.iterator
+        (lambda ()
+          (let ((i 0))
+            (object :next (lambda ()
+                            (set! i (+ i 1))
+                            (if (> i max)
+                                `&(:done #t)
+                                `&(:done #f :value ,(/ 1 i))))))))
+  (print (iterator->array obj))
+  (print (Array.from (iterator->array obj))))
+;; ==> #(1 1/2 1/3 1/4 1/5)
+;; ==> #(1 0.5 0.3333333333333333 0.25 0.2)
+```
+
+As you can see `Array.from` can't be used for every possible case becase it will unbox the values
+(and convert rational to float).
+
+You can abstract the use of iteration protocol with a macro, but to have real `yeild` keyword like
+syntax you need `call/cc`.
+
+You can also define generators inside JavaScript using `self.eval` (JavaScript global `eval`):
+
+```scheme
+(define gen (self.eval "(async function* gen(time, ...args) {
+                          function delay(time) {
+                            return new Promise((resolve) => {
+                              setTimeout(resolve, time);
+                            });
+                          }
+                          for (let x of args) {
+                            await delay(time);
+                            yield x;
+                          }
+                        })"))
+
+(iterator->array (gen 100 1 2 3 4 5))
+;; ==> #(1 2 3 4 5)
+```
+
+Here is example of async generator written in JavaScript.
+
+### Classes
 
 In LIPS, you can define JavaScript classes with `define-class` macro:
 
