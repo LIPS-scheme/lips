@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 04 Mar 2024 20:21:13 +0000
+ * build: Tue, 05 Mar 2024 13:03:01 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -4664,11 +4664,11 @@ var Lexer = /*#__PURE__*/function () {
           }
         }
         start = false;
-        var _iterator4 = _createForOfIteratorHelper(Lexer.rules),
-          _step4;
+        var _iterator3 = _createForOfIteratorHelper(Lexer.rules),
+          _step3;
         try {
-          for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-            var rule = _step4.value;
+          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+            var rule = _step3.value;
             if (this.match_rule(rule, {
               prev_char: prev_char,
               "char": _char5,
@@ -4687,9 +4687,9 @@ var Lexer = /*#__PURE__*/function () {
             }
           }
         } catch (err) {
-          _iterator4.e(err);
+          _iterator3.e(err);
         } finally {
-          _iterator4.f();
+          _iterator3.f();
         }
         if (this._state !== null) {
           // collect char in token
@@ -5773,20 +5773,20 @@ function match(pattern, input) {
       }
     */
     function get_first_match(patterns, input) {
-      var _iterator5 = _createForOfIteratorHelper(patterns),
-        _step5;
+      var _iterator4 = _createForOfIteratorHelper(patterns),
+        _step4;
       try {
-        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-          var _p = _step5.value;
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var _p = _step4.value;
           var _m = inner_match(_p, input);
           if (_m !== -1) {
             return _m;
           }
         }
       } catch (err) {
-        _iterator5.e(err);
+        _iterator4.e(err);
       } finally {
-        _iterator5.f();
+        _iterator4.f();
       }
       return -1;
     }
@@ -5938,19 +5938,19 @@ Formatter.exception_shift = function (token, settings) {
       if (!regexes.length) {
         return false;
       }
-      var _iterator6 = _createForOfIteratorHelper(regexes),
-        _step6;
+      var _iterator5 = _createForOfIteratorHelper(regexes),
+        _step5;
       try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var re = _step6.value;
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var re = _step5.value;
           if (token.match(re)) {
             return true;
           }
         }
       } catch (err) {
-        _iterator6.e(err);
+        _iterator5.e(err);
       } finally {
-        _iterator6.f();
+        _iterator5.f();
       }
     }
     return false;
@@ -6128,14 +6128,14 @@ Formatter.prototype["break"] = function () {
         sexp[count] = previousSexp(sub, count);
       }
     });
-    var _iterator7 = _createForOfIteratorHelper(rules),
-      _step7;
+    var _iterator6 = _createForOfIteratorHelper(rules),
+      _step6;
     try {
-      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-        var _step7$value = _slicedToArray(_step7.value, 3),
-          pattern = _step7$value[0],
-          count = _step7$value[1],
-          ext = _step7$value[2];
+      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+        var _step6$value = _slicedToArray(_step6.value, 3),
+          pattern = _step6$value[0],
+          count = _step6$value[1],
+          ext = _step6$value[2];
         count = count.valueOf();
         // 0 count mean ignore the previous S-Expression
         var test_sexp = count > 0 ? sexp[count] : sub;
@@ -6162,9 +6162,9 @@ Formatter.prototype["break"] = function () {
         }
       }
     } catch (err) {
-      _iterator7.e(err);
+      _iterator6.e(err);
     } finally {
-      _iterator7.f();
+      _iterator6.f();
     }
   }
   this.__code__ = tokens.join('');
@@ -6752,19 +6752,19 @@ function toString(obj, quote, skip_cycles) {
     }
   }
   // standard objects that have toString
-  var _iterator8 = _createForOfIteratorHelper(native_types),
-    _step8;
+  var _iterator7 = _createForOfIteratorHelper(native_types),
+    _step7;
   try {
-    for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-      var _type2 = _step8.value;
+    for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+      var _type2 = _step7.value;
       if (obj instanceof _type2) {
         return obj.toString(quote);
       }
     }
   } catch (err) {
-    _iterator8.e(err);
+    _iterator7.e(err);
   } finally {
-    _iterator8.f();
+    _iterator7.f();
   }
   if (obj instanceof LNumber) {
     return obj.toString();
@@ -8592,11 +8592,11 @@ function bind(fn, context) {
   }
   var bound = fn.bind(context);
   var props = Object.getOwnPropertyNames(fn);
-  var _iterator9 = _createForOfIteratorHelper(props),
-    _step9;
+  var _iterator8 = _createForOfIteratorHelper(props),
+    _step8;
   try {
-    for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-      var prop = _step9.value;
+    for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+      var prop = _step8.value;
       if (filter_fn_names(prop)) {
         try {
           bound[prop] = fn[prop];
@@ -8606,9 +8606,9 @@ function bind(fn, context) {
       }
     }
   } catch (err) {
-    _iterator9.e(err);
+    _iterator8.e(err);
   } finally {
-    _iterator9.f();
+    _iterator8.f();
   }
   hidden_prop(bound, '__fn__', fn);
   hidden_prop(bound, '__context__', context);
@@ -8811,19 +8811,19 @@ function let_macro(symbol) {
               }
             }).then(exec);
           } else {
-            var _iterator10 = _createForOfIteratorHelper(values),
-              _step10;
+            var _iterator9 = _createForOfIteratorHelper(values),
+              _step9;
             try {
-              for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-                var _step10$value = _step10.value,
-                  _name9 = _step10$value.name,
-                  _value3 = _step10$value.value;
+              for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+                var _step9$value = _step9.value,
+                  _name9 = _step9$value.name,
+                  _value3 = _step9$value.value;
                 env.set(_name9, _value3);
               }
             } catch (err) {
-              _iterator10.e(err);
+              _iterator9.e(err);
             } finally {
-              _iterator10.f();
+              _iterator9.f();
             }
           }
         }
@@ -9084,17 +9084,17 @@ function LString(string) {
       return fn.apply(this.__string__, args);
     };
   };
-  var _iterator11 = _createForOfIteratorHelper(_keys),
-    _step11;
+  var _iterator10 = _createForOfIteratorHelper(_keys),
+    _step10;
   try {
-    for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-      var key = _step11.value;
+    for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+      var key = _step10.value;
       LString.prototype[key] = wrap(String.prototype[key]);
     }
   } catch (err) {
-    _iterator11.e(err);
+    _iterator10.e(err);
   } finally {
-    _iterator11.f();
+    _iterator10.f();
   }
 }
 LString.prototype[Symbol.iterator] = /*#__PURE__*/_regeneratorRuntime.mark(function _callee13() {
@@ -11699,62 +11699,11 @@ var global_env = new Environment({
       var _this22 = this;
       var arg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
-        var env, _iteratorAbruptCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, value, port;
+        var env, port;
         return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) switch (_context16.prev = _context16.next) {
             case 0:
               env = _this22.env;
-              if (!LString.isString(arg)) {
-                _context16.next = 30;
-                break;
-              }
-              _iteratorAbruptCompletion2 = false;
-              _didIteratorError2 = false;
-              _context16.prev = 4;
-              _iterator2 = _asyncIterator(_parse(arg, env));
-            case 6:
-              _context16.next = 8;
-              return _iterator2.next();
-            case 8:
-              if (!(_iteratorAbruptCompletion2 = !(_step2 = _context16.sent).done)) {
-                _context16.next = 14;
-                break;
-              }
-              value = _step2.value;
-              return _context16.abrupt("return", value);
-            case 11:
-              _iteratorAbruptCompletion2 = false;
-              _context16.next = 6;
-              break;
-            case 14:
-              _context16.next = 20;
-              break;
-            case 16:
-              _context16.prev = 16;
-              _context16.t0 = _context16["catch"](4);
-              _didIteratorError2 = true;
-              _iteratorError2 = _context16.t0;
-            case 20:
-              _context16.prev = 20;
-              _context16.prev = 21;
-              if (!(_iteratorAbruptCompletion2 && _iterator2["return"] != null)) {
-                _context16.next = 25;
-                break;
-              }
-              _context16.next = 25;
-              return _iterator2["return"]();
-            case 25:
-              _context16.prev = 25;
-              if (!_didIteratorError2) {
-                _context16.next = 28;
-                break;
-              }
-              throw _iteratorError2;
-            case 28:
-              return _context16.finish(25);
-            case 29:
-              return _context16.finish(20);
-            case 30:
               if (arg === null) {
                 port = internal(env, 'stdin');
               } else {
@@ -11762,18 +11711,18 @@ var global_env = new Environment({
               }
               typecheck_text_port('read', port, 'input-port');
               return _context16.abrupt("return", port.read.call(env));
-            case 33:
+            case 4:
             case "end":
               return _context16.stop();
           }
-        }, _callee16, null, [[4, 16, 20, 30], [21,, 25, 29]]);
+        }, _callee16);
       })();
     });
     function read() {
       return _read2.apply(this, arguments);
     }
     return read;
-  }(), "(read [string])\n\n        This function, if used with a string, will parse it and\n        return the LIPS code, if there is any. If called with a\n        port, it will parse the next item from the port. If called\n        without an input, it will read a string from standard input\n        (using the browser's prompt or a user defined input method)\n        and calls itself with that string. This function can be used\n        together with `eval` to evaluate code from a string."),
+  }(), "(read [port])\n\n        This function, if called with a port, it will parse the next\n        item from the port. If called without an input, it will read\n        a string from standard input (using the browser's prompt or\n        a user defined input method) and parse it. This function can be\n        used together with `eval` to evaluate code from port."),
   // ------------------------------------------------------------------
   pprint: doc('pprint', function pprint(arg) {
     if (is_pair(arg)) {
@@ -15002,7 +14951,7 @@ function exec_collect(collect_callback) {
         dynamic_env = _ref48.dynamic_env,
         use_dynamic = _ref48.use_dynamic;
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee20() {
-        var results, input, _iteratorAbruptCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _code2, value;
+        var results, input, _iteratorAbruptCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _code2, value;
         return _regeneratorRuntime.wrap(function _callee20$(_context21) {
           while (1) switch (_context21.prev = _context21.next) {
             case 0:
@@ -15030,19 +14979,19 @@ function exec_collect(collect_callback) {
               return _context21.abrupt("return", [_context21.t0]);
             case 8:
               input = Array.isArray(arg) ? arg : _parse(arg);
-              _iteratorAbruptCompletion3 = false;
-              _didIteratorError3 = false;
+              _iteratorAbruptCompletion2 = false;
+              _didIteratorError2 = false;
               _context21.prev = 11;
-              _iterator3 = _asyncIterator(input);
+              _iterator2 = _asyncIterator(input);
             case 13:
               _context21.next = 15;
-              return _iterator3.next();
+              return _iterator2.next();
             case 15:
-              if (!(_iteratorAbruptCompletion3 = !(_step3 = _context21.sent).done)) {
+              if (!(_iteratorAbruptCompletion2 = !(_step2 = _context21.sent).done)) {
                 _context21.next = 31;
                 break;
               }
-              _code2 = _step3.value;
+              _code2 = _step2.value;
               _context21.next = 19;
               return exec_with_stacktrace(_code2, {
                 env: env,
@@ -15061,7 +15010,7 @@ function exec_collect(collect_callback) {
               _context21.t5 = (0, _context21.t2)(_context21.t3, _context21.t4);
               _context21.t1.push.call(_context21.t1, _context21.t5);
             case 28:
-              _iteratorAbruptCompletion3 = false;
+              _iteratorAbruptCompletion2 = false;
               _context21.next = 13;
               break;
             case 31:
@@ -15070,24 +15019,24 @@ function exec_collect(collect_callback) {
             case 33:
               _context21.prev = 33;
               _context21.t6 = _context21["catch"](11);
-              _didIteratorError3 = true;
-              _iteratorError3 = _context21.t6;
+              _didIteratorError2 = true;
+              _iteratorError2 = _context21.t6;
             case 37:
               _context21.prev = 37;
               _context21.prev = 38;
-              if (!(_iteratorAbruptCompletion3 && _iterator3["return"] != null)) {
+              if (!(_iteratorAbruptCompletion2 && _iterator2["return"] != null)) {
                 _context21.next = 42;
                 break;
               }
               _context21.next = 42;
-              return _iterator3["return"]();
+              return _iterator2["return"]();
             case 42:
               _context21.prev = 42;
-              if (!_didIteratorError3) {
+              if (!_didIteratorError2) {
                 _context21.next = 45;
                 break;
               }
-              throw _iteratorError3;
+              throw _iteratorError2;
             case 45:
               return _context21.finish(42);
             case 46:
@@ -15127,11 +15076,11 @@ function balanced(code) {
     return brackets.includes(token);
   });
   var stack = new Stack();
-  var _iterator12 = _createForOfIteratorHelper(tokens),
-    _step12;
+  var _iterator11 = _createForOfIteratorHelper(tokens),
+    _step11;
   try {
-    for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-      var token = _step12.value;
+    for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+      var token = _step11.value;
       if (open_tokens.includes(token)) {
         stack.push(token);
       } else if (!stack.is_empty()) {
@@ -15150,9 +15099,9 @@ function balanced(code) {
       }
     }
   } catch (err) {
-    _iterator12.e(err);
+    _iterator11.e(err);
   } finally {
-    _iterator12.f();
+    _iterator11.f();
   }
   return stack.is_empty();
 }
@@ -15630,10 +15579,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 04 Mar 2024 20:21:13 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 05 Mar 2024 13:03:01 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 04 Mar 2024 20:21:13 +0000').valueOf();
+  var date = LString('Tue, 05 Mar 2024 13:03:01 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15673,7 +15622,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 04 Mar 2024 20:21:13 +0000';
+var date = 'Tue, 05 Mar 2024 13:03:01 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

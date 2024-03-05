@@ -17,7 +17,7 @@
 
 (unset-special! "--")
 
-(define parser/t3 (read "(--)"))
+(define parser/t3 (. (lips.parse "(--)" (current-environment)) 0))
 
 (set-special! ":" 'keyword lips.specials.LITERAL)
 
@@ -44,7 +44,7 @@
          (* .x .x .x))))
 
 (define parser/t6 (let ((x 3)) ::x))
-(define parser/t7 (read "(let ((x 3)) ::x))"))
+(define parser/t7 (. (lips.parse "(let ((x 3)) ::x)" (current-environment)) 0))
 
 (unset-special! "::")
 
@@ -68,7 +68,7 @@
 
 (test "parser: escape hex literals"
       (lambda (t)
-         (t.is (to.throw (read "\"\\x9\"")) #t)
+         (t.is (to.throw (. (lips.parse "\"\\x9\"") 0)) #t)
          (t.is "\uFFFF" "￿")
          (t.is "\x9;\x9;" "\t\t")
          (t.is (repr '|foo bar|) "foo bar")

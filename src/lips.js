@@ -7425,11 +7425,6 @@ var global_env = new Environment({
     // ------------------------------------------------------------------
     read: doc('read', async function read(arg = null) {
         const { env } = this;
-        if (LString.isString(arg)) {
-            for await (let value of _parse(arg, env)) {
-                return value;
-            }
-        }
         var port;
         if (arg === null) {
             port = internal(env, 'stdin');
@@ -7438,15 +7433,13 @@ var global_env = new Environment({
         }
         typecheck_text_port('read', port, 'input-port');
         return port.read.call(env);
-    }, `(read [string])
+    }, `(read [port])
 
-        This function, if used with a string, will parse it and
-        return the LIPS code, if there is any. If called with a
-        port, it will parse the next item from the port. If called
-        without an input, it will read a string from standard input
-        (using the browser's prompt or a user defined input method)
-        and calls itself with that string. This function can be used
-        together with \`eval\` to evaluate code from a string.`),
+        This function, if called with a port, it will parse the next
+        item from the port. If called without an input, it will read
+        a string from standard input (using the browser's prompt or
+        a user defined input method) and parse it. This function can be
+        used together with \`eval\` to evaluate code from port.`),
     // ------------------------------------------------------------------
     pprint: doc('pprint', function pprint(arg) {
         if (is_pair(arg)) {
