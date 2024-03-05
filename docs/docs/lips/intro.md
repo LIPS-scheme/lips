@@ -328,7 +328,7 @@ next expression.
 This simplifies code when using promises, for instance using
 [fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 
-```
+```scheme
 (--> (fetch "https://scheme.org.pl/test/") (text) (match #/<h1>([^>]+)<\/h1>/) 1)
 ;; ==> "Scheme is Super Fun"
 ```
