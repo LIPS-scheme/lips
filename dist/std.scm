@@ -1231,11 +1231,13 @@
   "(iterator->array object)
 
    Return array from JavaScript iterator object."
-  (let ((result (vector)))
+  (let ((result (vector))
+        (i 0))
     (do-iterator
      (item object)
      (#f result)
-     (result.push item))))
+     (set-obj! result i item)
+     (set! i (+ i 1)))))
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Set (lambda () "#<Set>"))

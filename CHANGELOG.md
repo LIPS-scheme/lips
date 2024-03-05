@@ -55,6 +55,7 @@
 * fix mixed values in `let*-values` [#322](https://github.com/jcubic/lips/issues/322)
 * fix `do` macro [#324](https://github.com/jcubic/lips/issues/324)
 * fix `string->number` that leads to NaN [#326](https://github.com/jcubic/lips/issues/326)
+* fix unintentional unboxing in `iterator->array` [#328](https://github.com/jcubic/lips/issues/328)
 
 ## 1.0.0-beta.18
 ### Breaking
