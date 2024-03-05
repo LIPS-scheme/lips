@@ -140,6 +140,53 @@ As you can see the rational number got unboxed and converted into JavaScript flo
 Unboxing always can make you loose some information becase LIPS types needs to be converted into native JavaScript
 data types. And JavaScript doesn't have a notion of rationals, there are only floating point numbers, and big ints.
 
+### Procedures
+LIPS Scheme procedures are JavaScript functions, so you can call them from JavaScript.
+
+```scheme
+(set! self.greet (lambda () "hello, LIPS"))
+```
+
+You can call this function from JavaScript
+
+```javascript
+console.log(greet());
+// ==> {__string__: 'hello, LIPS'}
+```
+
+Note that the value was not automagically unboxed becase we are no longer in LIPS Scheme code and LIPS can't access native
+JavaScript. So to get the real a string you need to call `valueoOf()`:
+
+```javascript
+console.log(greet().valueOf());
+// ==> hello, LIPS
+```
+
+#### Procedure arity
+LIPS don't check the number of argumnents when calling a procedure:
+
+```scheme
+(let ((test (lambda (a b c)
+              (print a b c))))
+  (test 10))
+;; ==> 10
+;; ==> #<undefined>
+;; ==> #<undefined>
+```
+
+The same as with JavaScript if you don't pass an argument it will be undefined. But you still have full compatible with Scheme and use [arguments with variable artity](docs/scheme-intro/core#variable-number-of-arguments):
+
+```scheme
+(let ((test (lambda (first . rest)
+              (apply print first rest))))
+  (test 1)
+  (test 2 3 4))
+;; ==> 1
+;; ==> 2
+;; ==> 3
+;; ==> 4
+```
+
 ### Helper macros and functions
 The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it
 acts like a chain of method calls in JavaScript
