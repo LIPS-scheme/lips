@@ -395,6 +395,17 @@ Don't confuse JavaScript promises with `delay` expressions. Their representation
 ;; ==> #<js-promise resolved (number)>
 ```
 
+You can check if a value is a promise by quoting the expression and using `promise?` predicate:
+
+```scheme
+(let ((a '>10)
+      (b '>(Promise.resolve 10)))
+  (print (promise? a))
+  (print (promise? b)))
+;; ==> #f
+;; ==> #t
+```
+
 ### JavaScript Generars and interators
 Right now there is no way to define JavaScript generators inside LIPS. You can create iterator using
 [iteration prorocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols),
@@ -402,7 +413,6 @@ But to have yeild keyword you need [continuations](/docs/scheme-intro/continuati
 LIPS Roadmap.
 
 Here is example of creating iterator in LIPS:
-
 
 ```scheme
 (let ((obj (object))
