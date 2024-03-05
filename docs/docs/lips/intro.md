@@ -145,7 +145,7 @@ expression is the same as JavaScript:
 There are two legacy macros that are still part of LIPS, but you don't need
 them most of the time.
 
-* `.` - dot function was a first way to interact with JavaScript it allowed to
+* `.` - dot function was a first way to interact with JavaScript, it allowed to
   get property from an object:
 
 ```scheme
@@ -178,7 +178,7 @@ This is equivalent of:
 ```
 
 ### Scheme functions
-Scheme functions (lambda's) are JavaScript functions so you can call them from JavaScript.
+Scheme functions (lambda's) are JavaScript functions, so you can call them from JavaScript.
 
 ```scheme
 (set! window.foo (lambda () (alert "hello")))
