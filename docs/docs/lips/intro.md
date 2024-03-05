@@ -40,7 +40,7 @@ LIPS define helper `print` procedure that display all its arguments with newline
 ```
 
 ## Emoji
-LIPS fully supports all unicode characters including emoji:
+LIPS fully supports all Unicode characters, including emoji:
 
 ```scheme
 (define smiley #\😀)
@@ -62,10 +62,10 @@ You can also use them as part of symbols (e.g. as variables name):
 LIPS define both Lisp macros and Scheme hygienic macros (`syntax-rules`).
 
 It also implements:
-* [SRFI-46](https://srfi.schemers.org/srfi-46/) which allows to change ellipsis symbol for nested syntax-rules.
-* [SRFI-139](https://srfi.schemers.org/srfi-139/) which allows to define
+* [SRFI-46](https://srfi.schemers.org/srfi-46/) which allows changing the ellipsis symbol for nested syntax-rules.
+* [SRFI-139](https://srfi.schemers.org/srfi-139/) which allows defining
   [anaphoric syntax-rules macros](/docs/scheme-intro/macros#anaphoric-hygienic-macros).
-* [SRFI-147](https://srfi.schemers.org/srfi-147/) which allows to define new syntax-rules macros to define syntax-rules macros.
+* [SRFI-147](https://srfi.schemers.org/srfi-147/) which allows defining a new syntax-rules macros to define syntax-rules macros.
 
 ### Gensyms
 With lisp macros you can use gensyms they are special Scheme symbols that use JavaScript symbols
@@ -134,8 +134,8 @@ acts like a chain of method calls in JavaScript
 ;; ==> "string is this"
 ```
 
-You can chain methods that return arrays or string and call a method of them. Above
-expression is the same as JavaScript:
+You can chain methods that return arrays or string and call a method of them. The above expression
+is the same as JavaScript:
 
 ```javascript
 "this is string".split(' ').reverse().join(' ');
@@ -162,7 +162,7 @@ This returned function querySelector from document object in browser.
 You still sometimes may want to use this instead of `-->` when you want to get
 property from an object returned by expression.
 
-In old version of LIPS you have to execute code like this:
+In the old version of LIPS, you have to execute code like this:
 
 ```scheme
 ((. document 'querySelector) "body")
@@ -264,7 +264,7 @@ Example of procedures that are not wise to use are:
 LIPS define regular expressions it uses native JavaScript regular expressions.
 At first, the syntax looked like in JavaScript. It was problematic for the parser
 so you were not able to put space after `/` to distingish from divide procedure.
-Later the syntax was renamed into form that start with hash `#/[0-9]/`. The same
+Later, the syntax was renamed into form that start with hash `#/[0-9]/`. The same
 syntax is used by [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) implementation. But LIPS supports more flags (same as JavaScript).
 
 ### Vectors
@@ -287,7 +287,7 @@ In LIPS you can define object literals with `&`
 ;; ==> { name: 'Jack', age: 22 }
 ```
 
-You can nested object literals and mix them with different object:
+You can nest object literals and mix them with different object:
 
 ```scheme
 (define obj &(:name "Jack" :hobbies #("swiming" "programming")))
@@ -297,7 +297,7 @@ You can nested object literals and mix them with different object:
 ;; ==> { name: 'Jack', hobbies: [ 'swiming', 'programming' ] }
 ```
 
-Object similar to Scheme vectors are immutable and everything inside is quoted.
+Object similar to Scheme vectors, are immutable, and everything inside is quoted.
 
 ```scheme
 (define obj &(:name Jack))
@@ -370,8 +370,8 @@ automatic async/await you can use `(await)` procedure
 ;; ==> hello LIPS
 ```
 
-### Promises vs Delay expression
-Don't confuse JavaScript promises with `delay` expressions. They representation looks similar:
+### Promises vs delay expression
+Don't confuse JavaScript promises with `delay` expressions. Their representation looks similar:
 
 ```scheme
 (delay 10)
@@ -410,7 +410,7 @@ The class always need to have a base class (parent) or you need to use `null`. C
 ;; ==> "run, Jack"
 ```
 
-To create new instance of a Class you can use `new` procedure.
+To create the new instance of a Class, you can use `new` procedure.
 
 You can also manipulate JavaScript prototypes directly:
 
@@ -427,7 +427,7 @@ See [Homoiconic data types](/docs/lips/extension#new-homoiconic-data-types).
 
 ## Node.js
 
-In Node.js you can load JavaScript modules with `require`:
+In Node.js, you can load JavaScript modules with `require`:
 
 ```scheme
 (define fs (require "fs/promises"))
@@ -437,12 +437,12 @@ In Node.js you can load JavaScript modules with `require`:
 ;; ==> "hello LIPS"
 ```
 
-In above code can see example of [automagic async/await](#automagic-asyncawait).
+In above code, you can see example of [automagic async/await](#automagic-asyncawait).
 
-If you have to use callback based API in Node use
+If you have to use callback based API in Node, use
 [promisify function](https://nodejs.org/api/util.html#utilpromisifyoriginal) from Module util.
 
-You can also use Promise contructor yourself:
+You can also use the `Promise` contructor yourself:
 
 ```scheme
 (define fs (require "fs"))
@@ -462,5 +462,5 @@ You can also use Promise contructor yourself:
 ;; ==> "Hello, LIPS!"
 ```
 
-In above example, we import regular callback based fs module and use Promise constructor abstracted
-away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
+In the above example, we import a regular callback based fs module and use the `Promise` constructor
+abstracted away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
