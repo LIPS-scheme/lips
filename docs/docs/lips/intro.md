@@ -143,7 +143,7 @@ expression is the same as JavaScript:
 
 #### Lagacy macros and functions
 There are two legacy macros that are still part of LIPS, but you don't need
-them anymore.
+them most of the time.
 
 * `.` - dot function was a first way to interact with JavaScript it allowed to
   get property from an object:
