@@ -249,9 +249,11 @@ Since some code may be `async` and your code may break.
 Example of procedures that are not wise to use are:
 
 * `Array::forEach` - this function accepts a callaback but becasue it doesn't return
-  anything, LIPS can automatically await the reponse, and you code may execute out of order.
-* `String::replace` - this function can accept optional callback and if lambda is async
-  you will end up with `[object Promise]` in output string:
+  anything, LIPS can't automatically await the reponse, and your code may execute out of order.
+* `String::replace` - this function can accept optional callback and if `lambda` is async
+  you will end up with `[object Promise]` in output string. Any macro or function can return
+  a promise in LIPS, and if any of the expression inside a function return a Promise, the whole
+  function return a Promise and become async. Here is example code that demostrate the problem:
 
 ```scheme
 (--> "foo bar" (replace "foo" (lambda () (Promise.resolve "xxx"))))
