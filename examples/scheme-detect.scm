@@ -77,9 +77,7 @@
     (let test ((siglist detect:known-signatures))
       (if (equal? '() siglist)
           ;; Return 'UNKNOWN if we're stumped
-          (begin
-            (print signature)
-            'unknown)
+          'unknown
           (let ((testsig (car siglist)))
             (if (equal? (cadr testsig) signature)
                 (car testsig)
@@ -93,6 +91,3 @@
       (and (not memo)
            (set! memo (detect:match-signature)))
       memo)))
-
-(display (detect:name))
-(newline)
