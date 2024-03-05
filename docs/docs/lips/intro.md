@@ -379,7 +379,7 @@ Object similar to Scheme vectors, are immutable, and everything inside is quoted
 But to make it possible to share objects with JavaScript, native LIPS values are automatically unboxed.
 So instead of symbol represention you get a JavaScript string.
 
-You can also use quasiquote on object literals:
+You can use quasiquote with object literals:
 
 ```scheme
 (define jack (let ((name "Jack")
@@ -388,6 +388,17 @@ You can also use quasiquote on object literals:
 (write jack)
 ;; ==> &(:name "Jack" :age 22)
 ```
+
+Objects also have longhand form with `object` macro:
+
+```scheme
+(let ((obj (object :name 'Jack)))
+  (write obj))
+;; ==> &(:name "Jack")
+```
+
+But note that object macro is async (return a Promise) so you it may be problematic when used it
+with native JavaScript code.
 
 ### Automagic async/await
 LIPS do automatic async/await so it waits for any promise before evaluating
