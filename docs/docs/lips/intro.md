@@ -368,7 +368,7 @@ You can nest object literals and mix them with different object:
 ;; ==> { name: 'Jack', hobbies: [ 'swiming', 'programming' ] }
 ```
 
-Object similar to Scheme vectors, are immutable, and everything inside is quoted.
+Object similar to Scheme vectors, are immutable, and everything inside is quoted automatically:
 
 ```scheme
 (define obj &(:name Jack))
@@ -379,7 +379,7 @@ Object similar to Scheme vectors, are immutable, and everything inside is quoted
 But to make it possible to share objects with JavaScript, native LIPS values are automatically unboxed.
 So instead of symbol represention you get a JavaScript string.
 
-You can use quasiquote with object literals:
+You can also use quasiquote with object literals:
 
 ```scheme
 (define jack (let ((name "Jack")
