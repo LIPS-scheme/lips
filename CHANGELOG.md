@@ -57,6 +57,7 @@
 * fix `string->number` that leads to NaN [#326](https://github.com/jcubic/lips/issues/326)
 * fix unintentional unboxing in `iterator->array` [#328](https://github.com/jcubic/lips/issues/328)
 * fix `replace` with async `lambda` [#319](https://github.com/jcubic/lips/issues/319)
+* fix `values` without arguments [#331](https://github.com/jcubic/lips/issues/331)
 
 ## 1.0.0-beta.18
 ### Breaking

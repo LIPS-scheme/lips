@@ -135,6 +135,11 @@
                 (lambda (a b) b)) 5)
         (t.is (call-with-values (lambda () (values 4 5)) +) 9)))
 
+(test "core: values without wrapping"
+      (lambda (t)
+        (t.is (values 1) 1)
+        (t.is undefined (values))))
+
 (test "core: symbols"
       (lambda (t)
         (t.is '|foo\x20;bar| (string->symbol "foo bar"))

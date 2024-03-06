@@ -7124,10 +7124,11 @@ Value.prototype.valueOf = function() {
 // :: Different object than value used as object for (values)
 // -------------------------------------------------------------------------
 function Values(values) {
-    if (values.length) {
-        if (values.length === 1) {
-            return values[0];
-        }
+    if (!values.length) {
+        return;
+    }
+    if (values.length === 1) {
+        return values[0];
     }
     if (typeof this !== 'undefined' && !(this instanceof Values) ||
         typeof this === 'undefined') {
