@@ -71,8 +71,26 @@ like Common Lisp, Racket, Clojure. They all have one in common, they all use S-E
 syntax (or lack of).
 
 Scheme was designed by *Guy L. Steele* and *Gerald Jay Sussman* in a 1970s. They were playing with
-an idea called the actor model and trying to understand it by creating simple implementation. That
+an idea called the actor model and trying to understand it by creating a simple implementation. That
 implementation later led to Scheme programming languages.
+
+## REPL
+REPL or [Read-Eval-Print Loop](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop),
+is a way to interact with interpreter in an interactive way. Most modern interpreted programming languages
+that some kind of REPL, but it was first introduced in 1964 by
+[L. Peter Deutsch](https://en.wikipedia.org/wiki/L._Peter_Deutsch) and
+[Edmund Berkele](https://en.wikipedia.org/wiki/Edmund_Berkeley) for Lisp implementation on
+[PDP-1](https://en.wikipedia.org/wiki/PDP-1).
+
+To run REPL you often need to run scheme or lisp executable. It's often called from
+the [terminal interface](https://en.wikipedia.org/wiki/Terminal_emulator).
+When the scheme or lisp system runs you will get a prompt that may look like this:
+
+```
+scheme>
+```
+
+And you can type your scheme code and press enter to execute it (it's often called evaluation of the expression).
 
 ### Standards
 
