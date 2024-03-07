@@ -327,9 +327,9 @@ To define a procedure or a function, you use `lambda` expression:
 ```
 
 This defines a function square that multiply its argument by itself. Lambda is a way to create
-anonymous function and define assign it to the symbol square. The name `lambda` is nowadays common name to
-define anonymous function (example in languages like python or Java), but the name came from [Lambda
-Calculus](https://en.wikipedia.org/wiki/Lambda_calculus)
+anonymous function and define assign it to the symbol square. The name `lambda` is nowadays common
+name to define anonymous function (example in languages like python or Java), but the name came from
+[Lambda Calculus](https://en.wikipedia.org/wiki/Lambda_calculus)
 
 There is also a shortcut to define procedure/function:
 
@@ -360,8 +360,9 @@ You can define inner procedures inside other procedures:
 ```
 
 ### Immediately invoked lambda
-When calling a function, that first element doesn't need to be a symbol. It can be expression which evaluates
-to a function. So you can use lambda expression as first argument, but don't call it only evaluate it immediately, without saving it in a variable.
+When calling a function, that first element doesn't need to be a symbol. It can be expression which
+evaluates to a function. So you can use lambda expression as first argument, but don't call it only
+evaluate it immediately, without saving it in a variable.
 
 ```scheme
 ((lambda (x) (* x x)) 10)
@@ -369,21 +370,24 @@ to a function. So you can use lambda expression as first argument, but don't cal
 ```
 
 ### Variable number of arguments
-Built-in `+` function allow summing all its arguments. You can create function that accept variable number of arguments yourself.
+Built-in `+` function allow summing all its arguments. You can create function that accept variable
+number of arguments yourself.
 
 ```scheme
 (define sum (lambda args (apply + args)))
 ```
 
 This function invokes a function `+` with its arguments. Note that are no parentheses around
-arguments. So all arguments will be saved inside `args` parameter.
+arguments. So all arguments will be saved inside `args` parameter. `apply` can be called with
+procedure as first argument, multiple arguments and last argument needs to be a list.
 
 if you invoke
 ```scheme
 (sum 1 2 3 4)
 ```
 
-The `args` will contain a list `'(1 2 3 4)`. The same, you can use improper list (with dot inside) as arguments:
+The `args` will contain a list `'(1 2 3 4)`. The same, you can use improper list (with dot inside)
+as arguments:
 
 ```scheme
 (define expression (lambda (first . rest) (/ first (apply + rest))))
