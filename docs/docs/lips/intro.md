@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Core features
 
-## Special cosntants
+## Special constants
 LIPS define `#null` and `#void` as Parser constants so they can be used inside quoted expressions:
 
 ```scheme
