@@ -85,7 +85,7 @@ Macros can be nested, so one expression can expand into something you don't expe
 you have a function called `macroexpand-1` that should expand macro one time. Which in turn should
 expand just your macro.
 
-### New Control Follow Constructs
+### New Control Flow Constructs
 
 With macros, you can define new control flow (e.g. like `if` statements). Here is an example of
 `when` macro that is part of R7RS standard.
