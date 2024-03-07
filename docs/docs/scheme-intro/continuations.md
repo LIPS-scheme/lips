@@ -79,6 +79,34 @@ expression, but with continuations you can add one.
                         (loop (cdr lst))))))))
 ```
 
+You can even create abstrcation with anaphoric macro:
+
+```scheme
+(define-macro (alambda args . body)
+  `(lambda ,args
+     (call/cc (lambda (return)
+                ,@body))))
+```
+
+and you can use this macro like normal `lambda`, but you have anaphoric `return` expression:
+
+```scheme
+(define exists? (alambda (item lst)
+                         (for-each (lambda (x)
+                                     (if (equal? x item)
+                                         (return #t)))
+                                   lst)
+                         #f))
+
+(exists? 'x '(a b c d e f))
+;; ==> #f
+(exists? 'd '(a b c d e f))
+;; ==> #t
+```
+
+Here for-each always iterates over all elements, but with early exit it will return immediately when
+found a value.
+
 ## Loops
 
 You can create loops with continuations:
