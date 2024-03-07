@@ -4,11 +4,11 @@ sidebar_position: 1
 
 # Core features
 
-## null and undefined
-LIPS define those values as Parser constants so they can be used inside quoted expressions:
+## Special cosntants
+LIPS define `#null` and `#void` as Parser constants so they can be used inside quoted expressions:
 
 ```scheme
-(let ((lst '(undefined null)))
+(let ((lst '(#null #void)))
   (write (symbol? (car lst)))
   (newline)
   (write (symbol? (cadr lst)))
@@ -17,9 +17,16 @@ LIPS define those values as Parser constants so they can be used inside quoted e
 ;; ==> #f
 ```
 
-**NOTE** that they are not false values. LIPS follows R<sup>7</sup>RS spec and `#f` is the only falsy
-value. This may change when final 1.0 is released. It's not yet decided if those should also be falsy
-values, since they are part of JavaScript and it would simplify the code.
+**NOTE** `#null` is the same as JavaScript `null` value and it's a false value. Similar to
+[Kawa Scheme](https://www.gnu.org/software/kawa/index.html) that use `#!null`.
+
+`#void` constants is the same as result of `(value)` or `(if #f #f)`. In Scheme it's unspecified value,
+but in LIPS it's JavaScript undefined. `#void` is not false value.
+
+```scheme
+(eq? (if #f #f) (values))
+;; ==> #t
+```
 
 ## Numerical tower
 LIPS support full numerical tower (not yet 100% unit tested):
@@ -667,7 +674,8 @@ You can also use the `Promise` contructor yourself:
         (reject (gensym "reject")))
     `(new Promise (lambda (,resolve ,reject)
                     ,(append expr (list `(lambda (err data)
-                                           (if (not (null? err))
+                                           ;; Node.js error is null when no error
+                                           (if err
                                                (,reject err)
                                                (,resolve data)))))))))
 
