@@ -5,14 +5,14 @@
         (t.is (append '(1 2 (3) 4) 10) '(1 2 (3) 4 . 10))
         (t.is (append '(1 2 3 (4)) 10) '(1 2 3 (4) . 10))
         (t.is (to.throw (append '(1 . 2) 10)) #t)
-        (t.is (append () ()) nil)
+        (t.is (append () ()) '())
         (t.is (append '(1) ()) '(1))
         (t.is (append () '(1)) '(1))
         (t.is (append '(1 2 3) '()) '(1 2 3))
         (t.is (append () '(1 2 3)) '(1 2 3))
-        (t.is (append nil nil nil) nil)
-        (t.is (append) nil)
-        (t.is (append nil '(foo) nil '(bar)) '(foo bar))))
+        (t.is (append '() '() '()) '())
+        (t.is (append) '())
+        (t.is (append '() '(foo) '() '(bar)) '(foo bar))))
 
 
 (test "list: cycles"
@@ -23,7 +23,7 @@
           (t.is (repr y) "((1 2) (1 2))")
           (set-cdr! (cdadr y) 3)
           (t.is (repr y) "((1 2 . 3) (1 2 . 3))")
-          (set-cdr! (cdadr y) (cons 3 nil))
+          (set-cdr! (cdadr y) (cons 3 '()))
           (t.is (and (list? x) (list? y)) #t))
         (let ((x '(1 2 3)))
           (set-cdr! (cddr x) x)

@@ -151,7 +151,7 @@
           (let ((set! (lambda (x . rest) x))
                 (x 10))
             (nil! x)
-            (t.is x nil)))))
+            (t.is x '())))))
 
 (test "syntax: skip second item in list"
    (lambda (t)
@@ -195,7 +195,7 @@
    (lambda (t)
 
       (define-syntax foo
-         (syntax-rules () ((_ (a . (b . (c . nil))) ...) '(foo (a . c) ...))))
+         (syntax-rules () ((_ (a . (b . (c . ()))) ...) '(foo (a . c) ...))))
 
       (t.is (foo) '(foo))
       (t.is (foo (1 2 3)) '(foo (1 . 3)))
@@ -205,7 +205,7 @@
    (lambda (t)
 
       (define-syntax foo
-         (syntax-rules () ((_ (a . (b . (c . nil))) ...) '(foo b ...))))
+         (syntax-rules () ((_ (a . (b . (c . ()))) ...) '(foo b ...))))
 
       (t.is (foo) '(foo))
       (t.is (to.throw (foo 1)) #t)
@@ -220,7 +220,7 @@
 
       (define-syntax foo
          (syntax-rules ()
-           ((_ (a . (b . (c . nil))) ...)
+           ((_ (a . (b . (c . ()))) ...)
             '(foo a ... b ... c ...))))
 
       (t.is (foo) '(foo))
@@ -505,7 +505,7 @@
                    ((null? x) sum)))
                25)))
 
-;; foo foo ... should match single element foo ... should match nil
+;; foo foo ... should match single element foo ... should match ()
 (test "syntax: R6RS unless & when macros"
        (lambda (t)
 
@@ -523,9 +523,9 @@
 
 
          (t.is (when (> 3 2) 'foo) 'foo)
-         (t.is (when (< 3 2) 'foo) undefined) ;; unspecified
+         (t.is (when (< 3 2) 'foo) #void) ;; unspecified
 
-         (t.is (unless (> 3 2) 'less) undefined) ;; unspecified
+         (t.is (unless (> 3 2) 'less) #void) ;; unspecified
 
          (t.is (unless (< 3 2) 'foo) 'foo)))
 
@@ -806,7 +806,7 @@
       (lambda (t)
         (define-syntax foo
           (syntax-rules (<>)
-            ((_ <> . b) nil)
+            ((_ <> . b) ())
             ((_ a . b) (cons a b))))
 
         (t.is (foo 1) '(1))
@@ -820,10 +820,10 @@
                       (let ()
                         (define-syntax baz
                           (syntax-rules (bar)
-                            ((_ x) nil)))
+                            ((_ x) ())))
                         (baz bar)))))
 
-        (t.is (foo 10) nil)))
+        (t.is (foo 10) ())))
 
 (test "syntax: should expand in nested syntax into variable from parent syntax"
       (lambda (t)
@@ -1088,7 +1088,7 @@
                expr exprs ...))))
 
         (t.is (fresh (a b c) (list a b c))
-              (list undefined undefined undefined))))
+              (list #void #void #void))))
 
 (test "syntax: macro from Petrofsky"
       (lambda (t)
@@ -1096,7 +1096,7 @@
         (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
                 (foo foo))
               #t)
-        (define foo null)
+        (define foo #null)
         (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
                 (foo foo))
               #t)))
@@ -1274,7 +1274,7 @@
 
         (t.is (foo (x . y)) '(x y))))
 
-(test "syntax: symbol after spread with nil"
+(test "syntax: symbol after spread with ()"
       (lambda (t)
         (define-syntax foo
           (syntax-rules ()

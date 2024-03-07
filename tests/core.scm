@@ -84,13 +84,13 @@
 (test "core: it should create object literals without values"
       (lambda (t)
         (let ((x &(:foo :bar)))
-          (t.is x &(:foo undefined :bar undefined)))))
+          (t.is x &(:foo #void :bar #void)))))
 
 (test "core: it should create object with null value (#264)"
       (lambda (t)
-        (let ((x &(:foo null :bar null)))
-          (t.is (eq? x.foo null) #t)
-          (t.is (eq? x.bar null) #t))))
+        (let ((x &(:foo #null :bar #null)))
+          (t.is (eq? x.foo #null) #t)
+          (t.is (eq? x.bar #null) #t))))
 
 (test "core: it should allow change shorthand object literals"
       (lambda (t)
@@ -138,7 +138,7 @@
 (test "core: values without wrapping"
       (lambda (t)
         (t.is (values 1) 1)
-        (t.is undefined (values))))
+        (t.is #void (values))))
 
 (test "core: symbols"
       (lambda (t)
@@ -164,7 +164,8 @@
       (lambda (t)
         (t.is (if (newline) 1 2) 1)
         (t.is (if 0 1 2) 1)
-        (t.is (if null 1 2) 2)
+        (t.is (if #null 1 2) 2)
+        (t.is (if #void 1 2) 1)
         (t.is (if () 1 2) 1)
         (t.is (if #f 1 2) 2)))
 
@@ -172,18 +173,19 @@
       (lambda (t)
         (t.is (and) #t)
         (t.is (or) #f)
-        ;; undefined and null should be true values
-        ;; according to spec #f should be the only fasly value
-        (t.is (and 1 undefined) undefined)
-        (t.is (and 1 null) null)
-        (t.is (or (begin) 1) undefined)
-        (t.is (or null 1) 1)))
+        ;; #void should be true values
+        ;; according to spec #f should be the only false value
+        ;; but Kawa use #!null constants that is also false
+        (t.is (and 1 #void) #void)
+        (t.is (and 1 #null) #null)
+        (t.is (or (begin) 1) #void)
+        (t.is (or #null 1) 1)))
 
 (test "core: do macro"
       (lambda (t)
         (t.is (do ((i 0) (j 10 (- j 1))) (i j)) 10)
-        (t.is (do ((i 0) (j 10 (- j 1))) (null j)) 10)
-        (t.is (do ((i 0) (j 10 (- j 1))) (undefined j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) (#t j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) (#void j)) 10)
         (t.is (do ((i 0) (j 10 (- j 1))) ((zero? j) 10)) 10)))
 
 (test "core: do macro scope (#325)"
@@ -631,7 +633,7 @@
         (random 1000)
         (t.is (shuffle '(1 2 3 4)) '(2 4 3 1))
         (t.is (list? (shuffle '(1 2 3))) #t)
-        (t.is (shuffle nil) nil)
+        (t.is (shuffle '()) '())
         (random 1000)
         (t.is (shuffle #(1 2 3 4)) #(2 4 3 1))))
 

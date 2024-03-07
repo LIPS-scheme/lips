@@ -6,6 +6,8 @@
 * `eval` use `interaction-environment` stead of `current-environment` by default
 * remove support for string argument to `read` [#327](https://github.com/jcubic/lips/issues/327)
 * make `null` falsy value [#330](https://github.com/jcubic/lips/issues/330)
+* remove `nil` parser constant [#332](https://github.com/jcubic/lips/issues/332)
+* replace `undefined` with `#void`, and `null` with `#null`
 ### Features
 * add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS

@@ -37,7 +37,7 @@
 
 (test "std: some"
       (lambda (t)
-        (t.is (some + nil) #f)
+        (t.is (some + '()) #f)
         (t.is (some odd? (list 1 2 3)) #t)
         (t.is (some odd? (list 2 4 6)) #f)))
 
@@ -52,16 +52,16 @@
         (let ((name (pluck "__name__")))
           (t.is (name 'foo) "foo"))
         (let ((none (pluck)))
-          (t.is (none 'foo) nil))
+          (t.is (none 'foo) '()))
         (let ((xy (pluck 'x 'y)))
           (t.is (xy &(:x 10 :y 20 :z 30)) &(:x 10 :y 20)))))
 
 (test "std: predicates"
       (lambda (t)
         (t.is (regex? #/foo/) #t)
-        (t.is (boolean? nil) #f)
-        (t.is (boolean? null) #f)
-        (t.is (boolean? undefined) #f)
+        (t.is (boolean? '()) #f)
+        (t.is (boolean? #null) #f)
+        (t.is (boolean? #void) #f)
         (t.is (boolean? #t) #t)
         (t.is (boolean? #f) #t)))
 
@@ -71,7 +71,7 @@
         (t.is (find #/^[0-9]+$/ (list "foo" "bar" "10")) "10")
         (t.is (to.throw (find "xxx" (list 1 2 3))) true)
         (t.is (find odd? (list 0 2 4 3)) 3)
-        (t.is (find odd? (list 0 2 4 6)) nil)))
+        (t.is (find odd? (list 0 2 4 6)) '())))
 
 (test "std: typecheck"
       (lambda (t)

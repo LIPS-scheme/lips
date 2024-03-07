@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 07 Mar 2024 12:36:02 +0000
+ * build: Thu, 07 Mar 2024 12:43:54 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -4797,20 +4797,21 @@ specials.on(['remove', 'append'], function () {
   Lexer._cache.valid = false;
   Lexer._cache.rules = null;
 });
+var parsable_contants = {
+  '#null': null,
+  '#void': undefined
+};
 // ----------------------------------------------------------------------
 Object.defineProperty(Lexer, 'rules', {
   get: function get() {
     if (Lexer._cache.valid) {
       return Lexer._cache.rules;
     }
-    var tokens = specials.names().sort(function (a, b) {
+    var parsable = Object.keys(parsable_contants);
+    var tokens = specials.names().concat(parsable).sort(function (a, b) {
       return b.length - a.length || a.localeCompare(b);
     });
     var special_rules = tokens.reduce(function (acc, token) {
-      var _specials$get = specials.get(token);
-        _specials$get.type;
-        var special_symbol = _specials$get.symbol;
-      var rules;
       var symbol;
       // we need distinct symbols_ for syntax extensions
       if (token[0] === '#') {
@@ -4820,9 +4821,9 @@ Object.defineProperty(Lexer, 'rules', {
           symbol = Symbol["for"](token[1]);
         }
       } else {
-        symbol = special_symbol;
+        symbol = Symbol["for"](token);
       }
-      rules = Lexer.literal_rule(token, symbol);
+      var rules = Lexer.literal_rule(token, symbol);
       return acc.concat(rules);
     }, []);
     Lexer._cache.rules = Lexer._rules.concat(Lexer._brackets, special_rules, Lexer._symbol_rules);
@@ -6616,7 +6617,7 @@ function user_repr(obj) {
 }
 // ----------------------------------------------------------------------
 var str_mapping = new Map();
-[[true, '#t'], [false, '#f'], [null, 'null'], [undefined, '#<undefined>']].forEach(function (_ref12) {
+[[true, '#t'], [false, '#f'], [null, '#null'], [undefined, '#void']].forEach(function (_ref12) {
   var _ref13 = _slicedToArray(_ref12, 2),
     key = _ref13[0],
     value = _ref13[1];
@@ -11651,21 +11652,18 @@ var internal_env = new Environment({
   'numeral-unicode-regex': /(?:[0-9\xB2\xB3\xB9\xBC-\xBE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D58-\u0D5E\u0D66-\u0D78\u0DE6-\u0DEF\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uA9F0-\uA9F9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]|\uD800[\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDEE1-\uDEFB\uDF20-\uDF23\uDF41\uDF4A\uDFD1-\uDFD5]|\uD801[\uDCA0-\uDCA9]|\uD802[\uDC58-\uDC5F\uDC79-\uDC7F\uDCA7-\uDCAF\uDCFB-\uDCFF\uDD16-\uDD1B\uDDBC\uDDBD\uDDC0-\uDDCF\uDDD2-\uDDFF\uDE40-\uDE48\uDE7D\uDE7E\uDE9D-\uDE9F\uDEEB-\uDEEF\uDF58-\uDF5F\uDF78-\uDF7F\uDFA9-\uDFAF]|\uD803[\uDCFA-\uDCFF\uDD30-\uDD39\uDE60-\uDE7E\uDF1D-\uDF26\uDF51-\uDF54\uDFC5-\uDFCB]|\uD804[\uDC52-\uDC6F\uDCF0-\uDCF9\uDD36-\uDD3F\uDDD0-\uDDD9\uDDE1-\uDDF4\uDEF0-\uDEF9]|\uD805[\uDC50-\uDC59\uDCD0-\uDCD9\uDE50-\uDE59\uDEC0-\uDEC9\uDF30-\uDF3B]|\uD806[\uDCE0-\uDCF2\uDD50-\uDD59]|\uD807[\uDC50-\uDC6C\uDD50-\uDD59\uDDA0-\uDDA9\uDF50-\uDF59\uDFC0-\uDFD4]|\uD809[\uDC00-\uDC6E]|\uD81A[\uDE60-\uDE69\uDEC0-\uDEC9\uDF50-\uDF59\uDF5B-\uDF61]|\uD81B[\uDE80-\uDE96]|\uD834[\uDEC0-\uDED3\uDEE0-\uDEF3\uDF60-\uDF78]|\uD835[\uDFCE-\uDFFF]|\uD838[\uDD40-\uDD49\uDEF0-\uDEF9]|\uD839[\uDCF0-\uDCF9]|\uD83A[\uDCC7-\uDCCF\uDD50-\uDD59]|\uD83B[\uDC71-\uDCAB\uDCAD-\uDCAF\uDCB1-\uDCB4\uDD01-\uDD2D\uDD2F-\uDD3D]|\uD83C[\uDD00-\uDD0C]|\uD83E[\uDFF0-\uDFF9])/,
   'space-unicode-regex': /[\t-\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/
 }, undefined, 'internal');
-// -------------------------------------------------------------------------
+// ----------------------------------------------------------------------
 var nan = LNumber(NaN);
-var constants = {
+var constants = _objectSpread({
   '#t': true,
   '#f': false,
   '#true': true,
   '#false': false,
-  nil: _nil,
-  'null': null,
-  'undefined': undefined,
   '+inf.0': Number.POSITIVE_INFINITY,
   '-inf.0': Number.NEGATIVE_INFINITY,
   '+nan.0': nan,
   '-nan.0': nan
-};
+}, parsable_contants);
 // -------------------------------------------------------------------------
 var global_env = new Environment({
   eof: eof,
@@ -15596,10 +15594,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 07 Mar 2024 12:36:02 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Thu, 07 Mar 2024 12:43:54 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 07 Mar 2024 12:36:02 +0000').valueOf();
+  var date = LString('Thu, 07 Mar 2024 12:43:54 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15639,7 +15637,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 07 Mar 2024 12:36:02 +0000';
+var date = 'Thu, 07 Mar 2024 12:43:54 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

@@ -1,6 +1,6 @@
-(test "quasiquote: it should splice nil"
+(test "quasiquote: it should splice an empty list"
       (lambda (t)
-        (t.is `(x ,@nil x) '(x x))))
+        (t.is `(x ,@() x) '(x x))))
 
 (test "quasiquote: it should splice nil as body in do macro"
       (lambda (t)

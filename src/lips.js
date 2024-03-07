@@ -1371,19 +1371,22 @@ specials.on(['remove', 'append'], function() {
     Lexer._cache.valid = false;
     Lexer._cache.rules = null;
 });
+const parsable_contants = {
+    '#null': null,
+    '#void': undefined
+};
 // ----------------------------------------------------------------------
 Object.defineProperty(Lexer, 'rules', {
     get() {
         if (Lexer._cache.valid) {
             return Lexer._cache.rules;
         }
-        var tokens = specials.names().sort((a, b) => {
+        const parsable = Object.keys(parsable_contants);
+        const tokens = specials.names().concat(parsable).sort((a, b) => {
             return b.length - a.length || a.localeCompare(b);
         });
 
-        var special_rules = tokens.reduce((acc, token) => {
-            const { type, symbol: special_symbol } = specials.get(token);
-            let rules;
+        const special_rules = tokens.reduce((acc, token) => {
             let symbol;
             // we need distinct symbols_ for syntax extensions
             if (token[0] === '#') {
@@ -1393,9 +1396,9 @@ Object.defineProperty(Lexer, 'rules', {
                     symbol = Symbol.for(token[1]);
                 }
             } else {
-                symbol = special_symbol;
+                symbol = Symbol.for(token);
             }
-            rules = Lexer.literal_rule(token, symbol);
+            const rules = Lexer.literal_rule(token, symbol);
             return acc.concat(rules);
         }, []);
 
@@ -2782,8 +2785,8 @@ var str_mapping = new Map();
 [
     [true, '#t'],
     [false, '#f'],
-    [null, 'null'],
-    [undefined, '#<undefined>']
+    [null, '#null'],
+    [undefined, '#void']
 ].forEach(([key, value]) => {
     str_mapping.set(key, value);
 });
@@ -7374,20 +7377,18 @@ var internal_env = new Environment({
     'numeral-unicode-regex': /\p{N}/u,
     'space-unicode-regex': /\s/u
 }, undefined, 'internal');
-// -------------------------------------------------------------------------
+// ----------------------------------------------------------------------
 var nan = LNumber(NaN);
 var constants = {
     '#t': true,
     '#f': false,
     '#true': true,
     '#false': false,
-    nil,
-    'null': null,
-    'undefined': undefined,
     '+inf.0': Number.POSITIVE_INFINITY,
     '-inf.0': Number.NEGATIVE_INFINITY,
     '+nan.0': nan,
-    '-nan.0': nan
+    '-nan.0': nan,
+    ...parsable_contants
 };
 // -------------------------------------------------------------------------
 var global_env = new Environment({

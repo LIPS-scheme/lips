@@ -17,7 +17,7 @@
        (if (not (. ,attempt 'passed))
            (--> (. ,attempt 'errors)
                 (forEach (lambda (e)
-                           (set-obj! e 'savedError undefined)))))
+                           (set-obj! e 'savedError #void)))))
        (--> ,attempt (commit)))))
 
 

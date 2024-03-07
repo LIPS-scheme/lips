@@ -211,7 +211,7 @@
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values
   (syntax-rules (multi single)
-    ((_ ()) nil)
+    ((_ ()) '())
     ((_ () body ...) (begin body ...))
     ((_ ((bind obj) rest ...) . body)
      (apply (lambda bind
@@ -403,7 +403,7 @@
       (let ((len (apply min (map vector-length rest)))
             (result (vector)))
         (do ((i 0 (+ i 1)))
-            ((= i len) undefined)
+            ((= i len) #void)
             (let* ((args (map (lambda (v) (vector-ref v i)) rest)))
               (apply fn args))))))
 
@@ -423,7 +423,7 @@
   "(string-for-each fn string1 stringr2 ...)
 
    Applies a function fn to each element of the strings, similar string-map.
-   But the return value is undefined."
+   But the return value is #void."
   (typecheck "string-for-each" fn "function" 1)
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-for-each: function require at least 1 string")
@@ -1800,7 +1800,7 @@
                 (let ((prop-name (car field))
                       (get (cadr field))
                       (set (if (null? (cddr field))
-                               nil
+                               '()
                                (caddr field))))
                   `(begin
                      (define (,get ,obj-name)
@@ -2089,14 +2089,14 @@
    Returns all process environment variables as an alist. This function returns
    an empty list when called in the browser."
   (if (eq? self window)
-      nil
+      '()
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Returns given environment variable. This function returns undefined
+   Returns given environment variable. This function returns #void
    when called in the browser."
   (if (not (eq? self window))
       (. process.env name)))

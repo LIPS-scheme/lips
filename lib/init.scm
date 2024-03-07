@@ -14,7 +14,7 @@
                  ((not (indexed-db?))
                   (console.warn (string-append "No FS found and IndexedDB "
                                                "is not available"))
-                  nil))))
+                  '()))))
   (let ((internal (lips.env.get '**internal-env**)))
     (if (not (null? fs))
         (lips.set_fs fs))))

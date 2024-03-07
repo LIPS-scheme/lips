@@ -243,7 +243,7 @@
    Function that converts alist pairs to a JavaScript object."
   (if (pair? alist)
       (alist.to_object)
-      (alist->object (new lips.Pair undefined nil))))
+      (alist->object (new lips.Pair #void '()))))
 
 ;; -----------------------------------------------------------------------------
 (define (object->alist object)
@@ -303,12 +303,12 @@
         `(alist->object ())
         `(let ((,name ,(Object.fromEntries (new Array)))
                (,r-only ,(Object.fromEntries (new Array (new Array "writable" false)))))
-           ,@(let loop ((lst expr) (result nil))
+           ,@(let loop ((lst expr) (result '()))
                (if (null? lst)
                    (reverse result)
                    (let* ((first (car lst))
                           (no-second (null? (cdr lst)))
-                          (second (if no-second nil (cadr lst))))
+                          (second (if no-second '() (cadr lst))))
                      (if (not (key? first))
                          (let ((msg (string-append (type first)
                                                    " "
@@ -317,7 +317,7 @@
                            (throw msg))
                          (let ((prop (key->string first)))
                            (if (or (key? second) no-second)
-                               (let ((code `(set-obj! ,name ,prop undefined)))
+                               (let ((code `(set-obj! ,name ,prop #void)))
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if readonly
                                                (if (and (pair? second) (key? (car second)))
@@ -429,7 +429,7 @@
 
    Returns all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
-      nil
+      '()
       (let ((proto (if (null? rest) false (car rest)))
             (names (Object.getOwnPropertyNames obj)))
         (if (not proto)
@@ -462,9 +462,9 @@
 (define (value obj)
   "(value obj)
 
-   Function that unwraps LNumbers and converts nil to undefined."
-  (if (eq? obj nil)
-      undefined
+   Function that unwraps LNumbers and converts '() to #void."
+  (if (eq? obj '())
+      #void
       (if (number? obj)
           ((. obj "valueOf"))
           obj)))
@@ -482,7 +482,7 @@
            (* (Symbol.for "*"))
            (Pattern (lambda (pattern flag)
                       (new lips.Formatter.Pattern (list->array pattern)
-                           (if (null? flag) undefined flag)))))
+                           (if (null? flag) #void flag)))))
        ,@(map (lambda (pattern)
                 `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
               patterns))))
@@ -585,7 +585,7 @@
                        ,@(cdar rest))
                     (if (not (null? rest))
                         `(cond ,@rest))))))
-      nil))
+      '()))
 
 ;; -----------------------------------------------------------------------------
 (define (%r re . rest)
@@ -736,7 +736,7 @@
    Sorts the list using the quick sort algorithm according to predicate."
   (if (or (null? e) (<= (length e) 1))
       e
-      (let loop ((left nil) (right nil)
+      (let loop ((left '()) (right '())
                  (pivot (car e)) (rest (cdr e)))
         (if (null? rest)
             (append (append (qsort left predicate) (list pivot)) (qsort right predicate))
@@ -974,7 +974,7 @@
                           (eq? (caadr expr) '@)))
          (attrs (if have-attrs
                     (cdadr expr)
-                    nil))
+                    '()))
          (rest (if have-attrs
                    (cddr expr)
                    (cdr expr))))
@@ -988,7 +988,7 @@
                                                     (list 'unquote (cadr pair))))
                                             attrs)))
          ,@(if (null? rest)
-              nil
+              '()
               (let ((first (car rest)))
                 (if (pair? first)
                     (cond ((symbol=? 'sxml-unquote (car first))
@@ -1153,7 +1153,7 @@
 (define (make-list n . rest)
   (if (or (not (integer? n)) (<= n 0))
       (throw (new Error "make-list: first argument need to be integer larger then 0"))
-      (let ((fill (if (null? rest) undefined (car rest))))
+      (let ((fill (if (null? rest) #void (car rest))))
         (array->list (--> (new Array n) (fill fill))))))
 
 ;; -----------------------------------------------------------------------------
@@ -1201,7 +1201,7 @@
         (sync (gensym "sync"))
         (iterator (gensym "iterator"))
         (test (if (null? cond) #f (car cond)))
-        (result (if (null? cond) undefined (cadr cond)))
+        (result (if (null? cond) #void (cadr cond)))
         (next (gensym "next"))
         (stop (gensym "stop"))
         (item (gensym "item")))
@@ -1546,7 +1546,7 @@
   (typecheck "once" fn "function")
   (let ((result))
     (lambda args
-      (if (string=? (type result) "undefined")
+      (if (string=? (type result) "#void")
           (set! result (apply fn args)))
       result)))
 

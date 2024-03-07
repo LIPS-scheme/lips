@@ -61,7 +61,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (vector-literal . args)
-  (if (not (or (pair? args) (eq? args nil)))
+  (if (not (or (pair? args) (eq? args '())))
       (throw (new Error (concat "Parse Error: vector require pair got "
                                 (type args) " in " (repr args))))
       (let ((v (list->array args)))
