@@ -974,8 +974,9 @@ You can use it like this:
  (else))
 ```
 
-`cond-expand` have list of lists in format `(identifer . code)`. Example if you want to add `print`
-function that is defined in `LIPS`, not in other implementations, you can use code like this:
+`cond-expand` have list of lists in format `(identifer . code)`. For example, if you want to add
+`print` function that is defined in `LIPS`, but not in other implementations, you can use code like
+this:
 
 ```scheme
 (cond-expand
