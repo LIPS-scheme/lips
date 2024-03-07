@@ -84,7 +84,8 @@ that some kind of REPL, but it was first introduced in 1964 by
 
 To run REPL you often need to run scheme or lisp executable. It's often called from
 the [terminal interface](https://en.wikipedia.org/wiki/Terminal_emulator).
-When the scheme or lisp system runs you will get a prompt that may look like this:
+When the scheme or lisp system runs you will get a
+[prompt](https://en.wikipedia.org/wiki/Command-line_interface#Command_prompt) that may look like this:
 
 ```
 scheme>
