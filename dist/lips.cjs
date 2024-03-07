@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 06 Mar 2024 23:10:14 +0000
+ * build: Thu, 07 Mar 2024 12:36:02 +0000
  */
 
 'use strict';
@@ -8424,6 +8424,10 @@ function is_function(o) {
   return typeof o === 'function' && typeof o.bind === 'function';
 }
 // ----------------------------------------------------------------------------
+function is_false(o) {
+  return o === false || o === null;
+}
+// ----------------------------------------------------------------------------
 function is_string(o) {
   return typeof o === 'string';
 }
@@ -12256,7 +12260,7 @@ var global_env = new Environment({
       error: error
     };
     var resolve = function resolve(cond) {
-      if (cond === false) {
+      if (is_false(cond)) {
         return _evaluate(code.cdr.cdr.car, eval_args);
       } else {
         return _evaluate(code.cdr.car, eval_args);
@@ -13998,14 +14002,14 @@ var global_env = new Environment({
     return function loop() {
       function next(value) {
         result = value;
-        if (result !== false) {
+        if (!is_false(result)) {
           return result;
         } else {
           return loop();
         }
       }
       if (!args.length) {
-        if (result !== false) {
+        if (!is_false(result)) {
           return result;
         } else {
           return false;
@@ -14043,14 +14047,14 @@ var global_env = new Environment({
     return function loop() {
       function next(value) {
         result = value;
-        if (result === false) {
-          return false;
+        if (is_false(result)) {
+          return result;
         } else {
           return loop();
         }
       }
       if (!args.length) {
-        if (result !== false) {
+        if (!is_false(result)) {
           return result;
         } else {
           return false;
@@ -15595,10 +15599,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Wed, 06 Mar 2024 23:10:14 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Thu, 07 Mar 2024 12:36:02 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Wed, 06 Mar 2024 23:10:14 +0000').valueOf();
+  var date = LString('Thu, 07 Mar 2024 12:36:02 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15638,7 +15642,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Wed, 06 Mar 2024 23:10:14 +0000';
+var date = 'Thu, 07 Mar 2024 12:36:02 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

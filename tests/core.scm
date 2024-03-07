@@ -164,7 +164,7 @@
       (lambda (t)
         (t.is (if (newline) 1 2) 1)
         (t.is (if 0 1 2) 1)
-        (t.is (if null 1 2) 1)
+        (t.is (if null 1 2) 2)
         (t.is (if () 1 2) 1)
         (t.is (if #f 1 2) 2)))
 
@@ -177,7 +177,7 @@
         (t.is (and 1 undefined) undefined)
         (t.is (and 1 null) null)
         (t.is (or (begin) 1) undefined)
-        (t.is (or null 1) null)))
+        (t.is (or null 1) 1)))
 
 (test "core: do macro"
       (lambda (t)

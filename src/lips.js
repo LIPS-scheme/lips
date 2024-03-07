@@ -4466,6 +4466,10 @@ function is_function(o) {
     return typeof o === 'function' && typeof o.bind === 'function';
 }
 // ----------------------------------------------------------------------------
+function is_false(o) {
+    return o === false || o === null;
+}
+// ----------------------------------------------------------------------------
 function is_string(o) {
     return typeof o === 'string';
 }
@@ -7885,7 +7889,7 @@ var global_env = new Environment({
         const env = this;
         const eval_args = { env, dynamic_env, use_dynamic, error };
         const resolve = (cond) => {
-            if (cond === false) {
+            if (is_false(cond)) {
                 return evaluate(code.cdr.cdr.car, eval_args);
             } else {
                 return evaluate(code.cdr.car, eval_args);
@@ -9955,14 +9959,14 @@ var global_env = new Environment({
         return (function loop() {
             function next(value) {
                 result = value;
-                if (result !== false) {
+                if (!is_false(result)) {
                     return result;
                 } else {
                     return loop();
                 }
             }
             if (!args.length) {
-                if (result !== false) {
+                if (!is_false(result)) {
                     return result;
                 } else {
                     return false;
@@ -9991,14 +9995,14 @@ var global_env = new Environment({
         return (function loop() {
             function next(value) {
                 result = value;
-                if (result === false) {
-                    return false;
+                if (is_false(result)) {
+                    return result;
                 } else {
                     return loop();
                 }
             }
             if (!args.length) {
-                if (result !== false) {
+                if (!is_false(result)) {
                     return result;
                 } else {
                     return false;
