@@ -25,6 +25,25 @@ numbers are exact because they don't give any rounding errors like floats do (th
 There are also special constant `+nan.0`, `-nan.0`, `+inf.0`, and `-inf.0`. Positive and negative
 Not a number object and negative and positive infinity.
 
+You can convert string to numbers with `string->number` procedure and number to string with `number->string`.
+
+```scheme
+(string->number "1001" 2)
+;; ==> 9
+(string->number "1001")
+;; ==> 1001
+```
+
+The first argument is a string and the second one is the base of the number. In similar way you can use
+`number->string`:
+
+```scheme
+(number->string 1001 2)
+;; ==> "1111101001"
+(number->string 1001 16)
+;; ==> "3e9"
+```
+
 ## Boolean values
 
 Scheme define two boolean constants `#f` and `#t` but note that the only false value, according to
