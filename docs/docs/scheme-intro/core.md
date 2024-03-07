@@ -846,6 +846,94 @@ With this, you can create functions that create counters that start with a given
 
 Each counter has its own local state and its own counter variable.
 
+## Objects
+
+In Scheme you can have objects (data with behavior), the base code for objects use closures.
+
+```scheme
+(define (make-person name age)
+  (lambda (action . rest)
+    (case action
+      ((name) name)
+      ((age) age)
+      ((set-name) (set! name (car rest)))
+      ((set-age) (set! age (car rest))))))
+
+(let ((jack (make-person "Jack" 22)))
+  (display (jack 'name))
+  (newline)
+  (jack 'set-name "Mark")
+  (jack 'set-age 24)
+  (display (jack 'name))
+  (display " is ")
+  (display (jack 'age))
+  (display " years old"))
+;; ==> Jack
+;; ==> Mark is 24 years old
+```
+
+Notice that it's function which returns a function (`lambda`). You can send a message into that object,
+it will process it by returning a value from closure or mutating that value.
+
+In the same way you can use `alist`.
+
+### Records
+Anther way to create objects in Scheme, are R<sup>7</sub>RS records, they were first defined in
+[SRFI-9](https://srfi.schemers.org/srfi-9) and included in the offcial standard.
+
+You can define records that represent cons cells to create linked lists:
+
+```scheme
+(define-record-type :pare
+  (kons x y)
+  pare?
+  (x kar set-kar!)
+  (y kdr))
+```
+
+The record type is defined with:
+* constructor
+* predicate that test if the element is of given type
+* and list of fields
+
+You can use this record like this:
+
+```scheme
+(define k (kons 1 2))
+(pare? k)
+;; ==> #t
+(kar k)
+;; ==> 1
+(kdr k)
+;; ==> 2
+(set-kar! k 2)
+(cons (kar k) (kdr k))
+;; ==> (2 . 2)
+
+(define (klist . args)
+  (if (null? args)
+      ()
+      (kons (car args) (apply klist (cdr args)))))
+
+(define (kprint klist)
+  (display "(")
+  (let loop ((klist klist))
+    (when (not (null? klist))
+      (display (kar klist))
+      (let ((rest (kdr klist)))
+        (unless (null? rest)
+          (display " ")
+          (loop rest)))))
+  (display ")"))
+
+(define kl (klist 1 2 3 4))
+
+(kar (kdr (kdr (kdr kl))))
+;; ==> 4
+
+(kprint kl)
+;; ==> (1 2 3 4)
+```
 
 ## Dynamic variables
 Even that Scheme has lexical scope, you can define dynamic variables. They are the opposite of
