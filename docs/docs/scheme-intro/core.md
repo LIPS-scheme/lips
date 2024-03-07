@@ -878,7 +878,7 @@ it will process it by returning a value from closure or mutating that value.
 In the same way you can use `alist`.
 
 ### Records
-Anther way to create objects in Scheme, are R<sup>7</sub>RS records, they were first defined in
+Anther way to create objects in Scheme, are R<sup>7</sup>RS records, they were first defined in
 [SRFI-9](https://srfi.schemers.org/srfi-9) and included in the offcial standard.
 
 You can define records that represent cons cells to create linked lists:

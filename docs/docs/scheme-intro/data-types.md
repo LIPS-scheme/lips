@@ -103,7 +103,7 @@ You can also convert string to symbol with:
 
 Scheme have conversion of using `->` arrow to define procedure that convert types.
 
-In R<sub>7</sub>RS spec there is also a way to define symbols with special characters. Those symbols start and end with a vertical bar character.
+In R<sup>7</sup>RS spec there is also a way to define symbols with special characters. Those symbols start and end with a vertical bar character.
 
 ```scheme
 (define |foo bar| 10)
