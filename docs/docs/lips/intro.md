@@ -95,7 +95,7 @@ LIPS allow accessing JavaScript objects with dot notation:
 document.querySelector
 ;; ==> #<procedure(native)>
 ```
-### Mutatiing object properties
+### Mutating object properties
 You can use dot notation with `set!` to change the value:
 
 ```scheme
