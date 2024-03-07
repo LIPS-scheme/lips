@@ -117,17 +117,14 @@ You can create loops with continuations:
    (lambda (return)
      (let ((result '()))
        (let ((loop (call/cc (lambda (k) k))))
-         (set! result (cons (call/cc
-                             (lambda (append)
-                               (if (< from to)
-                                   (append from)
-                                   (return (reverse result)))))
-                            result))
+         (if (<= from to)
+             (set! result (cons from result))
+             (return (reverse result)))
          (set! from (+ from 1))
          (loop loop))))))
 
 (make-range 1 10)
-;; ==> (1 2 3 4 5 6 7 8 9)
+;; ==> (1 2 3 4 5 6 7 8 9 10)
 ```
 
 The first continuation creates an early exit, like in the previous example. But the second call/cc use
@@ -137,7 +134,7 @@ continuation to loop variable. This is required for the next loop.
 
 ## Generators
 
-Some languages have generators and a `yield` keyword. In Scheme you can create generators with
+Some languages have generators and a `yield` keyword. In Scheme, you can create generators with
 continuations.
 
 ```scheme
