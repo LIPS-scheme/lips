@@ -12,7 +12,7 @@ terminal](https://en.wikipedia.org/wiki/Computer_terminal) or a [terminal
 emulator](https://en.wikipedia.org/wiki/Terminal_emulator) that display so called
 [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop).
 
-To print anything on the screen you use `(write x)` or `(display x)` and `(newline)` functions.
+To print anything on the screen, you use `(write x)` or `(display x)` and `(newline)` functions.
 
 There is also a function that write single character `(write-char x)`
 
@@ -28,30 +28,30 @@ Example:
 (define list (read))
 ```
 
-after this the Scheme interpreter will pause and wait for the input from user. If user type `(1 2
-3)` (you don't need quote), and press enter, the read expression will return that list and Scheme
+After this, the Scheme interpreter will pause and wait for the input from user. If user type `(1 2
+3)` (you don't need to quote), and press enter, the read expression will return that list and Scheme
 will define a variable named list and assign that list to that symbol.
 
 ### Reading single character
-You also have a functions that operate on single characters:
+You also have functions that operate on single characters:
 
 * `(read-char)`
 * `(peek-char)`
 
 You can check if there are more characters in the stream by using `(eof-object? x)` predicate. `eof` is
-special object that indicate the end of file.
+a special object that indicate the end of file.
 
 ### Reading single line
 Scheme define function `(read-line)` that reads whole line.
 
 ## Ports
-Ports are a thing in Scheme that allows to write into and read from. By default `read` read from
+Ports are a thing in Scheme that allows to write into and read from. By default, `read` read from
 standard input, and `write`, `display`, and `newline` writes to standard output. But all those
 functions accept an argument which allow to change the port to which it's writing or reading.
 
 ### Standard input port
 
-To get standard input as port object you can use:
+To get standard input as a port object, you can use:
 
 ```scheme
 (current-input-port)
@@ -123,7 +123,7 @@ To write to a file first you need to have an open output port that points into a
 You need to remember to close the port to make sure that the data was properly written to the file. Some Scheme implementation
 may decide to flush the buffer (write to a file) when you close the port.
 
-You can use helper procedure that closes the port automatically:
+You can use a helper procedure that closes the port automatically:
 
 ```scheme
 (call-with-output-file "test-2.scm"
@@ -134,7 +134,7 @@ You can use helper procedure that closes the port automatically:
     (newline port)))
 ```
 
-The output file will contain two files that have two literal strings (with quotes because write was used).
+The output file will contain two files that have two literal strings (with quotes because right was used).
 
 ```
 "hello"
@@ -187,7 +187,7 @@ In specification there are no procedure that reads whole file as a string. But y
 ;; ==> "there"
 ```
 
-Same you can create a procedure that reads all lines from text as list of strings:
+The same you can create a procedure that reads all lines from text as list of strings:
 
 ```scheme
 (define (read-lines filename)
@@ -216,7 +216,7 @@ There are no procedure that write a string as a line into a port, but you can de
     (newline port)))
 ```
 
-You can use this function to write list of strings as lines into a file:
+You can use this function to write a list of strings as lines into a file:
 
 ```scheme
 (define (write-lines lst . rest)
@@ -290,7 +290,8 @@ representation of different objects as a value.
 ;; ==> "
 ```
 
-This prints a multi line string because `write` was used. Procedure `get-output-string` can be used to get the output string.
+This prints a multi line string because `write` was used. Procedure `get-output-string` can be used
+to get the output string.
 
 And same as before you can use `call-with-port` to close the port after use:
 
