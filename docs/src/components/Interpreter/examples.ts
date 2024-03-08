@@ -12,9 +12,10 @@ const examples = [
                         " "
                         object.version))
   ;; you can mix scheme and JavaScript
-  (ignore (setTimeout (lambda ()
+  (setTimeout (lambda ()
                 (alert (JSON.stringify object)))
-               1000)))`
+              1000)
+  #void)`
   },
   {
     description: 'Filter function accepts: regex or function. Curry is higher order function that creates a new function with default arguments. Pluck returns a function that extract fields from an object.',
