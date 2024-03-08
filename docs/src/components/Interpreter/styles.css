@@ -28,24 +28,25 @@
 body:not(.full-screen) .exit-full-screen {
     display: none;
 }
+body.full-screen {
+    overflow: hidden !important;
+}
 body.full-screen .full-screen.icon {
     display: none;
 }
-body.full-screen .term {
-    position: absolute;
-    max-width: initial;
+.full-screen .intro .actions-wrapper, body.full-screen .term {
+    position: fixed;
     top: 0;
+    right: 0;
+    max-width: initial;
+}
+body.full-screen .term {
     bottom: 0;
     left: 0;
-    right: 0;
     z-index: 300;
     height: auto;
 }
 .full-screen .intro .actions-wrapper {
-    max-width: initial;
-    position: absolute;
-    top: 0;
-    right: 0;
     z-index: 400;
 }
 .intro .actions {
