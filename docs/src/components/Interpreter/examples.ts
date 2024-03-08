@@ -239,7 +239,7 @@ const examples = [
   },
   {
     description: 'You can iterate over JavaScript generators (objects that implement iterator protocol)',
-    code: `;; JavaScript generator create using JS eval
+    code: `;; JavaScript generator created using JS eval
 (define gen (self.eval "
     (async function* gen(time, ...args) {
         function delay(time) {
