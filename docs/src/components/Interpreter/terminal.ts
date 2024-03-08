@@ -1,7 +1,11 @@
-export default function initTerminal() {
+let original: string;
+
+export function initTerminal() {
   const $ = globalThis.$;
   $.terminal.syntax('scheme');
-  $('.term').empty();
+  const $term = $('.term');
+  original = $term.html();
+  $term.empty();
   const term = globalThis.terminal({
     selector: '.term',
     dynamic: false,
@@ -30,3 +34,8 @@ to display list of matched names in environment.`
     formatters: false
   });
 };
+
+export function destroyTerminal() {
+  const $ = globalThis.$;
+  $('.term').html(original);
+}

@@ -1,15 +1,24 @@
-import { useEffect, useState, MouseEvent, CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useState, MouseEvent, CSSProperties } from 'react';
 import Markdown from 'react-markdown';
 import Head from '@docusaurus/Head';
 import useScripts from '@site/src/hooks/useScripts';
 import CodeBlock from '@theme/CodeBlock';
-import initTerminal from './terminal';
+import { initTerminal, destroyTerminal } from './terminal';
 import examples from './examples';
 
 import './styles.css';
 
 export interface TerminalProps extends CSSProperties {
   '--size': string;
+}
+
+const replReady = () => {
+    return (
+        globalThis.jQuery &&
+        globalThis.jQuery.terminal &&
+        globalThis.terminal &&
+        globalThis.lips
+    );
 }
 
 export default function Interpreter(): JSX.Element {
@@ -24,20 +33,22 @@ export default function Interpreter(): JSX.Element {
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js'
   ]);
+
   useEffect(() => {
     (function loop() {
-      if (globalThis.jQuery && globalThis.jQuery.terminal && globalThis.terminal && globalThis.lips) {
+      if (replReady()) {
         initTerminal();
       } else {
         setTimeout(loop, 100);
       }
     })();
+    return destroyTerminal;
   }, []);
 
   function onSnippetRun() {
     const $ = globalThis.jQuery;
     const code = $('.example:visible').text();
-    const term = $.terminal.active();
+    const term = $('.term').terminal();
     term.echo(term.get_prompt(), { formatters: false });
     term.exec(code, true);
     if (typeof screen.orientation === 'undefined') {
