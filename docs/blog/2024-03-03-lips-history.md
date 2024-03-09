@@ -2,7 +2,7 @@
 slug: lips-history
 title: LIPS History
 authors: jcubic
-tags: [lips, history]
+tags: [lips, scheme, history]
 ---
 
 This is the first article on LIPS blog. In this article I will write about the history of LIPS
