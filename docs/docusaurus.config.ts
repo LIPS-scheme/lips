@@ -35,19 +35,20 @@ const config: Config = {
     [
       'classic',
       {
-        docs: {
-          sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/jcubic/lips-website/tree/docusaurus/docs/',
-        },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/jcubic/lips-website/tree/docusaurus/docs/',
+          editUrl: 'https://github.com/jcubic/lips-website/tree/docusaurus/docs/',
+          feedOptions: {
+            type: 'rss',
+            limit: 10,
+            copyright: `Copyright © ${new Date().getFullYear()} Jakub T. Jankiewicz`,
+            title: 'LIPS Scheme blog',
+            description: 'LIPS Scheme blog RSS Feed'
+          }
+        },
+        docs: {
+          sidebarPath: './sidebars.ts',
+          editUrl: 'https://github.com/jcubic/lips-website/tree/docusaurus/docs/',
         },
         theme: {
           customCss: './src/css/custom.css',
