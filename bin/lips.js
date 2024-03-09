@@ -449,6 +449,7 @@ function run_repl(err, rl) {
         rl.prompt();
     }
     let prev_line;
+    const is_emacs = process.env.INSIDE_EMACS;
     bootstrap(interp).then(function() {
         if (supports_paste_brackets) {
             process.stdin.on('keypress', (c, k) => {
@@ -495,7 +496,7 @@ function run_repl(err, rl) {
                     }).then(function(result) {
                         if (process.stdin.isTTY) {
                             print(result);
-                            if (newline) {
+                            if (newline || is_emacs) {
                                 // readline doesn't work with not ended lines
                                 // it ignore those, so we end them ourselves
                                 process.stdout.write("\n");
@@ -505,15 +506,13 @@ function run_repl(err, rl) {
                                 multiline = false;
                             }
                         }
-                        rl.setPrompt(prompt);
-                        rl.prompt();
-                        rl.resume();
                     }).catch(function() {
                         if (process.stdin.isTTY) {
                             if (multiline) {
                                 multiline = false;
                             }
                         }
+                    }).finally(function() {
                         rl.setPrompt(prompt);
                         rl.prompt();
                         rl.resume();
@@ -521,17 +520,24 @@ function run_repl(err, rl) {
                 } else {
                     multiline = true;
                     if (cmd.match(/\x1b\[200~/) || !supports_paste_brackets) {
-                        rl.setPrompt(continuePrompt);
                         rl.prompt();
+                        if (is_emacs) {
+                            rl.setPrompt('');
+                        } else {
+                            rl.setPrompt(continuePrompt);
+                        }
                         if (terminal) {
                             rl.write(' '.repeat(prompt.length - continuePrompt.length));
                         }
                     } else {
                         const ind = indent(code, 2, prompt.length - continuePrompt.length);
                         const spaces = new Array(ind + 1).join(' ');
-                        rl.setPrompt(continuePrompt);
-                        rl.prompt();
-                        if (terminal) {
+                        if (is_emacs) {
+                            rl.setPrompt('');
+                            rl.prompt();
+                        } else {
+                            rl.setPrompt(continuePrompt);
+                            rl.prompt();
                             rl.write(spaces);
                         }
                     }
