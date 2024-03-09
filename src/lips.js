@@ -5784,6 +5784,9 @@ LComplex.prototype.pow = function(n) {
         // Complex exponent of a complex numbers
         // equation taken from https://math.stackexchange.com/a/476998/31117
         let p = n.mul(Math.log(magnitude.valueOf())).add(LComplex.i.mul(angle).mul(n));
+        if (!LNumber.isComplex(p)) {
+            return LFloat(Math.E).pow(p);
+        }
         const e = LFloat(Math.E).pow(p.__re__.valueOf());
         return LComplex({
             re: e.mul(Math.cos(p.__im__.valueOf())),

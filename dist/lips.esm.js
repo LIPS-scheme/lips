@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 07 Mar 2024 12:43:54 +0000
+ * build: Sat, 09 Mar 2024 22:12:33 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -4797,6 +4797,7 @@ specials.on(['remove', 'append'], function () {
   Lexer._cache.valid = false;
   Lexer._cache.rules = null;
 });
+// those constants need to be add as rules to the Lexer to work with vector literals
 var parsable_contants = {
   '#null': null,
   '#void': undefined
@@ -9890,6 +9891,9 @@ LComplex.prototype.pow = function (n) {
     // Complex exponent of a complex numbers
     // equation taken from https://math.stackexchange.com/a/476998/31117
     var p = n.mul(Math.log(magnitude.valueOf())).add(LComplex.i.mul(angle).mul(n));
+    if (!LNumber.isComplex(p)) {
+      return LFloat(Math.E).pow(p);
+    }
     var e = LFloat(Math.E).pow(p.__re__.valueOf());
     return LComplex({
       re: e.mul(Math.cos(p.__im__.valueOf())),
@@ -15594,10 +15598,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 07 Mar 2024 12:43:54 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 09 Mar 2024 22:12:33 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 07 Mar 2024 12:43:54 +0000').valueOf();
+  var date = LString('Sat, 09 Mar 2024 22:12:33 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15637,7 +15641,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 07 Mar 2024 12:43:54 +0000';
+var date = 'Sat, 09 Mar 2024 22:12:33 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
