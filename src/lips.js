@@ -1371,6 +1371,7 @@ specials.on(['remove', 'append'], function() {
     Lexer._cache.valid = false;
     Lexer._cache.rules = null;
 });
+// those constants need to be add as rules to the Lexer to work with vector literals
 const parsable_contants = {
     '#null': null,
     '#void': undefined
