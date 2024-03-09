@@ -9,7 +9,7 @@ LIPS Scheme support regular expression literals, but it's not the only one imple
 support those.  Other implementation includes [Gauche](https://practical-scheme.net/gauche/) and
 [Kawa](https://www.gnu.org/software/kawa/index.html).
 
-Unfortunetlly, you can easily use those regular expressions in [GNU
+Unfortunetlly, you can't easily use those regular expressions in [GNU
 Emacs](https://en.wikipedia.org/wiki/GNU_Emacs), my main editor of choice.
 
 <!--truncate-->
