@@ -333,7 +333,7 @@ Instead of `Array::replace` you should use LIPS Scheme `replace` procedure that 
 
 ```scheme
 (replace #/[a-z]+/g (lambda ()
-                  (Promise.resolve "lips"))
+                      (Promise.resolve "lips"))
          "foo bar")
 ;; ==> "lips lips"
 ```
