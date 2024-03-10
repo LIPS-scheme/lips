@@ -352,6 +352,69 @@ variable that hold the alist only for alist defined inside the code:
 ;; ==> (foo bar baz)
 ```
 
+### Nested Hygienic Macros
+There are two ways to defined nested macros, macros that define macros. One is escape of ellipsis
+with `(... ...)` syntax.
+
+```scheme
+(define-syntax define-for
+  (syntax-rules ()
+    ((_ symbol)
+     (define-syntax symbol
+       (syntax-rules ()
+         ((_ (var start end) body (... ...))
+          (let loop ((var start))
+            (if (<= var end)
+                (begin
+                  body (... ...)
+                  (loop (+ var 1)))))))))))
+```
+
+This macro defines macros that act like for loop, but using tail recursive, named let. You can use this macro like this:
+
+```scheme
+(define-for loop)
+
+(begin
+  (loop (i 1 10)
+        (display i)
+        (if (< i 10)
+            (display " ")))
+  (newline))
+;; ==> 1 2 3 4 5 6 7 8 9 10
+```
+
+Another way to define nested marcros is using
+[SRFI-46](https://srfi.schemers.org/srfi-46/srfi-46.html) syntax, which allow to change the symbol of ellipsis:
+
+```scheme
+(define-syntax define-for
+  (syntax-rules ()
+    ((_ symbol)
+     (define-syntax symbol
+       (syntax-rules ::: ()
+         ((_ (var start end) body :::)
+          (let loop ((var start))
+            (if (<= var end)
+                (begin
+                  body :::
+                  (loop (+ var 1)))))))))))
+```
+
+The macro works exactly the same as previous one:
+
+```scheme
+(define-for loop)
+
+(begin
+  (loop (i 1 10)
+        (display i)
+        (if (< i 10)
+            (display " ")))
+  (newline))
+;; ==> 1 2 3 4 5 6 7 8 9 10
+```
+
 ### Anaphoric Hygienic Macros
 By default Scheme `syntax-rules` macros don't allow creating anaphoric macros like lisp macro do.
 But with [SRFI-139](https://srfi.schemers.org/srfi-139/srfi-139.html) you can implement such macros.
