@@ -180,7 +180,7 @@ expansion will stop, similary to recursive functions you may create infinite loo
 ```scheme
 (define-macro (alist . body)
   (if (null? body)
-      '()
+      ()
       `(cons (cons ,(car body) ,(cadr body)) (alist ,@(cddr body)))))
 ```
 
