@@ -415,6 +415,66 @@ The macro works exactly the same as previous one:
 ;; ==> 1 2 3 4 5 6 7 8 9 10
 ```
 
+### Identifiers
+Inside macros you can add identifers can can be used like keywords from other programming langauges. They match only
+if literal symbol was used and it was not shadowed (overwritten) by variable with same name.
+
+```scheme
+(define-syntax for
+  (syntax-rules (==>)
+     ((_ (var start ==> end) body ...)
+      (let loop ((var start))
+         (if (<= var end)
+             (begin
+                body ...
+                (loop (+ var 1))))))))
+```
+
+This for macro define symbol `==>` that can be used as part of the syntax:
+
+```scheme
+(let ((start 1)
+      (end 10))
+  (for (i start ==> end)
+     (display i)
+     (if (< i end)
+         (display " ")))
+  (newline))
+;; ==> 1 2 3 4 5 6 7 8 9 10
+```
+
+If the symbol `==>` is shadowed by local variable the macro will not match and give an error:
+
+```scheme
+(let ((start 1)
+      (end 10)
+      (==> "this will not work"))
+  (for (i start ==> end)
+     (display i)
+     (if (< i end)
+         (display " ")))
+  (newline))
+;; ==> syntax-rules: no matching syntax in macro
+```
+
+special keywords (created with identifiers) can be optional:
+
+```scheme
+(define-syntax for
+  (syntax-rules (==>)
+     ((_ (var start end) body ...)
+      (_ (var start ==> end) body ...))
+     ((_ (var start ==> end) body ...)
+      (let loop ((var start))
+         (if (<= var end)
+             (begin
+                body ...
+                (loop (+ var 1))))))))
+```
+
+This is recursive `syntax-rules` that when using without `==>` symbol it just add it between `start`
+and `end`.
+
 ### Anaphoric Hygienic Macros
 By default Scheme `syntax-rules` macros don't allow creating anaphoric macros like lisp macro do.
 But with [SRFI-139](https://srfi.schemers.org/srfi-139/srfi-139.html) you can implement such macros.
