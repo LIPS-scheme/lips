@@ -172,6 +172,36 @@ If you try to evaluate the macro, you will get proper results:
 ;; ==> 1000
 ```
 
+### Recursive Macros
+
+You can define recursive macros similary to recursive function. But you need to make sure that the
+expansion will stop, similary to recursive functions you may create infinite loops.
+
+```scheme
+(define-macro (alist . body)
+  (if (null? body)
+      '()
+      `(cons (cons ,(car body) ,(cadr body)) (alist ,@(cddr body)))))
+```
+
+You can call this macro to create alist based on its arguments:
+
+```scheme
+(alist "foo" 10 "bar" 20 "baz" 30)
+;; ==> (("foo" . 10) ("bar" . 20) ("baz" . 30))
+```
+
+**Note** recursive call is inside quote and only argument is unquoted. This is required since
+recursive macro call needs to appear in the expansion. If you call macro recursivly and don't return
+macro call as output list you will end up in ifninite recursive call.
+
+You can see the macro will expand with macroexpand:
+
+```scheme
+(macroexpand (alist "foo" 10 "bar" 20 "baz" 30))
+;; ==> (cons (cons "foo" 10) (cons (cons "bar" 20) (cons (cons "baz" 30) ())))
+```
+
 ### Anaphoric Macros
 
 Anaphoric macros are special kind of macros that leverage the leaking of internal data outside
