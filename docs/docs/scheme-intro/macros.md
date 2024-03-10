@@ -475,6 +475,34 @@ special keywords (created with identifiers) can be optional:
 This is recursive `syntax-rules` that when using without `==>` symbol it just add it between `start`
 and `end`.
 
+### Recursive Hygienic Macros
+You can define recursive hygienic macros, similar to recursive function you need a base case that will stop expansion and
+recursve case.
+
+```scheme
+(define-syntax alist
+  (syntax-rules ()
+     ((_) ())
+     ((_ x y z ...)
+      (cons (cons x y) (alist z ...)))))
+```
+
+Here is example of recusive macro that expand into series of `cons`. You can use this macro like this:
+
+```scheme
+(alist 'foo 10 'bar 20 'baz 30)
+;; ==> ((foo . 10) (bar . 20) (baz . 30))
+```
+
+If the Scheme interpreter of choice support macroexpand on hygienic macros you will see that it
+expact into series of `cons`:
+
+```scheme
+(macroexpand '(alist 'foo 10 'bar 20 'baz 30))
+;; ==> (#:cons (#:cons (quote foo) 10) (#:cons (#:cons (quote bar) 20) (#:cons (#:cons (quote baz) 30) ())))
+```
+The output may be differnt depening on implementation.
+
 ### Anaphoric Hygienic Macros
 By default Scheme `syntax-rules` macros don't allow creating anaphoric macros like lisp macro do.
 But with [SRFI-139](https://srfi.schemers.org/srfi-139/srfi-139.html) you can implement such macros.
