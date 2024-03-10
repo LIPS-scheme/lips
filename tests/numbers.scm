@@ -1003,6 +1003,11 @@
         (t.is (expt 0.5 -10-10i) 816.2504880317307+618.3131413676737i)
         (t.is (expt -0.5 -10-10i) 3.5940738147512644e16+2.7225258707836444e16i)))
 
+(test "numbers: expt => e"
+      (lambda (t)
+        ;; ref: https://twitter.com/martinmbauer/status/1766449192958898506
+        (t.is (exact->inexact (expt (expt (expt +i +i) (/ 1 Math.PI)) -2)) Math.E)))
+
 (test "numbers: sin"
       (lambda (t)
         (for-each (lambda (l)
