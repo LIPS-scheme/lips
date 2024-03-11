@@ -1,6 +1,7 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import marked from 'marked';
 
 const config: Config = {
   title: 'LIPS Scheme',
@@ -43,7 +44,16 @@ const config: Config = {
             limit: 10,
             copyright: `Copyright © ${new Date().getFullYear()} Jakub T. Jankiewicz`,
             title: 'LIPS Scheme blog',
-            description: 'LIPS Scheme blog RSS Feed'
+            description: 'LIPS Scheme blog RSS Feed',
+            createFeedItems: async ({ blogPosts,...params }) => {
+              const feedItems = await params.defaultCreateFeedItems({ blogPosts, ...params });
+              await Promise.all(feedItems.map(async (feedItem,index) => {
+                const blogPost = blogPosts[index]!;
+                const excerpt = blogPost.content.replace(/<!--\s*truncate\s*-->[\s\S]*$/, '').trim();
+                feedItem.content = await marked.parse(excerpt);
+              }));
+              return feedItems;
+            }
           }
         },
         docs: {
