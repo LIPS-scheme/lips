@@ -49,8 +49,10 @@ const config: Config = {
               const feedItems = await params.defaultCreateFeedItems({ blogPosts, ...params });
               feedItems.map((feedItem,index) => {
                 const blogPost = blogPosts[index]!;
+                const permalink = blogPost.metadata.permalink;
                 const excerpt = blogPost.content.replace(/<!--\s*truncate\s*-->[\s\S]*$/, '').trim();
-                feedItem.content = marked.parse(excerpt) as string;
+                const html = (marked.parse(excerpt) as string) + `<br/><a href="${permalink}">see the rest of the article</a>`
+                feedItem.content = html;
               });
               return feedItems;
             }
