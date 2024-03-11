@@ -47,11 +47,11 @@ const config: Config = {
             description: 'LIPS Scheme blog RSS Feed',
             createFeedItems: async ({ blogPosts,...params }) => {
               const feedItems = await params.defaultCreateFeedItems({ blogPosts, ...params });
-              await Promise.all(feedItems.map(async (feedItem,index) => {
+              feedItems.map((feedItem,index) => {
                 const blogPost = blogPosts[index]!;
                 const excerpt = blogPost.content.replace(/<!--\s*truncate\s*-->[\s\S]*$/, '').trim();
-                feedItem.content = await marked.parse(excerpt);
-              }));
+                feedItem.content = marked.parse(excerpt) as string;
+              });
               return feedItems;
             }
           }
