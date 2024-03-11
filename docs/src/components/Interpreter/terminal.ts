@@ -4,7 +4,9 @@ export function initTerminal() {
   const $ = globalThis.$;
   $.terminal.syntax('scheme');
   const $term = $('.term');
-  original = $term.html();
+  if (!original) {
+    original = $term.html();
+  }
   $term.empty();
   const term = globalThis.terminal({
     selector: '.term',

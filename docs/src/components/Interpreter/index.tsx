@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useState, MouseEvent, CSSProperties } from 'react';
+import { useEffect, useState, MouseEvent, CSSProperties } from 'react';
 import Markdown from 'react-markdown';
+import useIsBrowser from '@docusaurus/useIsBrowser';
 import Head from '@docusaurus/Head';
 import useScripts from '@site/src/hooks/useScripts';
 import CodeBlock from '@theme/CodeBlock';
@@ -25,9 +26,11 @@ export default function Interpreter(): JSX.Element {
   const [activeSnippet, setActiveSnippet] = useState(0);
   const [size, setSize] = useState(1);
 
-  const prod = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === 'production';
+  const isBrowser = useIsBrowser();
+  const isStatic = isProd && !isBrowser;
 
-  useScripts((prod || globalThis.jQuery) ? [] : [
+  useScripts(isBrowser && !!globalThis.jQuery ? [] : [
     'https://cdn.jsdelivr.net/npm/jquery',
     'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
@@ -93,10 +96,10 @@ export default function Interpreter(): JSX.Element {
         <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.1/css/prism-coy.css" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
               rel="stylesheet"/>
-        {prod && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
-        {prod && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
-        {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
-        {prod && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
         <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
                 data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
       </Head>
