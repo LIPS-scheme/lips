@@ -14,6 +14,8 @@ Emacs](https://en.wikipedia.org/wiki/GNU_Emacs), my main editor of choice.
 
 <!--truncate-->
 
+## The problem
+
 The main problem is when using vertical bar character inside Scheme code in Emacs. GNU Emacs thinks
 that the vertical bar is part of the [symbol](/docs/scheme-intro/data-types#symbols):
 
@@ -28,8 +30,12 @@ This blog (the same as whole website) use modified PrismJS Scheme mode that supp
 expressions. But in GNU Emacs there was a need to add `|` after a comment and close the lists that
 were ignored by Emacs scheme mode (because they were inside symbol).
 
-I asked a [question on emacs-devel mailing list](https://lists.gnu.org/archive/html/emacs-devel/2024-02/msg00896.html), on how to solve this problem. I didn't get any reply for days, then suddenly somone
-[reply with this emacs lisp code snippet](https://lists.gnu.org/archive/html/emacs-devel/2024-03/msg00282.html).
+## The solution
+
+I asked a [question on emacs-devel mailing
+list](https://lists.gnu.org/archive/html/emacs-devel/2024-02/msg00896.html), on how to solve this
+problem. I didn't get any reply for days, then suddenly somone [reply with this emacs lisp code
+snippet](https://lists.gnu.org/archive/html/emacs-devel/2024-03/msg00282.html).
 
 ```lisp
 (defun scheme-regex-patch ()
