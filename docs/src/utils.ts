@@ -32,14 +32,8 @@ const browser = puppeteer.launch({
   headless: true
 });
 
-type DateTimeFormatOptions = {
-  year: 'numeric';
-  month: 'short';
-  day: 'numeric'
-};
-
 function formatDate(lang: string, date: Date) {
-  const options: DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+  const options = { year: 'numeric', month: 'short', day: 'numeric' } as const;
   return date.toLocaleDateString(lang, options);
 }
 
