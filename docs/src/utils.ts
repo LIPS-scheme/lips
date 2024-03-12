@@ -25,11 +25,23 @@ type RenderOptions = {
   fullname: string;
   avatar: string;
   slug: string;
+  date: Date
 };
 
 const browser = puppeteer.launch({
   headless: true
 });
+
+type DateTimeFormatOptions = {
+  year: 'numeric';
+  month: 'short';
+  day: 'numeric'
+};
+
+function formatDate(lang: string, date: Date) {
+  const options: DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+  return date.toLocaleDateString(lang, options);
+}
 
 const delay = (time: number) => new Promise(resolve => setTimeout(resolve, time));
 
@@ -38,12 +50,12 @@ function mktemp(suffix: string) {
   return path.join(os.tmpdir(), `${prefix}-${suffix}`);
 }
 
-export default async function render({ title, fullname, avatar, slug }: RenderOptions) {
+export default async function render({ title, fullname, avatar, slug, date }: RenderOptions) {
   const output_svg = await liquid.render(await svg, {
     fullname,
     title,
     avatar,
-    date: 'N/A'
+    date: formatDate('en-US', date)
   });
   const svg_fullname = mktemp('docusaurs.svg');
   await fs.writeFile(svg_fullname, output_svg);

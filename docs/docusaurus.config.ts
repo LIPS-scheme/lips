@@ -52,11 +52,13 @@ const config: Config = {
             createFeedItems: async ({ blogPosts,...params }) => {
               if (isProd) {
                 await Promise.all(blogPosts.map(blogPost => {
+                  const author = blogPost.metadata.authors[0];
                   const slug = blogPost.metadata.permalink.replace(/^.*\//, '');
                   const title = blogPost.metadata.title;
-                  const fullname = 'Jakub T. Jankiewicz';
-                  const avatar = 'https://github.com/jcubic.png';
-                  return renderSocialCard({ title, fullname, avatar, slug });
+                  const fullname = author.name;
+                  const avatar = author.imageURL;
+                  const date = blogPost.metadata.date;
+                  return renderSocialCard({ title, fullname, avatar, slug, date: new Date(date) });
                 }));
               }
               const feedItems = await params.defaultCreateFeedItems({ blogPosts, ...params });
