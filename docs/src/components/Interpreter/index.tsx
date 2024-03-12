@@ -86,7 +86,6 @@ export default function Interpreter(): JSX.Element {
   }
 
   const terminalStyle = {
-    'contain': 'initial',
     '--size': size.toFixed(1)
   } as TerminalProps;
 
