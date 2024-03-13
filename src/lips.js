@@ -4203,7 +4203,10 @@ function transform_syntax(options = {}) {
             // escape ellispsis from R7RS e.g. (... ...)
             if (!disabled && is_pair(first) &&
                 LSymbol.is(first.car, ellipsis_symbol)) {
-                return traverse(first.cdr, { disabled: true });
+                return new Pair(
+                    first.cdr.car,
+                    traverse(expr.cdr)
+                );
             }
             if (second && LSymbol.is(second, ellipsis_symbol) && !disabled) {
                 log('>> 1');

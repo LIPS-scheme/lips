@@ -439,6 +439,27 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
+(test "syntax: nested macro with escape ellipsis"
+      (lambda (t)
+        (define-syntax define-for
+          (syntax-rules ()
+            ((_ symbol)
+             (define-syntax symbol
+               (syntax-rules ()
+                 ((_ (var start end) body (... ...))
+                  (let loop ((var start))
+                    (if (<= var end)
+                        (begin
+                          body (... ...)
+                          (loop (+ var 1)))))))))))
+
+        (define-for loop)
+
+        (let ((result (vector)))
+          (loop (i 1 10)
+                (result.push i))
+          (t.is result #(1 2 3 4 5 6 7 8 9 10)))))
+
 (test "syntax: triple elispsis (Gauche example)"
       (lambda (t)
         (define-syntax my-append
