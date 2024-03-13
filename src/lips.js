@@ -4854,22 +4854,30 @@ function let_macro(symbol) {
                 error
             });
         }
+        function check_duplicates(name) {
+            if (name in env.__env__) {
+                throw new Error(`Duplicated let variable ${name}`);
+            }
+        }
         return (function loop() {
             var pair = args[i++];
             dynamic_env = name === 'let*' ? env : self;
             if (!pair) {
-                // resolve all promises
                 if (values && values.length) {
                     var v = values.map(x => x.value);
+                    // resolve all promises
                     var promises = v.filter(is_promise);
                     if (promises.length) {
                         return promise_all(v).then((arr) => {
                             for (var i = 0, len = arr.length; i < len; ++i) {
-                                env.set(values[i].name, arr[i]);
+                                const name = values[i].name;
+                                check_duplicates(name);
+                                env.set(name, arr[i]);
                             }
                         }).then(exec);
                     } else {
                         for (let { name, value } of values) {
+                            check_duplicates(name);
                             env.set(name, value);
                         }
                     }

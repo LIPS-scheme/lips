@@ -63,6 +63,7 @@
 * fix `values` without arguments [#331](https://github.com/jcubic/lips/issues/331)
 * improve working of REPL in Emacs
 * fix `(expt +i +i)`
+* fix let with duplicated variables [#335](https://github.com/jcubic/lips/issues/335)
 
 ## 1.0.0-beta.18
 ### Breaking

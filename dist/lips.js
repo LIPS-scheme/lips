@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 09 Mar 2024 22:12:33 +0000
+ * build: Wed, 13 Mar 2024 16:17:23 +0000
  */
 
 (function (global, factory) {
@@ -8807,20 +8807,27 @@
           error: error
         });
       }
+      function check_duplicates(name) {
+        if (name in env.__env__) {
+          throw new Error("Duplicated let variable ".concat(name));
+        }
+      }
       return function loop() {
         var pair = args[i++];
         dynamic_env = name === 'let*' ? env : self;
         if (!pair) {
-          // resolve all promises
           if (values && values.length) {
             var v = values.map(function (x) {
               return x.value;
             });
+            // resolve all promises
             var promises = v.filter(is_promise);
             if (promises.length) {
               return promise_all(v).then(function (arr) {
                 for (var i = 0, len = arr.length; i < len; ++i) {
-                  env.set(values[i].name, arr[i]);
+                  var _name9 = values[i].name;
+                  check_duplicates(_name9);
+                  env.set(_name9, arr[i]);
                 }
               }).then(exec);
             } else {
@@ -8829,9 +8836,10 @@
               try {
                 for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
                   var _step9$value = _step9.value,
-                    _name9 = _step9$value.name,
+                    _name10 = _step9$value.name,
                     _value3 = _step9$value.value;
-                  env.set(_name9, _value3);
+                  check_duplicates(_name10);
+                  env.set(_name10, _value3);
                 }
               } catch (err) {
                 _iterator9.e(err);
@@ -15605,10 +15613,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 09 Mar 2024 22:12:33 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 13 Mar 2024 16:17:23 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 09 Mar 2024 22:12:33 +0000').valueOf();
+    var date = LString('Wed, 13 Mar 2024 16:17:23 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -15648,7 +15656,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sat, 09 Mar 2024 22:12:33 +0000';
+  var date = 'Wed, 13 Mar 2024 16:17:23 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
