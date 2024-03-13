@@ -65,7 +65,7 @@
 * improve working of REPL in Emacs
 * fix `(expt +i +i)`
 * fix let with duplicated variables [#335](https://github.com/jcubic/lips/issues/335)
-* fix escape elipsis in syntax-rules [#334](https://github.com/jcubic/lips/issues/334)
+* fix escape ellipsis in syntax-rules [#334](https://github.com/jcubic/lips/issues/334)
 
 ## 1.0.0-beta.18
 ### Breaking
