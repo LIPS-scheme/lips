@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 13 Mar 2024 16:17:23 +0000
+ * build: Wed, 13 Mar 2024 16:20:43 +0000
  */
 
 'use strict';
@@ -8549,8 +8549,7 @@ function map_object(object, fn) {
 }
 // ----------------------------------------------------------------------
 function unbox(object) {
-  // LCharacter is unboxable #233
-  var lips_type = [LString, LNumber].some(function (x) {
+  var lips_type = [LString, LNumber, LCharacter].some(function (x) {
     return object instanceof x;
   });
   if (lips_type) {
@@ -15609,10 +15608,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Wed, 13 Mar 2024 16:17:23 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Wed, 13 Mar 2024 16:20:43 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Wed, 13 Mar 2024 16:17:23 +0000').valueOf();
+  var date = LString('Wed, 13 Mar 2024 16:20:43 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15652,7 +15651,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Wed, 13 Mar 2024 16:17:23 +0000';
+var date = 'Wed, 13 Mar 2024 16:20:43 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

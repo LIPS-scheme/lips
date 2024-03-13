@@ -8,6 +8,7 @@
 * make `null` falsy value [#330](https://github.com/jcubic/lips/issues/330)
 * remove `nil` parser constant [#332](https://github.com/jcubic/lips/issues/332)
 * replace `undefined` with `#void`, and `null` with `#null`
+* characters are again unboxed into strings by JavaScript code [#329](https://github.com/jcubic/lips/issues/329)
 ### Features
 * add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
