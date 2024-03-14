@@ -1074,8 +1074,15 @@ this:
     (for-each (lambda (arg)
                 (display arg)
                 (newline))
-              args))))
+              args))
+  (define (lips.parse expr)
+    (with-input-from-port (open-input-string expr)
+      (lambda ()
+        (do ((result '() (cons (read) result)))
+          ((eof-object? (peek-char)) (list->vector (reverse result)))))))))
 ```
 
-It will evaluate an empty list for `LIPS` and `define` a new `print` procedure for other
-implementations.
+It will evaluate an empty list for `LIPS` and `define` a new `print` and `lips.parse` procedures for
+other implementations. Those procedures are part of LIPS Scheme, see [LIPS
+Tutorial](/docs/lips/intro).  Some Scheme implementations may not support `with-input-from-port`
+(like GNU Kawa) so it may require to add implementation for it.
