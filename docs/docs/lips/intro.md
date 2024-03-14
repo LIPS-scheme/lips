@@ -75,9 +75,9 @@ It also implements:
 * [SRFI-147](https://srfi.schemers.org/srfi-147/) which allows defining a new syntax-rules macros to define syntax-rules macros.
 
 ### Gensyms
-With lisp macros you can use gensyms they are special Scheme symbols that use JavaScript symbols
-behind the sceen so they are proven to be unique. Additionaly you can use named gensym if you pass
-string as first argument:
+With lisp macros you can use [gensyms](/docs/scheme-intro/macros#gensyms), they are special Scheme
+symbols that use JavaScript symbols behind the sceen, so they are proven to be unique. Additionaly
+you can use named gensym if you pass string as first argument:
 
 ```scheme
 (gensym)
