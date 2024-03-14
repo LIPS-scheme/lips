@@ -11,7 +11,6 @@ on:
 permissions:
   contents: write
 
-
 defaults:
   run:
     working-directory: docs
@@ -19,7 +18,7 @@ defaults:
 jobs:
   deploy:
     name: Build Docusaurus
-    if: ${{ github.repository == 'jcubic/lips-website' }}
+    if: ${{ github.repository == 'jcubic/lips-website' || (github.repository == 'jcubic/lips' && github.ref_name == 'master')}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
