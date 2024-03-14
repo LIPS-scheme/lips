@@ -404,8 +404,36 @@ Objects also have longhand form with `object` macro:
 ;; ==> &(:name "Jack")
 ```
 
-But note that object macro is async (return a Promise) so you it may be problematic when used it
+But note that object macro is async (return a Promise) so it may be problematic when used it
 with native JavaScript code.
+
+Object literal also have shorthad notation:
+
+```scheme
+(let ((obj &(:x :y)))
+  (write obj))
+;; ==> &(:x #void :y #void)
+```
+
+It creates two writtable slots, the rest of the props are read only:
+
+```scheme
+(let ((obj &(:x :y)))
+  (set! obj.x 10)
+  (set! obj.y 20)
+  (write obj))
+;; ==> &(:x 10 :y 20)
+
+(let ((obj &(:x :y)))
+  (set! obj.z 20)
+  (write obj))
+;; ==> Cannot add property z, object is not extensible
+
+(let ((obj &(:x :y :z 10)))
+  (set! obj.z 20)
+  (write obj))
+;; ==> Cannot assign to read only property 'z' of object '#<Object>'
+```
 
 ### Automagic async/await
 LIPS do automatic async/await so it waits for any promise before evaluating
