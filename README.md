@@ -342,7 +342,7 @@ I would also love to see if you use the library, I may even share the links of p
 
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
-* Current Parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
+* Part of the current Parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
 * `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
 * Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
 * The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
