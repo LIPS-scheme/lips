@@ -144,7 +144,7 @@ There are 3 types of syntax extensions `SPLICE`, `LITERAL`, and `SYMBOL`. You de
 constants defined in `lips.specials` object.
 
 * `LITERAL` - used above pass it's argument as is, with literal syntax extension you can execute it
-  on any argument.
+  on any argument. This is default when no constant in `set-special!` is used.
 * `SPLICE` - if you execute syntax `##(1 2 3)` the arguments will be spliced, so the function or a
   macro needs to use improper list. Or use named arguments if syntax accept fixed amount of arguments.
 * `SYMBOL` - this type of extensions don't accept any arguments and can be used to define parser constants.
@@ -240,6 +240,39 @@ This allow to create named [gensyms](/docs/lips/intro#gensyms) that are unique:
 ```
 
 You can use them with lisp macros instead of `gensym` expressions.
+
+### String interpolation
+
+With syntax extensions you can create string interpolation that expand into a Scheme code:
+
+```scheme
+(set-special! "$" 'interpolate)
+
+(define (interpolate str)
+  (typecheck "interpolate" str "string")
+  (let* ((re #/(\$\{[^\}]+\})/)
+         (parts (--> str (split re) (filter Boolean))))
+    `(string-append ,@(map (lambda (part)
+                             (if (not (null? (part.match re)))
+                                 (let* ((expr (part.replace #/(^\$\{)|(\}$)/g ""))
+                                        (port (open-input-string expr))
+                                        (value (with-input-from-port port read)))
+                                   `(repr ,value))
+                                 part))
+                           (vector->list parts)))))
+
+(pprint (macroexpand-1 (let ((x 10)) $"x = ${(+ x 2)}")))
+;; ==> (let ((x 10))
+;; ==>   (string-append "x = " (repr (+ x 2))))
+
+(let ((x 10))
+  $"x = ${(+ x 2)}")
+;; ==> "x = 12"
+```
+
+The limitation of this solution is that you can't use strings inside `${ ... }`. It will break the
+Lexer.  In the future there may be a way to define such syntax extensions (See [Add full string
+interpolation as syntax extension](https://github.com/jcubic/lips/issues/321)).
 
 ## New Homoiconic data types
 
