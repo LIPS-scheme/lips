@@ -396,6 +396,18 @@ You can also use quasiquote with object literals:
 ;; ==> &(:name "Jack" :age 22)
 ```
 
+**NOTE**: because of the construction of [syntax extensions](/docs/lips/extension#syntax-extensions) and
+[quasiquote](/docs/scheme-intro/data-types#quasiquote), you can't splice a list inside object literals:
+
+```scheme
+(let ((args (list ':foo "lorem" ':bar "ipsum")))
+  `&(,@args))
+;; ==> pair (unquote-splicing args) is not a symbol!
+```
+
+The reason why this work like this is because, syntax extensions (`&`) runs at parse time and LIPS macros are runtime.
+This may change in the future when [expansion time will be implemented](https://github.com/jcubic/lips/issues/169).
+
 Objects also have longhand form with `object` macro:
 
 ```scheme
