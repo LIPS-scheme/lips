@@ -43,8 +43,8 @@ export default function Logo(props) {
   // and provide a sensible fallback otherwise.
   const alt = logo?.alt ?? fallbackAlt;
   return (
-    <Link
-      to={logoLink}
+    <a
+      href={logoLink}
       {...propsRest}
       {...(logo?.target && {target: logo.target})}>
       {logo && (
@@ -55,6 +55,6 @@ export default function Logo(props) {
         />
       )}
       {navbarTitle != null && <b className={titleClassName}>{navbarTitle}</b>}
-    </Link>
+    </a>
   );
 }
