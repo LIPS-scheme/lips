@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: Core LIPS features added on top of Scheme, related to JavaScript
 ---
 
 # Core features

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 6
+description: A way to extends LIPS syntax, not only with macros
 ---
 
 # Extending LIPS
