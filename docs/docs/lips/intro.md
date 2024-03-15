@@ -247,6 +247,18 @@ This is equivalent of:
 (document.querySelector "body")
 ```
 
+**NOTE** the only time when you still need `.` function is when you want to get the property of
+object returned by expression.
+
+```scheme
+(let ((style (. (document.querySelector "body") 'style)))
+  (set! style.background "red"))
+```
+
+Here we get a [style object](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style)
+from [the DOM node](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) wihout soring the
+reference to the DOM node.
+
 ### Scheme functions
 Scheme functions (lambda's) are JavaScript functions, so you can call them from JavaScript.
 
