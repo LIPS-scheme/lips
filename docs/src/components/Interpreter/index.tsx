@@ -28,9 +28,8 @@ export default function Interpreter(): JSX.Element {
 
   const isProd = process.env.NODE_ENV === 'production';
   const isBrowser = useIsBrowser();
-  const isStatic = isProd && !isBrowser;
 
-  useScripts(isBrowser && !!globalThis.jQuery ? [] : [
+  useScripts(isProd || (isBrowser && !!globalThis.jQuery) ? [] : [
     'https://cdn.jsdelivr.net/npm/jquery',
     'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
@@ -96,10 +95,10 @@ export default function Interpreter(): JSX.Element {
         <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.1/css/prism-coy.css" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
               rel="stylesheet"/>
-        {isStatic && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
-        {isStatic && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
-        {isStatic && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
-        {isStatic && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
+        {isProd && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
+        {isProd && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
+        {isProd && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
+        {isProd && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
         <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
                 data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
       </Head>
