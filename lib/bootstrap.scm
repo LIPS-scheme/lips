@@ -663,16 +663,18 @@
   "(read-all)
    (read-all port)
 
-   Read all S-Expressions from port and return then as a list"
+   Read all S-Expressions from port and return them as a list"
   (let ((port (if (null? rest) (current-input-port) (car rest))))
-    (do ((result '() (cons (read port) result)))
-      ((eof-object? (peek-char port)) (reverse result)))))
+    (let loop ((result '()) (expr (read port)))
+      (if (eof-object? expr)
+          (reverse result)
+          (loop (cons expr result) (read port))))))
 
 ;; -----------------------------------------------------------------------------
 (define (with-input-from-string string thunk)
   "(with-input-from-string string thunk)
 
-   Reads string and execute the thunk with currect input port set to
+   Reads string and execute the thunk with current input port set to
    port created from opening the string."
   (with-input-from-port (open-input-string string) thunk))
 
