@@ -359,6 +359,8 @@ I would also love to see if you use the library, I may even share the links of p
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
 
+Special thanks to [Lassi Kortela](https://github.com/lassik) for helping with Scheme code.
+
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
