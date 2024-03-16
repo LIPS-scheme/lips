@@ -5777,12 +5777,14 @@ LComplex.prototype.serialize = function() {
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.toRational = function(n) {
-    if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
-        const im = LFloat(this.__im__).toRational(n);
-        const re = LFloat(this.__re__).toRational(n);
-        return LComplex({ im, re });
+    let im = this.__im__, re = this.__re__;
+    if (LNumber.isFloat(this.__im__)) {
+        im = LFloat(this.__im__).toRational(n);
     }
-    return this;
+    if (LNumber.isFloat(this.__re__)) {
+        re = LFloat(this.__re__).toRational(n);
+    }
+    return LComplex({ im, re });
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.pow = function(n) {

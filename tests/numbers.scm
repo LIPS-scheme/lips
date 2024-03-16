@@ -929,6 +929,30 @@
         (t.is (exact->inexact 1/2+10i) 0.5+10.0i)
         (t.is (exact->inexact 1/2+10.0i) 0.5+10.0i)))
 
+(test "numbers: inexact->exact"
+      (lambda (t)
+        (t.is (inexact->exact 0.1) 1/10)
+        (t.is (inexact->exact 1/10) 1/10)
+
+        (t.is (inexact->exact 0.1+0.1i) 1/10+1/10i)
+        (t.is (inexact->exact 1/10+1/10i) 1/10+1/10i)
+
+        (t.is (inexact->exact 0.1+1/10i) 1/10+1/10i)
+        (t.is (inexact->exact 1/10+0.1i) 1/10+1/10i)
+
+        (t.is (inexact->exact 1/10+1/10i) 1/10+1/10i)
+        (t.is (inexact->exact 1/10+1/10i) 1/10+1/10i)
+
+        (t.is (inexact->exact 0.1+10i) 1/10+10i)
+        (t.is (inexact->exact 10+0.1i) 10+1/10i)
+
+        (t.is (inexact->exact 1/10+10i) 1/10+10i)
+        (t.is (inexact->exact 10+1/10i) 10+1/10i)
+
+        (t.is (inexact->exact +0.1i) +1/10i)
+        (t.is (inexact->exact +10i) +10i)
+        (t.is (inexact->exact +1/10i) +1/10i)))
+
 (test "numbers: operation exp"
       (lambda (t)
         ;; big int
