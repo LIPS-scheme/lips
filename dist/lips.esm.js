@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 13 Mar 2024 16:48:03 +0000
+ * build: Sat, 16 Mar 2024 19:46:48 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -3550,7 +3550,7 @@ function gen_integer_re(mnemonic, range) {
 var re_re = /^#\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimyus]*)$/;
 var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
 // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
-var complex_float_stre = "(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|nan.0|inf.0|".concat(float_stre, "|[+-]?[0-9]+))?(?:").concat(float_stre, "|[+-](?:[0-9]+/[0-9]+|[0-9]+|nan.0|inf.0))i");
+var complex_float_stre = "(?:#[ie])?(?:[+-]?(?:[0-9][0-9_]*/[0-9][0-9_]*|nan.0|inf.0|".concat(float_stre, "|[+-]?[0-9]+))?(?:").concat(float_stre, "|[+-](?:[0-9]+/[0-9]+|[0-9]+|nan.0|inf.0))i");
 var float_re = new RegExp("^(#[ie])?".concat(float_stre, "$"), 'i');
 function make_complex_match_re(mnemonic, range) {
   // complex need special treatment of 10e+1i when it's hex or decimal
@@ -3793,6 +3793,8 @@ function parse_complex(arg) {
   im = parse_num(parts[2]);
   if (parts[1]) {
     re = parse_num(parts[1]);
+  } else if (im instanceof LFloat) {
+    re = LFloat(0);
   } else {
     re = LNumber(0);
   }
@@ -15603,10 +15605,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Wed, 13 Mar 2024 16:48:03 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 16 Mar 2024 19:46:48 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Wed, 13 Mar 2024 16:48:03 +0000').valueOf();
+  var date = LString('Sat, 16 Mar 2024 19:46:48 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15646,7 +15648,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Wed, 13 Mar 2024 16:48:03 +0000';
+var date = 'Sat, 16 Mar 2024 19:46:48 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
