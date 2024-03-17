@@ -69,6 +69,7 @@
 * fix escape ellipsis in syntax-rules [#334](https://github.com/jcubic/lips/issues/334)
 * fix parsing inexact complex without real part and `inexact->exact` procedure [#340](https://github.com/jcubic/lips/issues/340)
 * fix `equal?` on cycles [#302](https://github.com/jcubic/lips/issues/302)
+* fix Petrifsky let [#341](https://github.com/jcubic/lips/issues/341)
 
 ## 1.0.0-beta.18
 ### Breaking

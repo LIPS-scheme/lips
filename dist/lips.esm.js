@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 Mar 2024 21:24:54 +0000
+ * build: Sun, 17 Mar 2024 21:56:13 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -8773,7 +8773,8 @@ function let_macro(symbol) {
           return pair.cdr.car;
         });
       }
-      return Pair.fromArray([LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], Pair(code.car, args)]);
+      var args_name = gensym('args');
+      return Pair.fromArray([LSymbol('let'), [[args_name, Pair(LSymbol('list'), args)]], [LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], [LSymbol('apply'), code.car, args_name]]]);
     } else if (macro_expand) {
       // Macro.defmacro are special macros that should return lips code
       // here we use evaluate, so we need to check special flag set by
@@ -15624,10 +15625,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 17 Mar 2024 21:24:54 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 17 Mar 2024 21:56:13 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 17 Mar 2024 21:24:54 +0000').valueOf();
+  var date = LString('Sun, 17 Mar 2024 21:56:13 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15667,7 +15668,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 17 Mar 2024 21:24:54 +0000';
+var date = 'Sun, 17 Mar 2024 21:56:13 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

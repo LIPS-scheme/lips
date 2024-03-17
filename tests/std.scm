@@ -243,7 +243,7 @@
         (t.is (atanh -2)
               -0.5493061443340548+1.5707963267948966i)))
 
-(test.failing "std: Petrofsky let"
+(test "std: Petrofsky let"
       (lambda (t)
         (t.is (let - ((n (- 1))) n) -1)))
 

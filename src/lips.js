@@ -4826,12 +4826,15 @@ function let_macro(symbol) {
                 params = code.cdr.car.map(pair => pair.car);
                 args = code.cdr.car.map(pair => pair.cdr.car);
             }
+            const args_name = gensym('args');
             return Pair.fromArray([
-                LSymbol('letrec'),
-                [[code.car, Pair(
-                    LSymbol('lambda'),
-                    Pair(params, code.cdr.cdr))]],
-                Pair(code.car, args)
+                LSymbol('let'),
+                [[args_name, Pair(LSymbol('list'), args)]],
+                [LSymbol('letrec'),
+                 [[code.car, Pair(
+                     LSymbol('lambda'),
+                     Pair(params, code.cdr.cdr))]],
+                 [LSymbol('apply'), code.car, args_name]]
             ]);
         } else if (macro_expand) {
             // Macro.defmacro are special macros that should return lips code
