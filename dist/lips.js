@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 Mar 2024 21:56:13 +0000
+ * build: Sun, 17 Mar 2024 22:13:53 +0000
  */
 
 (function (global, factory) {
@@ -13229,11 +13229,18 @@
     '%equal-pairs': doc('%equal-pairs', function (a, b) {
       var equal = global_env.get('equal?');
       if (is_pair(a) && is_pair(b)) {
+        var head, tail;
         if (a.have_cycles('car')) {
-          return a.car === b.car;
+          head = a.car === b.car;
         } else {
-          return equal(a.car, b.car);
+          head = equal(a.car, b.car);
         }
+        if (a.have_cycles('cdr')) {
+          tail = a.cdr === b.cdr;
+        } else {
+          tail = equal(a.cdr, b.cdr);
+        }
+        return head && tail;
       }
       return false;
     }, "(%equal-pairs a b)\n\n        Function checks if two pairs are the same according to equal?"),
@@ -15632,10 +15639,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 17 Mar 2024 21:56:13 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 17 Mar 2024 22:13:53 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 17 Mar 2024 21:56:13 +0000').valueOf();
+    var date = LString('Sun, 17 Mar 2024 22:13:53 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -15675,7 +15682,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 17 Mar 2024 21:56:13 +0000';
+  var date = 'Sun, 17 Mar 2024 22:13:53 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

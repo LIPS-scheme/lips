@@ -9000,16 +9000,18 @@ var global_env = new Environment({
     '%equal-pairs': doc('%equal-pairs', function(a, b) {
         const equal = global_env.get('equal?');
         if (is_pair(a) && is_pair(b)) {
+            let head, tail;
             if (a.have_cycles('car')) {
-                return a.car === b.car;
+                head = a.car === b.car;
             } else {
-                return equal(a.car, b.car);
+                head = equal(a.car, b.car);
             }
             if (a.have_cycles('cdr')) {
-                return a.cdr === b.cdr;
+                tail = a.cdr === b.cdr;
             } else {
-                return equal(a.cdr, b.cdr);
+                tail = equal(a.cdr, b.cdr);
             }
+            return head && tail;
         }
         return false;
     }, `(%equal-pairs a b)

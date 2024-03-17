@@ -1,5 +1,3 @@
-#!/usr/bin/env -S lips -t
-
 ;; Source
 ;; http://www.willdonnelly.net/blog/runtime-scheme-detection/
 
