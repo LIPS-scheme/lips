@@ -8993,31 +8993,6 @@ var global_env = new Environment({
         Function that creates a new list with each argument appended end-to-end.
         It will always return a new list and not modify its arguments.`),
     // ------------------------------------------------------------------
-    // :: we can't put this code into Scheme because LIPS cycles are dynamic
-    // :: we need to remove old cycle markers and add new one when evaluate
-    // :: the code. So (node.cdr.have_cycles "cdr") will never work.
-    // ------------------------------------------------------------------
-    '%equal-pairs': doc('%equal-pairs', function(a, b) {
-        const equal = global_env.get('equal?');
-        if (is_pair(a) && is_pair(b)) {
-            let head, tail;
-            if (a.have_cycles('car')) {
-                head = a.car === b.car;
-            } else {
-                head = equal(a.car, b.car);
-            }
-            if (a.have_cycles('cdr')) {
-                tail = a.cdr === b.cdr;
-            } else {
-                tail = equal(a.cdr, b.cdr);
-            }
-            return head && tail;
-        }
-        return false;
-    }, `(%equal-pairs a b)
-
-        Function checks if two pairs are the same according to equal?`),
-    // ------------------------------------------------------------------
     'append!': doc('append!', function(...items) {
         var is_list = global_env.get('list?');
         return items.reduce((acc, item) => {

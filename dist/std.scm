@@ -1783,7 +1783,8 @@
    them with eq?"
   (cond ((and (pair? a))
          (and (pair? b)
-              (%equal-pairs a b)))
+              (equal? (car a) (car b))
+              (equal? (cdr a) (cdr b))))
         ((symbol? a)
          (and (symbol? b)
               (equal? a.__name__ b.__name__)))
