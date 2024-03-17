@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 16 Mar 2024 19:46:48 +0000
+ * build: Sun, 17 Mar 2024 21:24:54 +0000
  */
 
 (function (global, factory) {
@@ -9883,15 +9883,18 @@
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.toRational = function (n) {
-    if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
-      var im = LFloat(this.__im__).toRational(n);
-      var re = LFloat(this.__re__).toRational(n);
-      return LComplex({
-        im: im,
-        re: re
-      });
+    var im = this.__im__,
+      re = this.__re__;
+    if (LNumber.isFloat(this.__im__)) {
+      im = LFloat(this.__im__).toRational(n);
     }
-    return this;
+    if (LNumber.isFloat(this.__re__)) {
+      re = LFloat(this.__re__).toRational(n);
+    }
+    return LComplex({
+      im: im,
+      re: re
+    });
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.pow = function (n) {
@@ -13218,6 +13221,22 @@
       return (_global_env$get = global_env.get('append!')).call.apply(_global_env$get, [this].concat(_toConsumableArray(items)));
     }, "(append item ...)\n\n        Function that creates a new list with each argument appended end-to-end.\n        It will always return a new list and not modify its arguments."),
     // ------------------------------------------------------------------
+    // :: we can't put this code into Scheme because LIPS cycles are dynamic
+    // :: we need to remove old cycle markers and add new one when evaluate
+    // :: the code. So (node.cdr.have_cycles "cdr") will never work.
+    // ------------------------------------------------------------------
+    '%equal-pairs': doc('%equal-pairs', function (a, b) {
+      var equal = global_env.get('equal?');
+      if (is_pair(a) && is_pair(b)) {
+        if (a.have_cycles('car')) {
+          return a.car === b.car;
+        } else {
+          return equal(a.car, b.car);
+        }
+      }
+      return false;
+    }, "(%equal-pairs a b)\n\n        Function checks if two pairs are the same according to equal?"),
+    // ------------------------------------------------------------------
     'append!': doc('append!', function () {
       var is_list = global_env.get('list?');
       for (var _len26 = arguments.length, items = new Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
@@ -15612,10 +15631,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 16 Mar 2024 19:46:48 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 17 Mar 2024 21:24:54 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 16 Mar 2024 19:46:48 +0000').valueOf();
+    var date = LString('Sun, 17 Mar 2024 21:24:54 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -15655,7 +15674,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sat, 16 Mar 2024 19:46:48 +0000';
+  var date = 'Sun, 17 Mar 2024 21:24:54 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

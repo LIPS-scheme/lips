@@ -4724,15 +4724,15 @@ function is_port_method(obj) {
 // ----------------------------------------------------------------------
 // Hidden props
 // ----------------------------------------------------------------------
-var __context__ = Symbol.for('__context__');
-var __fn__ = Symbol.for('__fn__');
-var __data__ = Symbol.for('__data__');
-var __ref__ = Symbol.for('__ref__');
-var __cycles__ = Symbol.for('__cycles__');
-var __class__ = Symbol.for('__class__');
-var __method__ = Symbol.for('__method__');
-var __prototype__ = Symbol.for('__prototype__');
-var __lambda__ = Symbol.for('__lambda__');
+const __context__ = Symbol.for('__context__');
+const __fn__ = Symbol.for('__fn__');
+const __data__ = Symbol.for('__data__');
+const __ref__ = Symbol.for('__ref__');
+const __cycles__ = Symbol.for('__cycles__');
+const __class__ = Symbol.for('__class__');
+const __method__ = Symbol.for('__method__');
+const __prototype__ = Symbol.for('__prototype__');
+const __lambda__ = Symbol.for('__lambda__');
 // ----------------------------------------------------------------------
 // :: Function bind fn with context but it also move all props
 // :: mostly used for Object function
@@ -8989,6 +8989,29 @@ var global_env = new Environment({
 
         Function that creates a new list with each argument appended end-to-end.
         It will always return a new list and not modify its arguments.`),
+    // ------------------------------------------------------------------
+    // :: we can't put this code into Scheme because LIPS cycles are dynamic
+    // :: we need to remove old cycle markers and add new one when evaluate
+    // :: the code. So (node.cdr.have_cycles "cdr") will never work.
+    // ------------------------------------------------------------------
+    '%equal-pairs': doc('%equal-pairs', function(a, b) {
+        const equal = global_env.get('equal?');
+        if (is_pair(a) && is_pair(b)) {
+            if (a.have_cycles('car')) {
+                return a.car === b.car;
+            } else {
+                return equal(a.car, b.car);
+            }
+            if (a.have_cycles('cdr')) {
+                return a.cdr === b.cdr;
+            } else {
+                return equal(a.cdr, b.cdr);
+            }
+        }
+        return false;
+    }, `(%equal-pairs a b)
+
+        Function checks if two pairs are the same according to equal?`),
     // ------------------------------------------------------------------
     'append!': doc('append!', function(...items) {
         var is_list = global_env.get('list?');

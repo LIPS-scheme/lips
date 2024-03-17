@@ -132,11 +132,11 @@
   "(equal? a b)
 
    The function checks if values are equal. If both are a pair or an array
-   it compares their elements recursively."
+   it compares their elements recursively. If pairs have cycles it compares
+   them with eq?"
   (cond ((and (pair? a))
          (and (pair? b)
-              (equal? (car a) (car b))
-              (equal? (cdr a) (cdr b))))
+              (%equal-pairs a b)))
         ((symbol? a)
          (and (symbol? b)
               (equal? a.__name__ b.__name__)))
