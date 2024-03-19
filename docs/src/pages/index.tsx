@@ -12,6 +12,7 @@ import Video from '@site/src/components/Video';
 import Intro from '@site/src/components/Intro';
 
 import styles from './index.module.css';
+const DownArrow = require('@site/static/img/down-arrow.svg').default;
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
@@ -23,6 +24,9 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <Interpreter/>
+        <div className={styles.arrow}>
+          <DownArrow />
+        </div>
       </div>
     </header>
   );
