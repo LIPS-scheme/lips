@@ -8,7 +8,8 @@ import Tools from '@site/src/components/Tools';
 import Version from '@site/src/components/Version';
 import Acknowledgment from '@site/src/components/Acknowledgment';
 import License from '@site/src/components/License';
-
+import Video from '@site/src/components/Video';
+import Intro from '@site/src/components/Intro';
 
 import styles from './index.module.css';
 
@@ -26,9 +27,6 @@ function HomepageHeader() {
     </header>
   );
 }
-
-import Video from '@site/src/components/Video';
-import Intro from '@site/src/components/Intro';
 
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
