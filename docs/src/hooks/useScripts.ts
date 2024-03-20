@@ -10,10 +10,10 @@ function getScript(script: string) {
   });
 }
 
-export default function useScripts(scripts: string[]) {
+export default function useScripts(scripts?: string[]) {
   useEffect(() => {
     (function loop() {
-      if (scripts.length) {
+      if (scripts?.length) {
         const script = scripts.shift();
         getScript(script).then(loop);
       }

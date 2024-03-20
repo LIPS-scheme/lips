@@ -40,5 +40,6 @@ to display list of matched names in environment.`
 export function destroyTerminal() {
   const $ = globalThis.$;
   $('.terminal-tooltip').remove();
-  $('.term').html('').removeClass('terminal');
+  const $term = $('.term');
+  $term.terminal().destroy();
 }

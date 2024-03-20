@@ -1,4 +1,4 @@
-import { useEffect, useState, MouseEvent, CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, MouseEvent, CSSProperties } from 'react';
 import Markdown from 'react-markdown';
 import useIsBrowser from '@docusaurus/useIsBrowser';
 import Head from '@docusaurus/Head';
@@ -25,20 +25,22 @@ const replReady = () => {
 export default function Interpreter(): JSX.Element {
   const [activeSnippet, setActiveSnippet] = useState(0);
   const [size, setSize] = useState(1);
+  const ref = useRef<HTMLDivElement>();
 
   const isProd = process.env.NODE_ENV === 'production';
   const isBrowser = useIsBrowser();
+  const isStatic = isProd && !isBrowser && !globalThis.jQuery;
 
-  useScripts(!!globalThis.jQuery ? [] : [
+  useScripts(!globalThis.jQuery && [
     'https://cdn.jsdelivr.net/npm/jquery',
     'https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js',
     'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js'
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     (function loop() {
-      if (replReady()) {
+      if (replReady() && styleReady()) {
         initTerminal();
       } else {
         setTimeout(loop, 100);
@@ -84,6 +86,11 @@ export default function Interpreter(): JSX.Element {
     $(document.body).removeClass('full-screen');
   }
 
+  function styleReady() {
+    // hack to prevent initalizaing of jQuery Terminal before style is loaded
+    return !!getComputedStyle(ref.current).getPropertyValue('--base-background');
+  }
+
   const terminalStyle = {
     '--size': size.toFixed(1)
   } as TerminalProps;
@@ -95,12 +102,12 @@ export default function Interpreter(): JSX.Element {
         <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism@0.4.1/css/prism-coy.css" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/css/terminal.css"
               rel="stylesheet"/>
-        {isProd && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
-        {isProd && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
-        {isProd && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
-        {isProd && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
-        <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
-                data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>
+        {isStatic && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js" />}
+        {!globalThis.lips && <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"
+                                     data-bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/std.xcb"/>}
       </Head>
       <div className="intro">
         <div className="actions-wrapper">
@@ -123,6 +130,7 @@ export default function Interpreter(): JSX.Element {
             </li>
           </ul>
         </div>
+        <div className="terminal marker" ref={ref}></div>
         <div className="term" style={terminalStyle}>
           <div className="loader-container">
             <div className="loader">
