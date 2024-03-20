@@ -1051,6 +1051,21 @@
         char)))
 
 ;; -----------------------------------------------------------------------------
+(define (string-foldcase string)
+  "(string-foldcase char)
+
+   Returns lowercase string using the Unicode simple case-folding algorithm."
+  (typecheck "string-foldcase" string "string")
+  (--> (Array.from string)
+       (map (lambda (str)
+              (let ((ord (str.codePointAt 0)))
+                (let ((output (. *fold-case-mapping* ord)))
+                  (if (number? output)
+                      (String.fromCodePoint output)
+                      str)))))
+       (join "")))
+
+;; -----------------------------------------------------------------------------
 (define (digit-value chr)
   "(digit-value chr)
 
