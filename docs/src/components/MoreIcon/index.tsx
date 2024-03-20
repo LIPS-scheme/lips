@@ -1,5 +1,4 @@
 const DownArrow = require('@site/static/img/down-arrow.svg').default;
-
 import styles from './index.module.css';
 
 export default function MoreIcon(): JSX.Element {
@@ -8,4 +7,4 @@ export default function MoreIcon(): JSX.Element {
       <DownArrow />
     </div>
   );
-}
+};
