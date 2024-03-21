@@ -184,6 +184,7 @@ body.full-screen .term {
     top: 60px;
     display: block;
     font-size: 20px;
+    font-family: sans-serif;
     margin-left: -10px;
     cursor: pointer;
     transition: transform 100ms linear;
