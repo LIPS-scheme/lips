@@ -1,10 +1,15 @@
 import React from 'react';
 import clsx from 'clsx';
+import { useLocation } from '@docusaurus/router';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import MoreIcon from '@site/src/components/MoreIcon';
 import './style.css';
 
 export default function FooterLayout({style, links, logo, copyright}) {
+  const { pathname: currentPath } = useLocation();
+  const { siteConfig: { baseUrl } } = useDocusaurusContext();
+
   return (
     <footer
       className={clsx('footer', {
@@ -19,7 +24,7 @@ export default function FooterLayout({style, links, logo, copyright}) {
           </div>
         )}
       </div>
-      <MoreIcon />
+      {baseUrl === currentPath && <MoreIcon />}
       <script dangerouslySetInnerHTML={{__html: `
 var owa_baseUrl = 'https://stats.jcubic.pl/';
 var owa_cmds = owa_cmds || [];
