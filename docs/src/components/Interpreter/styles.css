@@ -6,6 +6,10 @@
     resize: vertical;
     overflow: hidden;
 }
+.intro .terminal.marker {
+    position: absolute;
+    left: -9999999999px;
+}
 .intro .term:not(.terminal) {
     background: var(--background);
 }
