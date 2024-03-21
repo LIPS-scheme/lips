@@ -10,7 +10,6 @@ import Acknowledgment from '@site/src/components/Acknowledgment';
 import License from '@site/src/components/License';
 import Video from '@site/src/components/Video';
 import Intro from '@site/src/components/Intro';
-import MoreIcon from '@site/src/components/MoreIcon';
 
 import styles from './index.module.css';
 
@@ -24,7 +23,6 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <Interpreter/>
-        <MoreIcon />
       </div>
     </header>
   );

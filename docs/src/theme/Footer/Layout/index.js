@@ -1,6 +1,9 @@
 import React from 'react';
 import clsx from 'clsx';
 
+import MoreIcon from '@site/src/components/MoreIcon';
+import './style.css';
+
 export default function FooterLayout({style, links, logo, copyright}) {
   return (
     <footer
@@ -16,6 +19,7 @@ export default function FooterLayout({style, links, logo, copyright}) {
           </div>
         )}
       </div>
+      <MoreIcon />
       <script dangerouslySetInnerHTML={{__html: `
 var owa_baseUrl = 'https://stats.jcubic.pl/';
 var owa_cmds = owa_cmds || [];
