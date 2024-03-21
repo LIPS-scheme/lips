@@ -87,6 +87,62 @@ you can use named gensym if you pass string as first argument:
 ;; ==> #:sym
 ```
 
+## Procedures
+Procedures in LIPS have access additional objects `arguments`, but the have nothing to do with JavaScript.
+arguments is an array/vector with calling argumnets and it have an object callee which points to the same
+procedure. So you can create recursive functions with anonymous lambda:
+
+```scheme
+((lambda (n)
+   (if (<= n 0)
+       1
+       (* n (arguments.callee (- n 1))))) 10)
+;; ==> 3628800
+```
+
+This is classic factorial function written as lambda without the name.
+
+## Doc strings
+Procedures, macros, and variables can have doc strings.
+
+```scheme
+(define (factorial n)
+  "(factorial n)
+
+   Calculate factorial of a given number"
+  (if (<= n 0)
+       1
+       (* n (factorial (- n 1)))))
+```
+
+You can access doc string with `help` procedure or with `__doc__` property.
+
+```scheme
+(write factorial.__doc__)
+"(factorial n)
+
+Calculate factorial of a given number"
+```
+
+If you define variable or hygienic macro with doc string, the string is hidden (you can access it with `__doc__`),
+so help is the only way to access it:
+
+```scheme
+(define-syntax q
+  (syntax-rules ()
+    ((_ x) 'x))
+  "(q expression)
+
+   Macro quote the expression")
+
+(write q.__doc__)
+;; ==> #void
+(help q)
+;; ==> (q expression)
+;; ==>
+;; ==> Macro quote the expression
+```
+
 ## Integration with JavaScript
 
 ### Dot notation
@@ -258,6 +314,18 @@ object returned by expression.
 Here we get a [style object](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style)
 from [the DOM node](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) wihout soring the
 reference to the DOM node.
+
+**NOTE** becasue dot notation in symbols is not special syntax you can use code like this:
+
+```scheme
+(let ((x #(1 2 3)))
+  (print x.0)
+  (print x.1)
+  (print x.2))
+;; ==> 1
+;; ==> 2
+;; ==> 3
+```
 
 ### Scheme functions
 Scheme functions (lambda's) are JavaScript functions, so you can call them from JavaScript.
