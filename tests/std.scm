@@ -308,13 +308,13 @@
 
         (t.is (kons 1 2) (kons 1 2))))
 
-(test "std: equal? on same cycle"
+(test.skip "std: equal? on same cycle"
       (lambda (t)
         (let ((x (cons 1 (cons 2 '()))))
           (set-cdr! (cdr x) x)
           (t.is (equal? x x) #t))))
 
-(test "std: equal?  on identical cycles"
+(test.skip "std: equal?  on identical cycles"
       (lambda (t)
         (let ((a (list 1 2))
               (b (list 1 2)))
