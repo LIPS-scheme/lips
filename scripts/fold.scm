@@ -12,17 +12,13 @@
        (filter (lambda (line)
                   (and (not (string=? line ""))
                        (null? (line.match #/^#/))
-                       (not (null? (line.match #/; C/
-                                               ))))))
+                       (not (null? (line.match #/; C/))))))
        (map (lambda (line)
               (let* ((parts (line.split "; "))
                      (small (not (null? (line.match #/SMALL/))))
-                     (upper (string->number (. parts (if small 2 0)) 16))
-                     (lower (string->number (. parts (if small 0 2)) 16)))
-                (string-append "\"" (number->string upper) "\""  ": " (number->string lower)))))))
-
-
-
+                     (orig (string->number (. parts 0) 16))
+                     (fold (string->number (. parts 2) 16)))
+                (string-append "\"" (number->string orig) "\""  ": " (number->string fold)))))))
 
 (print (string-append "const fold_case_mapping = {"
                       (--> (get-mapping (get-data))

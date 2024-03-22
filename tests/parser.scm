@@ -55,6 +55,17 @@
 
 (unset-special! "#nil")
 
+(test "parser: #!fold-case"
+      (lambda (t)
+        (define foo 10)
+        (t.is (to.throw FOO) #t)
+        #!fold-case
+        (t.is (to.throw FOO) #f)
+        (define BAR 20)
+        (t.is (* FOO Bar) 200)
+        #!no-fold-case
+        (t.is (to.throw FOO) #t)))
+
 (test "parser: syntax extension"
       (lambda (t)
         (t.is parser/t1 "<foo+bar/>")
