@@ -19,12 +19,12 @@
                      (small (not (null? (line.match #/SMALL/))))
                      (upper (string->number (. parts (if small 2 0)) 16))
                      (lower (string->number (. parts (if small 0 2)) 16)))
-                (string-append "\\\"" (number->string upper) "\\\""  ": " (number->string lower)))))))
+                (string-append "\"" (number->string upper) "\""  ": " (number->string lower)))))))
 
 
 
 
-(print (string-append "(define *fold-case-mapping* (JSON.parse \"{"
+(print (string-append "const fold_case_mapping = {"
                       (--> (get-mapping (get-data))
                            (reduce (lambda (acc expr index arr)
                                      (if (zero? index)
@@ -34,4 +34,4 @@
                                                (string-append acc "\n    " expr suffix)
                                                (string-append acc expr suffix)))))
                                          ""))
-                      "\n}\"))"))
+                      "\n}"))"))
