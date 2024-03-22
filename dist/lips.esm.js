@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 22 Mar 2024 12:40:41 +0000
+ * build: Fri, 22 Mar 2024 13:10:37 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -5483,27 +5483,27 @@ function _parse2() {
           parser = new Parser(arg, {
             env: env
           });
-        case 3:
-          _context9.next = 6;
+        case 2:
+          _context9.next = 5;
           return _awaitAsyncGenerator(parser.read_object());
-        case 6:
+        case 5:
           expr = _context9.sent;
           if (!parser.balanced()) {
             parser.ballancing_error(expr, prev);
           }
           if (!(expr === eof)) {
-            _context9.next = 10;
+            _context9.next = 9;
             break;
           }
-          return _context9.abrupt("break", 15);
-        case 10:
+          return _context9.abrupt("break", 14);
+        case 9:
           prev = expr;
-          _context9.next = 13;
+          _context9.next = 12;
           return expr;
-        case 13:
-          _context9.next = 3;
+        case 12:
+          _context9.next = 2;
           break;
-        case 15:
+        case 14:
         case "end":
           return _context9.stop();
       }
@@ -15531,7 +15531,7 @@ function exec_collect(collect_callback) {
         dynamic_env = _ref48.dynamic_env,
         use_dynamic = _ref48.use_dynamic;
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee20() {
-        var results, input, _iteratorAbruptCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _code2, value;
+        var results, input, _iteratorAbruptCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, code, value;
         return _regeneratorRuntime.wrap(function _callee20$(_context21) {
           while (1) switch (_context21.prev = _context21.next) {
             case 0:
@@ -15549,7 +15549,7 @@ function exec_collect(collect_callback) {
                 break;
               }
               _context21.next = 6;
-              return exec_with_stacktrace(code, {
+              return exec_with_stacktrace(arg, {
                 env: env,
                 dynamic_env: dynamic_env,
                 use_dynamic: use_dynamic
@@ -15571,9 +15571,9 @@ function exec_collect(collect_callback) {
                 _context21.next = 31;
                 break;
               }
-              _code2 = _step2.value;
+              code = _step2.value;
               _context21.next = 19;
-              return exec_with_stacktrace(_code2, {
+              return exec_with_stacktrace(code, {
                 env: env,
                 dynamic_env: dynamic_env,
                 use_dynamic: use_dynamic
@@ -15582,7 +15582,7 @@ function exec_collect(collect_callback) {
               value = _context21.sent;
               _context21.t1 = results;
               _context21.t2 = collect_callback;
-              _context21.t3 = _code2;
+              _context21.t3 = code;
               _context21.next = 25;
               return value;
             case 25:
@@ -16159,10 +16159,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 22 Mar 2024 12:40:41 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 22 Mar 2024 13:10:37 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 22 Mar 2024 12:40:41 +0000').valueOf();
+  var date = LString('Fri, 22 Mar 2024 13:10:37 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -16202,7 +16202,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 22 Mar 2024 12:40:41 +0000';
+var date = 'Fri, 22 Mar 2024 13:10:37 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

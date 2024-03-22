@@ -1743,7 +1743,6 @@ async function* _parse(arg, env) {
         }
     }
     const parser = new Parser(arg, { env });
-    let i = 100000;
     let prev;
     while (true) {
         const expr = await parser.read_object();
@@ -11217,7 +11216,7 @@ function exec_collect(collect_callback) {
         }
         const results = [];
         if (is_pair(arg)) {
-            return [await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic })];
+            return [await exec_with_stacktrace(arg, { env, dynamic_env, use_dynamic })];
         }
         const input = Array.isArray(arg) ? arg : _parse(arg);
         for await (let code of input) {
