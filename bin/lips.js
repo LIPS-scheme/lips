@@ -20,6 +20,7 @@ import {
     unserialize_bin,
     balanced_parenthesis,
     tokenize,
+    _is_directive,
     Interpreter,
     LSymbol,
     Macro,
@@ -283,7 +284,12 @@ function readBinary(filename) {
 // -----------------------------------------------------------------------------
 function readFile(filename) {
     const buff = readBinary(filename);
-    return buff.toString().replace(/^#!.*\n/, '');
+    return buff.toString().replace(/^(#!.*)([\s\n])/, function(_, shebang, delim) {
+        if (_is_directive(shebang)) {
+            return shebang + delim;
+        }
+        return '';
+    });
 }
 
 // -----------------------------------------------------------------------------

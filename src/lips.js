@@ -8170,7 +8170,12 @@ var global_env = new Environment({
                 if (type(code) === 'buffer') {
                     code = code.toString();
                 }
-                code = code.replace(/^#!.*/, '');
+                code = code.replace(/^(#!.*)/, function(_, shebang) {
+                    if (is_directive(shebang)) {
+                        return shebang;
+                    }
+                    return '';
+                });
                 if (code.match(/^\{/)) {
                     code = unserialize(code);
                 }
@@ -11824,6 +11829,7 @@ export {
     Values,
     QuotedPromise,
     LipsError as Error,
+    is_directive as _is_directive,
 
     quote,
 

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 22 Mar 2024 13:11:25 +0000
+ * build: Fri, 22 Mar 2024 13:26:48 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -12595,7 +12595,12 @@ var global_env = new Environment({
         if (type(code) === 'buffer') {
           code = code.toString();
         }
-        code = code.replace(/^#!.*/, '');
+        code = code.replace(/^(#!.*)/, function (_, shebang) {
+          if (is_directive(shebang)) {
+            return shebang;
+          }
+          return '';
+        });
         if (code.match(/^\{/)) {
           code = unserialize(code);
         }
@@ -16180,10 +16185,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 22 Mar 2024 13:11:25 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 22 Mar 2024 13:26:48 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 22 Mar 2024 13:11:25 +0000').valueOf();
+  var date = LString('Fri, 22 Mar 2024 13:26:48 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -16223,7 +16228,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 22 Mar 2024 13:11:25 +0000';
+var date = 'Fri, 22 Mar 2024 13:26:48 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
@@ -16287,4 +16292,4 @@ var lips = {
 };
 global_env.set('lips', lips);
 
-export { BufferedOutputPort, Environment, LipsError as Error, Formatter, InputBinaryFilePort, InputByteVectorPort, InputFilePort, InputPort, InputStringPort, Interpreter, LBigInteger, LCharacter, LComplex, LFloat, LNumber, LRational, LString, LSymbol, Lexer, Macro, OutputBinaryFilePort, OutputByteVectorPort, OutputFilePort, OutputPort, OutputStringPort, Pair, Parameter, Parser, QuotedPromise, Syntax, Values, Worker, balanced, balanced as balancedParenthesis, balanced as balanced_parenthesis, banner, bootstrap, compile, date, user_env as env, eof, _evaluate as evaluate, exec, _nil as nil, parse, quote, rationalize, repr, serialize, serialize_bin, set_fs, specials, tokenize, unserialize, unserialize_bin, version };
+export { BufferedOutputPort, Environment, LipsError as Error, Formatter, InputBinaryFilePort, InputByteVectorPort, InputFilePort, InputPort, InputStringPort, Interpreter, LBigInteger, LCharacter, LComplex, LFloat, LNumber, LRational, LString, LSymbol, Lexer, Macro, OutputBinaryFilePort, OutputByteVectorPort, OutputFilePort, OutputPort, OutputStringPort, Pair, Parameter, Parser, QuotedPromise, Syntax, Values, Worker, is_directive as _is_directive, balanced, balanced as balancedParenthesis, balanced as balanced_parenthesis, banner, bootstrap, compile, date, user_env as env, eof, _evaluate as evaluate, exec, _nil as nil, parse, quote, rationalize, repr, serialize, serialize_bin, set_fs, specials, tokenize, unserialize, unserialize_bin, version };
