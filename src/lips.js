@@ -1428,13 +1428,8 @@ function match_or_null(re, char) {
 // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
 // ----------------------------------------------------------------------
 class Parser {
-    constructor(arg, { env, meta = false, formatter = multiline_formatter } = {}) {
-        if (arg instanceof LString) {
-            arg = arg.toString();
-        }
-
+    constructor({ env, meta = false, formatter = multiline_formatter } = {}) {
         read_only(this, '_formatter', formatter, { hidden: true });
-        read_only(this, '__lexer__', new Lexer(arg));
         read_only(this, '__env__', env);
 
         read_only(this, '_meta', meta, { hidden: true });
@@ -1444,6 +1439,12 @@ class Parser {
             parentheses: 0,
             fold_case: false
         }, { hidden: true });
+    }
+    parse(arg) {
+        if (arg instanceof LString) {
+            arg = arg.toString();
+        }
+        read_only(this, '__lexer__', new Lexer(arg));
     }
     resolve(name) {
         return this.__env__ && this.__env__.get(name, { throwError: false });
@@ -1759,7 +1760,13 @@ async function* _parse(arg, env) {
             env = user_env;
         }
     }
-    const parser = new Parser(arg, { env });
+    let parser;
+    if (arg instanceof Parser) {
+        parser = arg;
+    } else {
+        parser = new Parser({ env });
+        parser.parse(arg);
+    }
     let prev;
     while (true) {
         const expr = await parser.read_object();
@@ -6888,7 +6895,8 @@ function InputPort(read) {
     this._with_parser = this._with_init_parser.bind(this, async () => {
         if (!this.char_ready()) {
             const line = await this._read();
-            parser = new Parser(line, { env: this });
+            parser = new Parser({ env: this });
+            parser.parse(line);
         }
         return this.__parser__;
     });
@@ -7089,7 +7097,8 @@ function InputStringPort(string, env) {
     string = string.valueOf();
     this._with_parser = this._with_init_parser.bind(this, () => {
         if (!this.__parser__) {
-            this.__parser__ = new Parser(string, { env });
+            this.__parser__ = new Parser({ env });
+            this.__parser__.parse(string);
         }
         return this.__parser__;
     });
@@ -7322,6 +7331,7 @@ function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj 
     if (typeof name === 'undefined') {
         name = 'anonymous';
     }
+    this.__parser__ = new Parser({  env: this.__env__ });
     this.__env__ = user_env.inherit(name, obj);
     this.__env__.set('parent.frame', doc('parent.frame', () => {
         return this.__env__;
@@ -7342,13 +7352,13 @@ function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj 
     set_interaction_env(this.__env__, inter);
 }
 // -------------------------------------------------------------------------
-Interpreter.prototype.exec = function(code, options = {}) {
+Interpreter.prototype.exec = async function(arg, options = {}) {
     let {
         use_dynamic = false,
         dynamic_env,
         env
     } = options;
-    typecheck('Interpreter::exec', code, ['string', 'array'], 1);
+    typecheck('Interpreter::exec', arg, ['string', 'array'], 1);
     typecheck('Interpreter::exec', use_dynamic, 'boolean', 2);
     // simple solution to overwrite this variable in each interpreter
     // before evaluation of user code
@@ -7359,7 +7369,12 @@ Interpreter.prototype.exec = function(code, options = {}) {
         dynamic_env = env;
     }
     global_env.set('**interaction-environment**', this.__env__);
-    return exec(code, { env, dynamic_env, use_dynamic });
+    if (Array.isArray(arg)) {
+        return exec(arg, { env, dynamic_env, use_dynamic });
+    } else {
+        this.__parser__.parse(arg);
+        return exec(this.__parser__, { env, dynamic_env, use_dynamic });
+    }
 };
 // -------------------------------------------------------------------------
 Interpreter.prototype.get = function(value) {
