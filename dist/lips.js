@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 22 Mar 2024 13:10:37 +0000
+ * build: Fri, 22 Mar 2024 13:11:25 +0000
  */
 
 (function (global, factory) {
@@ -4812,13 +4812,14 @@
     '#null': null,
     '#void': undefined
   };
+  var directives = ['#!fold-case', '#!no-fold-case'];
   // ----------------------------------------------------------------------
   Object.defineProperty(Lexer, 'rules', {
     get: function get() {
       if (Lexer._cache.valid) {
         return Lexer._cache.rules;
       }
-      var parsable = Object.keys(parsable_contants);
+      var parsable = Object.keys(parsable_contants).concat(directives);
       var tokens = specials.names().concat(parsable).sort(function (a, b) {
         return b.length - a.length || a.localeCompare(b);
       });
@@ -4875,7 +4876,8 @@
         hidden: true
       });
       read_only(this, '_state', {
-        parentheses: 0
+        parentheses: 0,
+        fold_case: false
       }, {
         hidden: true
       });
@@ -4909,33 +4911,48 @@
                 this.skip();
                 return _context.abrupt("continue", 0);
               case 7:
+                if (!is_directive(token.token)) {
+                  _context.next = 11;
+                  break;
+                }
+                this.skip();
+                if (token.token === '#!fold-case') {
+                  this._state.fold_case = true;
+                } else if (token.token === '#!no-fold-case') {
+                  this._state.fold_case = false;
+                }
+                return _context.abrupt("continue", 0);
+              case 11:
                 if (!(token.token === '#;')) {
-                  _context.next = 14;
+                  _context.next = 18;
                   break;
                 }
                 this.skip();
                 if (!(this.__lexer__.peek() === eof)) {
-                  _context.next = 11;
+                  _context.next = 15;
                   break;
                 }
                 throw new Error('Lexer: syntax error eof found after comment');
-              case 11:
-                _context.next = 13;
+              case 15:
+                _context.next = 17;
                 return this._read_object();
-              case 13:
-                return _context.abrupt("continue", 0);
-              case 14:
-                return _context.abrupt("break", 17);
               case 17:
+                return _context.abrupt("continue", 0);
+              case 18:
+                return _context.abrupt("break", 21);
+              case 21:
                 token = this._formatter(token);
+                if (this._state.fold_case) {
+                  token.token = foldcase_string(token.token);
+                }
                 if (!this._meta) {
-                  _context.next = 20;
+                  _context.next = 25;
                   break;
                 }
                 return _context.abrupt("return", token);
-              case 20:
+              case 25:
                 return _context.abrupt("return", token.token);
-              case 21:
+              case 26:
               case "end":
                 return _context.stop();
             }
@@ -8976,6 +8993,10 @@
   // ----------------------------------------------------------------------
   function is_function(o) {
     return typeof o === 'function' && typeof o.bind === 'function';
+  }
+  // ----------------------------------------------------------------------------
+  function is_directive(token) {
+    return directives.includes(token);
   }
   // ----------------------------------------------------------------------------
   function is_false(o) {
@@ -16166,10 +16187,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 22 Mar 2024 13:10:37 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 22 Mar 2024 13:11:25 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 22 Mar 2024 13:10:37 +0000').valueOf();
+    var date = LString('Fri, 22 Mar 2024 13:11:25 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -16209,7 +16230,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 22 Mar 2024 13:10:37 +0000';
+  var date = 'Fri, 22 Mar 2024 13:11:25 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

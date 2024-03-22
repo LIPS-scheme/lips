@@ -1378,13 +1378,17 @@ const parsable_contants = {
     '#null': null,
     '#void': undefined
 };
+const directives = [
+    '#!fold-case',
+    '#!no-fold-case'
+];
 // ----------------------------------------------------------------------
 Object.defineProperty(Lexer, 'rules', {
     get() {
         if (Lexer._cache.valid) {
             return Lexer._cache.rules;
         }
-        const parsable = Object.keys(parsable_contants);
+        const parsable = Object.keys(parsable_contants).concat(directives);
         const tokens = specials.names().concat(parsable).sort((a, b) => {
             return b.length - a.length || a.localeCompare(b);
         });
@@ -1437,7 +1441,8 @@ class Parser {
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
         read_only(this, '_state', {
-            parentheses: 0
+            parentheses: 0,
+            fold_case: false
         }, { hidden: true });
     }
     resolve(name) {
@@ -1454,6 +1459,15 @@ class Parser {
                 this.skip();
                 continue;
             }
+            if (is_directive(token.token)) {
+                this.skip();
+                if (token.token === '#!fold-case') {
+                    this._state.fold_case = true;
+                } else if (token.token === '#!no-fold-case') {
+                    this._state.fold_case = false;
+                }
+                continue;
+            }
             if (token.token === '#;') {
                 this.skip();
                 if (this.__lexer__.peek() === eof) {
@@ -1465,6 +1479,9 @@ class Parser {
             break;
         }
         token = this._formatter(token);
+        if (this._state.fold_case) {
+            token.token = foldcase_string(token.token);
+        }
         if (this._meta) {
             return token;
         }
@@ -1533,7 +1550,7 @@ class Parser {
         return head;
     }
     async read_value() {
-        var token = await this.read();
+        let token = await this.read();
         if (token === eof) {
             throw new Error('Parser: Expected token eof found');
         }
@@ -4846,6 +4863,10 @@ function is_nil(value) {
 // ----------------------------------------------------------------------
 function is_function(o) {
     return typeof o === 'function' && typeof o.bind === 'function';
+}
+// ----------------------------------------------------------------------------
+function is_directive(token) {
+    return directives.includes(token);
 }
 // ----------------------------------------------------------------------------
 function is_false(o) {
