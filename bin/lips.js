@@ -101,6 +101,7 @@ function print_error(e, stack) {
     if (stack) {
         console.error(e.stack);
         console.error(strace);
+        process.exit(1);
     } else {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
