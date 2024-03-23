@@ -7331,8 +7331,8 @@ function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj 
     if (typeof name === 'undefined') {
         name = 'anonymous';
     }
-    this.__parser__ = new Parser({  env: this.__env__ });
     this.__env__ = user_env.inherit(name, obj);
+    this.__parser__ = new Parser({  env: this.__env__ });
     this.__env__.set('parent.frame', doc('parent.frame', () => {
         return this.__env__;
     }, global_env.__env__['parent.frame'].__doc__));
