@@ -217,10 +217,9 @@ This will define constant `#nil`. It's different from `nil` variable:
 ;; ==> #t
 ```
 
-### Limitations
+### Autogensyms
 
-The limitation of syntax extensions is that you can't define variable that starts with the
-same characters as syntax extension. This may be a benefit and not a limitation:
+With syntax extensions you can define autogensyms expressions:
 
 ```scheme
 (set-special! "#:" 'keyword lips.specials.LITERAL)
@@ -274,6 +273,11 @@ With syntax extensions you can create string interpolation that expand into a Sc
 The limitation of this solution is that you can't use strings inside `${ ... }`. It will break the
 Lexer.  In the future there may be a way to define such syntax extensions (See [Add full string
 interpolation as syntax extension](https://github.com/jcubic/lips/issues/321)).
+
+### Limitations
+
+The limitation of syntax extensions is that you can't define variable that starts with the
+same characters as syntax extension. This may be a benefit and not a limitation:
 
 ## New Homoiconic data types
 
