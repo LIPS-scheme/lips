@@ -13,8 +13,8 @@ The base of those data structures are two expressions `delay` and `force`.
 
 The result of a delay is often called a Promise.
 
-To create a lazy pair, you use cons with the first element (`car`) and the rest (`cdr`) is a delay
-expression:
+To create a lazy [pair](/docs/scheme-intro/data-types#pairs), you use cons with the first element
+(`car`) and the rest (`cdr`) is a delay expression:
 
 ```scheme
 (define s (cons 1 (delay 2)))
