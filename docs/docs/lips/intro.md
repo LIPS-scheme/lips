@@ -172,6 +172,47 @@ so help is the only way to access it:
 ;; ==> Macro quote the expression
 ```
 
+## Typechecking
+
+LIPS do typechecking for all scheme procedures.
+
+```scheme
+(+ "hello" 10)
+;; ==> Expecting number got string
+```
+
+You can incorporate typechecking in your own code:
+
+```scheme
+(let ((x 10))
+  (typecheck "let" x "string" 0))
+;; ==> Expecting string got number in expression `let` (argument 0)
+(let ((x "string"))
+  (typecheck "let" x "number"))
+;; ==> Expecting number got string in expression `let`
+```
+
+There is also another function to check type of number:
+
+```scheme
+(let ((i 10+10i))
+  (typecheck-number "let" i "bigint"))
+;; ==> Expecting bigint got complex in expression `let`
+```
+
+**NOTE**: In LIPS all integers are BigInts.
+
+The last typecking function is `typecheck-args` that check if all arguments are of same type.
+
+```scheme
+(let ((number '(1 10 1/2 10+10i)))
+  (typecheck-args "number" "let" number))
+;; ==> #void
+(let ((number '(1 10 1/2 "string")))
+  (typecheck-args "number" "let" number))
+;; ==>  Expecting number got string in expression `let` (argument 4)
+```
+
 ## Integration with JavaScript
 
 ### Dot notation
