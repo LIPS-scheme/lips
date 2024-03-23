@@ -43,6 +43,29 @@ To create instance of this component you use:
 The main element is `sxml` macro that to same transoformation as [JSX
 compiler](https://legacy.reactjs.org/docs/introducing-jsx.html) like [Babel](https://babeljs.io/) do.
 
+## Inserting the Scheme code into SXML
+
+By default symbols in SXML are treated as tags. If you want to put code like with `{ }` in JSX you need to use
+`~` symbol in front of S-Expression:
+
+```scheme
+(let ((x 10))
+  (sxml (ul (li ~x)
+            (li ~(+ x 1))
+            (li ~(+ x 2)))))
+```
+
+You can also array from escaped expression:
+
+```scheme
+(sxml (ul ~(list->array
+            (map (lambda (x)
+                   (sxml (li ~x)))
+                 (range 10)))))
+```
+
+Remember to use `list->array` (or `list->vector`) if you process lists.
+
 ## Using SXML with React and Preact
 
 To use SXML with React you need to specificy the main function that is used to create tags in JSX.
