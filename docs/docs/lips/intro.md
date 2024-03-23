@@ -87,6 +87,35 @@ you can use named gensym if you pass string as first argument:
 ;; ==> #:sym
 ```
 
+## Single argument eval
+
+Eval in LIPS don't require second argument to `eval`. The environment is optional and default
+it's a result of calling `(interaction-environment)`.
+
+```scheme
+(define x 10)
+(eval '(+ x x))
+;; ==> 20
+```
+
+```scheme
+(define x 10)
+(let ((x 20))
+  (eval '(- x)))
+;; ==> -10
+```
+
+But you can also use the second arguments:
+
+```scheme
+(define x 10)
+(let ((x 20))
+  (eval '(- x) (current-environment)))
+;; ==> -20
+```
+
+Read more about [LIPS environments](/docs/lips/environments).
+
 ## Procedures
 Procedures in LIPS have access additional objects `arguments`, but the have nothing to do with JavaScript.
 arguments is an array/vector with calling argumnets and it have an object callee which points to the same
@@ -768,7 +797,7 @@ You can also manipulate JavaScript prototypes directly:
 By default toString is not used for represention of objects, but you add representation if you want.
 See [Homoiconic data types](/docs/lips/extension#new-homoiconic-data-types).
 
-## Node.js
+### Node.js
 
 In Node.js, you can load JavaScript modules with `require`:
 
