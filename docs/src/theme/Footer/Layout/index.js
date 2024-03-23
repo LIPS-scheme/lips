@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import MoreIcon from '@site/src/components/MoreIcon';
 import './style.css';
+const NotByAI = require('@site/static/img/Written-By-Human-Not-By-AI-Badge-black.svg').default
 
 export default function FooterLayout({style, links, logo, copyright}) {
   const { pathname: currentPath } = useLocation();
@@ -21,6 +22,7 @@ export default function FooterLayout({style, links, logo, copyright}) {
           <div className="footer__bottom text--center">
             {logo && <div className="margin-bottom--sm">{logo}</div>}
             {copyright}
+            <a href="https://notbyai.fyi"><NotByAI /></a>
           </div>
         )}
       </div>
