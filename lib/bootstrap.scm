@@ -1361,7 +1361,7 @@
         (new lips.Environment (object
                                :interaction-environment interaction-environment
                                :**interaction-environment** **interaction-environment**)
-             null "root")
+             #null "root")
         ,name))
 
 ;; -----------------------------------------------------------------------------
