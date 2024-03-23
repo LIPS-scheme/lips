@@ -366,14 +366,14 @@
        (or (%number-type "rational" x) (integer? x))))
 
 ;; -----------------------------------------------------------------------------
-(define (typecheck-args _type name _list)
-  "(typecheck-args args type)
+(define (typecheck-args _type label _list)
+  "(typecheck-args type label lst)
 
-   Function that makes sure that all items in the array are of same type."
+   Function that makes sure that all items in list are of same type."
   (let iter ((n 1) (_list _list))
     (if (pair? _list)
         (begin
-          (typecheck name (car _list) _type n)
+          (typecheck label (car _list) _type n)
           (iter (+ n 1) (cdr _list))))))
 
 ;; -----------------------------------------------------------------------------
