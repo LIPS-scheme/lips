@@ -136,7 +136,7 @@ You can use a helper procedure that closes the port automatically:
 
 The output file will contain two files that have two literal strings (with quotes because right was used).
 
-```
+```scheme
 "hello"
 "there"
 ```
@@ -273,7 +273,7 @@ You can also create ports as strings. You can use standard functions as with fil
 Output string port act as a [buffer](https://en.wikipedia.org/wiki/Data_buffer). You can also use to to get string
 representation of different objects as a value.
 
-```
+```scheme
 (let ((port (open-output-string)))
   (let ((beatles '("John Lennon"
                  "Paul McCartney"
