@@ -172,7 +172,7 @@ If you want to create REPL or similar thing you can use Interpreter interface wh
 stdin and stdout.
 
 ```javascript
-import { Interpreter } from '@jcubic/lips';
+import { Interpreter, InputPort, OutputPort } from '@jcubic/lips';
 
 const interpreter = Interpreter('<name>', {
     stdin: InputPort(function() {
