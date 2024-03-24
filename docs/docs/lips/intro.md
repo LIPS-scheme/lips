@@ -878,3 +878,29 @@ You can also use the `Promise` contructor yourself:
 
 In the above example, we import a regular callback based fs module and use the `Promise` constructor
 abstracted away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
+
+## Binary compiler
+
+LIPS Scheme have dumb binary compiler. The compiler is a way to compress the LIPS Scheme code and
+create binary file that is faster to load. Compiler is use to make bootstraping faster. The binary
+file use [CBOR](https://en.wikipedia.org/wiki/CBOR) serialization format that is then compressed
+with [LZJB](https://en.wikipedia.org/wiki/LZJB) alorithm that is pretty fast. And it can still be
+compress further with gzip by the HTTP server.
+
+To compile/compress a file you can use `-c` flag when executing `lips` executable.
+
+```bash
+$ lips -c file.scm
+```
+
+You can then execute the code with:
+
+```bash
+$ lips -c file.xcb
+```
+
+Will create `file.xcb` in same directory. For smaller files it make not have a difference when
+loading `.xcb` or `.scm` files.
+
+**NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are threated
+as comments, so you can't compile the code that have those directives.
