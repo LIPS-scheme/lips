@@ -178,6 +178,8 @@ If you really want to overwrite `define` you can (not that you should):
   (define-macro (define x)
     `(print ,x)))
 
+(define 10)
+;; ==> 10
 (unset! define)
 (define foo 10)
 ;; ==> Unbound variable `define'
