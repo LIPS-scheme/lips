@@ -849,17 +849,17 @@
 
    Returns a new function that limits the number of arguments to n."
   (lambda args
-    (apply fn (take n args))))
+    (apply fn (take args n))))
 
 ;; -----------------------------------------------------------------------------
-(define (take n lst)
-  "(take n list)
+(define (take lst n)
+  "(take list n)
 
    Returns n first values of the list."
-  (let iter ((result '()) (i n) (lst lst))
+  (let loop ((result '()) (i n) (lst lst))
     (if (or (null? lst) (<= i 0))
         (reverse result)
-        (iter (cons (car lst) result) (- i 1) (cdr lst)))))
+        (loop (cons (car lst) result) (- i 1) (cdr lst)))))
 
 ;; -----------------------------------------------------------------------------
 (define (zip . lists)
