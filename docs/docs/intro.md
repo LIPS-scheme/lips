@@ -163,8 +163,46 @@ exec('(let ((a 10) (b 20)) (* a b))').then(result => {
 });
 ```
 
-**Note**: that you also need to bootstrap the standard library to have fully working Scheme system.
-
 `exec` is the main function that can be used to evaluate expressions. It returns a Promise of Array
 of results.
 
+### Creating REPL
+
+If you want to create REPL or similar thing you can use Interpreter interface which allow to change
+stdin and stdout.
+
+```javascript
+import { Interpreter } from '@jcubic/lips';
+
+const interpreter = Interpreter('<name>', {
+    stdin: InputPort(function() {
+        return new Promise(function(resolve) {
+          // resolve with a string when data is ready
+        });
+    },
+    stdout: OutputPort(function(obj) {
+        // you will get any obect and need to print it
+        // you can use this.get('repr') function from LIPS environment
+        // to get represention of the object as string
+        if (typeof obj !== 'string') {
+            obj = this.get('repr')(obj);
+        }
+    })
+});
+```
+
+Anything you add to the object passed to Interpreter will be added to global scope.
+
+The Interpreter have a method `exec` that work the same as thhe one exported from LIPS.
+
+### Bootstraping
+
+**Note**: that you also need to bootstrap the standard library to have fully working Scheme system.
+
+```javascript
+await interpreter.exec(`(let-env lips.env.__parent__
+                          (load "<path or URL>/dist/std.xcb"))`);
+```
+
+`lips.env` is user environment and `__parent__` is real top level global environment.  To see more
+about `let-env` expression check [documentation about LIPS environments](/docs/lips/environments).
