@@ -3460,7 +3460,7 @@ function mark_cycles(pair) {
     }
     const detect = trampoline(function detect_thunk(pair, parents) {
         if (is_pair(pair)) {
-            delete pair.ref;
+            delete pair[__ref__];
             delete pair[__cycles__];
             visit(pair);
             parents.push(pair);
