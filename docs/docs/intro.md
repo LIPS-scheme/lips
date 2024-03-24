@@ -71,27 +71,9 @@ breaking changes no new stable version was released and instead 1.0 beta started
 
 If LIPS is installed globally just use `lips` command to start the REPL:
 
-```
-$ lips
-  __ __                          __
- / / \ \       _    _  ___  ___  \ \
-| |   \ \     | |  | || . \/ __>  | |
-| |    > \    | |_ | ||  _/\__ \  | |
-| |   / ^ \   |___||_||_|  <___/  | |
- \_\ /_/ \_\                     /_/   lexical scope
+![LIPS REPL sesssion in Terminal](/img/screencast.gif)
 
-LIPS Interpreter 1.0.0-beta (2024-02-16) <https://lips.js.org>
-Copyright (c) 2018-2024 Jakub T. Jankiewicz
-
-Type (env) to see environment with functions macros and variables. You can also
-use (help name) to display help for specific function or macro, (apropos name)
-to display list of matched names in environment and (dir object) to list
-properties of an object.
-
-lips>
-```
-
-By default splash screen is shown you can hide it with option `-q`. If you're using bash you can create an
+By default, splash screen is shown you can hide it with option `-q`. If you're using bash you can create an
 alias:
 
 ```bash
@@ -143,7 +125,7 @@ This extension is defined in [SRFI-22](https://srfi.schemers.org/srfi-22/srfi-22
   (print (string-append "Hello " what)))
 ```
 
-If you write code like this and save it in `script.scm` on Unix like systems (Linux, MacOS, or Windows with WSL)
+If you write code like this and save it in `script.scm` on Unix like systems (Linux, macOS, or Windows with WSL)
 you can change the execution permission:
 
 ```bash
