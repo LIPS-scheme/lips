@@ -150,3 +150,42 @@ You can mix lexical scope chain with frames:
 ;; ==> let ==> #(y)
 ;; ==> lambda ==> #(arguments parent.frame x)
 ```
+
+## Global environment
+
+in `lips.env` is user global environment but real global environment where all functions and macros that are
+located (it's also a place where names from bootstraping are saved) is `lips.env.__parent__`.
+
+If you want to really overwrite builtin function.
+
+```scheme
+(define-macro (define x)
+  `(print ,x))
+
+(define 10)
+;; ==> 10
+(unset! define)
+(define foo 10)
+(print foo)
+;; ==> 10
+```
+
+If you execute this code in REPL or in a script it will only add `define` into `interaction-environment`.
+If you really want to overwrite `define` you can (not that you should):
+
+```scheme
+(let-env lips.env.__parent__
+  (define-macro (define x)
+    `(print ,x)))
+
+(unset! define)
+(define foo 10)
+;; ==> Unbound variable `define'
+```
+
+The only time you may want to use `lips.env.__parent__` when you bootstrap the LIPS Scheme system.
+
+```scheme
+(let-env lips.env.__parent__
+  (load "<path or URL>/dist/std.xcb"))
+```
