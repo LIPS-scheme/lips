@@ -22,7 +22,7 @@ export function initTerminal() {
     return { top, right, left };
   });
 
-  const intro = `LIPS version ${globalThis.lips.version}
+  const intro = `(λ LIPS) version ${globalThis.lips.version}
 Copyright (c) 2018-${new Date().getFullYear()} [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]
 
 Type (env) to see environment with functions macros and variables
