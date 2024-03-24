@@ -63,6 +63,7 @@
 (define (defmacro? obj) "(defmacro? expression)\u000A\u000AChecks if object is a macro and it's expandable." (and (macro? obj) (. obj (quote defmacro))))
 (define (n-ary n fn) "(n-ary n fn)\u000A\u000AReturns a new function that limits the number of arguments to n." (lambda args (apply fn (take args n))))
 (define (take lst n) "(take list n)\u000A\u000AReturns n first values of the list." (let loop ((result (quote ())) (i n) (lst lst)) (if (or (null? lst) (<= i 0)) (reverse result) (loop (cons (car lst) result) (- i 1) (cdr lst)))))
+(define (drop lst n) "(take list n)\u000A\u000AReturns a list where first n elements are removed." (let loop ((i n) (lst lst)) (if (or (null? lst) (<= i 0)) lst (loop (- i 1) (cdr lst)))))
 (define (zip . lists) "(zip list1 list2 ...)\u000A\u000AReturn list where elements are taken from each list.\u000Ae.g.:\u000A(zip '(1 2 3) '(2 3 4))\u000A;; ==> '((1 2) (2 3) (3 4))" (if (or (null? lists) (some null? lists)) (quote ()) (cons (map car lists) (apply zip (map cdr lists)))))
 (define unary (%doc "(unary fn)\u000A\u000AReturns a new function with arguments limited to one." (curry n-ary 1)))
 (define binary (%doc "(binary fn)\u000A\u000AReturns a new function with arguments limited to two." (curry n-ary 2)))

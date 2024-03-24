@@ -862,6 +862,16 @@
         (loop (cons (car lst) result) (- i 1) (cdr lst)))))
 
 ;; -----------------------------------------------------------------------------
+(define (drop lst n)
+  "(take list n)
+
+   Returns a list where first n elements are removed."
+  (let loop ((i n) (lst lst))
+    (if (or (null? lst) (<= i 0))
+        lst
+        (loop (- i 1) (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
 (define (zip . lists)
   "(zip list1 list2 ...)
 

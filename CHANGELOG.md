@@ -32,6 +32,7 @@
 * add `zip` procedure (inspired by [Lodash](https://docs-lodash.com/v4/zip/))
 * add `with-input-from-string` and `read-all` [#327](https://github.com/jcubic/lips/issues/327)
 * add `#!fold-case` and `#!no-fold-case` directives [#342](https://github.com/jcubic/lips/issues/342)
+* add `drop` procedure
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
@@ -72,7 +73,7 @@
 * fix escape ellipsis in syntax-rules [#334](https://github.com/jcubic/lips/issues/334)
 * fix parsing inexact complex without real part and `inexact->exact` procedure [#340](https://github.com/jcubic/lips/issues/340)
 * fix `equal?` on cycles [#302](https://github.com/jcubic/lips/issues/302)
-* fix Petrifsky let [#341](https://github.com/jcubic/lips/issues/341)
+* fix Petrofsky let [#341](https://github.com/jcubic/lips/issues/341)
 
 ## 1.0.0-beta.18
 ### Breaking
