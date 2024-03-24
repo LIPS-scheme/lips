@@ -723,15 +723,15 @@ function isSymbol(x) {
 // :: LSymbol constructor
 // ----------------------------------------------------------------------
 function LSymbol(name) {
-    if (typeof this !== 'undefined' && this.constructor !== LSymbol ||
-        typeof this === 'undefined') {
-        return new LSymbol(name);
-    }
     if (name instanceof LString) {
         name = name.valueOf();
     }
     if (LSymbol.list[name] instanceof LSymbol) {
         return LSymbol.list[name];
+    }
+    if (typeof this !== 'undefined' && this.constructor !== LSymbol ||
+        typeof this === 'undefined') {
+        return new LSymbol(name);
     }
     this.__name__ = name;
     if (typeof name === 'string') {

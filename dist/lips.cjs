@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 23 Mar 2024 17:32:36 +0000
+ * build: Sun, 24 Mar 2024 11:03:14 +0000
  */
 
 'use strict';
@@ -4128,14 +4128,14 @@ function isSymbol(x) {
 // :: LSymbol constructor
 // ----------------------------------------------------------------------
 function LSymbol(name) {
-  if (typeof this !== 'undefined' && this.constructor !== LSymbol || typeof this === 'undefined') {
-    return new LSymbol(name);
-  }
   if (name instanceof LString) {
     name = name.valueOf();
   }
   if (LSymbol.list[name] instanceof LSymbol) {
     return LSymbol.list[name];
+  }
+  if (typeof this !== 'undefined' && this.constructor !== LSymbol || typeof this === 'undefined') {
+    return new LSymbol(name);
   }
   this.__name__ = name;
   if (typeof name === 'string') {
@@ -17123,10 +17123,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sat, 23 Mar 2024 17:32:36 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 24 Mar 2024 11:03:14 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sat, 23 Mar 2024 17:32:36 +0000').valueOf();
+  var date = LString('Sun, 24 Mar 2024 11:03:14 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17166,7 +17166,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sat, 23 Mar 2024 17:32:36 +0000';
+var date = 'Sun, 24 Mar 2024 11:03:14 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
