@@ -106,37 +106,6 @@ lips --bootstrap none foo.scm
 This will run the code without loading the standard library. So LIPS will have only functions
 and macros defined in JavaScript. This is called Core of LIPS with most of the essentials.
 
-### Node.js project
-
-Afeter you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
-instead of JavaScript, using everything Node.js provide See documentation about [Integration with
-JavaScript](/docs/lips/intro#integration-with-javascript).
-
-```bash
-mkdir my-project
-cd my-project
-npm init -y
-```
-
-Then you can install npm packages
-
-```bash
-npm install braces # example npm package
-```
-
-and use them in LIPS Scheme:
-
-```scheme
-(define braces (require "braces"))
-
-(write (braces "{01..10}" &(:expand #t)))
-;; ==> #("01" "02" "03" "04" "05" "06" "07" "08" "09" "10")
-```
-
-**NOTE**: [braces](https://www.npmjs.com/package/braces) is a popular package to expand bash like
-expressions, it's used as [deep dependeny for
-TailwindCSS](https://shubhamjain.co/2024/02/29/why-is-number-package-have-59m-downloads/).
-
 ### Executing expressions
 
 You can execute expression with `-e` flag (short of `eval`):
@@ -175,6 +144,37 @@ You can change that if you add dot (current working directory) to the `$PATH` en
 ```bash
 export $PATH=".:$PATH"
 ```
+
+### Node.js project
+
+Afeter you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
+instead of JavaScript, using everything Node.js provide See documentation about [Integration with
+JavaScript](/docs/lips/intro#integration-with-javascript).
+
+```bash
+mkdir my-project
+cd my-project
+npm init -y
+```
+
+Then you can install npm packages
+
+```bash
+npm install braces # example npm package
+```
+
+and use them in LIPS Scheme:
+
+```scheme
+(define braces (require "braces"))
+
+(write (braces "{01..10}" &(:expand #t)))
+;; ==> #("01" "02" "03" "04" "05" "06" "07" "08" "09" "10")
+```
+
+**NOTE**: [braces](https://www.npmjs.com/package/braces) is a popular package to expand bash like
+expressions, it's used as [deep dependeny for
+TailwindCSS](https://shubhamjain.co/2024/02/29/why-is-number-package-have-59m-downloads/).
 
 ## Executing LIPS prammatically
 
