@@ -48,7 +48,7 @@ body.full-screen .term {
     bottom: 0;
     left: 0;
     z-index: 300;
-    height: auto;
+    height: auto !important;
 }
 .full-screen .intro .actions-wrapper {
     z-index: 400;
