@@ -248,3 +248,11 @@ await interpreter.exec(`(let-env lips.env.__parent__
 
 `lips.env` is user environment and `__parent__` is real top level global environment.  To see more
 about `let-env` expression check [documentation about LIPS environments](/docs/lips/environments).
+
+## Editor support
+
+Note that Scheme is popular lanugage and editors usually support its syntax. But also not every editor
+may support literal regular expressions that are part of LIPS. If your editor doesn't support them,
+you can report an issue if the project is Open Source. Literal Regular Expressions are also part
+of [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) and
+[GNU Kawa](https://www.gnu.org/software/kawa/Regular-expressions.html).
