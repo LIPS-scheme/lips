@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState, MouseEvent, CSSProperties } from 'react';
 import Markdown from 'react-markdown';
+import clsx from 'clsx';
+
 import useIsBrowser from '@docusaurus/useIsBrowser';
 import Head from '@docusaurus/Head';
 import useScripts from '@site/src/hooks/useScripts';
@@ -49,9 +51,9 @@ export default function Interpreter(): JSX.Element {
     return destroyTerminal;
   }, []);
 
-  function onSnippetRun() {
+  function execSnippet(selector = '.example:visible') {
     const $ = globalThis.jQuery;
-    const code = $('.example:visible').text();
+    const code = $(selector).text();
     const term = $('.term').terminal();
     term.echo(term.get_prompt(), { formatters: false });
     term.exec(code, true);
@@ -144,11 +146,14 @@ export default function Interpreter(): JSX.Element {
           </div>
         </div>
         <div className="examples terminal-external">
-          <button className="run" onClick={onSnippetRun}>run</button>
+          <div className="egg">
+            <button onClick={() => execSnippet('li.hidden .example')}>π</button>
+          </div>
+          <button className="run" onClick={() => execSnippet()}>run</button>
           <ul className="list">
             {examples.map((example, index) => {
               return (
-                <li key={index} className={index === activeSnippet ? 'active' : undefined}>
+                <li key={index} className={clsx({active: index === activeSnippet, hidden: example.hidden})}>
                   <div className="example">
                     <CodeBlock language="scheme" className="lips">
                       {example.code}
@@ -160,9 +165,9 @@ export default function Interpreter(): JSX.Element {
             })}
           </ul>
           <ul className="pagination">
-            {examples.map((_, index) => {
+            {examples.map((example, index) => {
               return (
-                <li key={index} className={index === activeSnippet ? 'active' : undefined}>
+                <li key={index} className={clsx({active: index === activeSnippet, hidden: example.hidden})}>
                   <a href="#" onClick={makeChangeSnippet(index)}>{ index + 1 }</a>
                 </li>
               );

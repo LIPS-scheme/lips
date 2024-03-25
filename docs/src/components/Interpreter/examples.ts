@@ -281,6 +281,22 @@ const examples = [
              (else (* n (f (- n 1))))))))
  10)
 ;; ==> 3628800`
+  },
+  {
+    hidden: true,
+    code: `(define-macro (%promisify expr)
+  (let ((resolve (gensym "resolve")))
+    \`(new Promise
+       (lambda (,resolve)
+          ,(append expr (list resolve))))))
+
+(if (null? self.$.terminal.from_ansi)
+    (%promisify ($.getScript "https://cdn.jsdelivr.net/npm/jquery.terminal/js/unix_formatting.js")))
+(if (null? self.qrcode)
+    (%promisify ($.getScript "https://cdn.jsdelivr.net/gh/jcubic/static/js/qrcode.js")))
+(let ((code (%promisify (qrcode.generate "https://tinyurl.com/fxv87gb"))))
+  (term.echo (code.replace #/\\[47m/g "[30;47m"))
+  #void)`
   }
 ];
 

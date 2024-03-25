@@ -87,6 +87,25 @@ body.full-screen .term {
     top: 0;
     margin: 0;
 }
+.intro .egg {
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+.intro .egg button {
+    cursor: pointer;
+    border-radius: 50%;
+    border: 0;
+    height: 20px;
+    width: 20px;
+    padding: 0;
+    background: none;
+}
+.intro .egg button:hover {
+    background: #E79E2D;
+    font-weight: bold;
+}
 .intro .actions .icon,
 .top-bar .icons a {
     background-image: url(/img/icons.svg);
