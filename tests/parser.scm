@@ -223,45 +223,55 @@
                  ))
           (t.is (x.valueOf) "\n"))))
 
-
+(test "parser: should throw error on quote without expression"
+      (lambda (t)
+        (let ((specs '("(list ')" "(list '')")))
+          (for-each (lambda (code)
+                      (t.is (to.throw (lips.parse code)) #t))
+                    specs))))
 
 (test "parser: should throw an error on invalid dot sequennce #245"
       (lambda (t)
         (t.is (to.throw (lips.parse "(1 . 2 3)")) #t)))
 
-(test "tokenizer: should create tokens for simple list"
+(test "lexer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")
               #("(" "foo" "bar" "baz" ")"))))
 
-(test "tokenizer: should create tokens for numbers string and regexes"
+(test "lexer: should create tokens for numbers string and regexes"
       (lambda (t)
         (t.is (lips.tokenize "(foo #/( \\/)/g \"bar baz\" 10 1.1 10e2
                               10+10i +inf.0+inf.0i +nan.0+nan.0i 1/2+1/2i)")
               #("(" "foo" "#/( \\/)/g" "\"bar baz\"" "10" "1.1" "10e2"
                 "10+10i" "+inf.0+inf.0i" "+nan.0+nan.0i" "1/2+1/2i" ")"))))
 
-(test "tokenizer: should create token for alist"
+(test "lexer: should create token for alist"
       (lambda (t)
         (t.is (lips.tokenize "((foo . 10) (bar . 20) (baz . 30))")
               #("(" "(" "foo" "." "10" ")" "(" "bar" "." "20" ")" "("
                 "baz" "." "30" ")" ")"))))
 
-(test "tokenizer: should ignore comments"
+(test "lexer: should ignore comments"
       (lambda (t)
         (let ((code "(foo bar baz); (baz quux)"))
           (t.is (lips.tokenize code)
                 #("(" "foo" "bar" "baz" ")")))))
 
-(test "tokenizer: should handle semicolon in regexes and strings"
+(test "lexer: should handle semicolon in regexes and strings"
       (lambda (t)
         (let ((code "(\";()\" #/;;;/g baz); (baz quux)"))
           (t.is (lips.tokenize code)
                 #("(" "\";()\"" "#/;;;/g" "baz" ")")))))
 
-(test "tokenizer: with meta data"
+(test "lexer: with meta data"
       (lambda (t)
         (let* ((fs (require "fs"))
                (code (--> (fs.promises.readFile "./tests/stubs/macro.txt")
                           (toString))))
           (t.snapshot (lips.tokenize code true)))))
+
+(test "lexer: should throw error on unterminated string"
+      (lambda (t)
+        (let ((code "\"foo"))
+          (t.is (to.throw (lips.tokenize code)) #t))))
