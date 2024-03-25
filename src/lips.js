@@ -1230,7 +1230,11 @@ class Lexer {
             }
             // no rule for token
             var line = this.__input__.split('\n')[this._line];
-            throw new Error(`Invalid Syntax at line ${this._line}\n${line}`);
+            throw new Error(`Invalid Syntax at line ${this._line + 1}\n${line}`);
+        }
+        if (this._state !== null) {
+            const line_number = this.__input__.substring(0, this._newline).match(/\n/g)?.length ?? 0;
+            throw new Unterminated(`Invalid Syntax at line ${line_number + 1}: Unterminated expression`);
         }
     }
 }
@@ -1733,6 +1737,8 @@ class Parser {
         }
     }
 }
+class Unterminated extends Error { }
+Parser.Unterminated = Unterminated;
 // ----------------------------------------------------------------------
 // :: Parser helper that handles circular list structures
 // :: using datum labels
@@ -11277,7 +11283,14 @@ function balanced(code) {
     };
     var tokens;
     if (typeof code === 'string') {
-        tokens = tokenize(code);
+        try {
+            tokens = tokenize(code);
+        } catch(e) {
+            if (e instanceof Unterminated) {
+                return false;
+            }
+            throw e;
+        }
     } else {
         tokens = code.map(x => x && x.token ? x.token : x);
     }

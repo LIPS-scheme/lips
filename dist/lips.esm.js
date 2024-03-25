@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 Mar 2024 15:03:27 +0000
+ * build: Mon, 25 Mar 2024 20:27:02 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -70,11 +70,11 @@ function _classPrivateFieldSet(receiver, privateMap, value) {
   return value;
 }
 
-function _getPrototypeOf(o) {
-  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-    return o.__proto__ || Object.getPrototypeOf(o);
-  };
-  return _getPrototypeOf(o);
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+  return self;
 }
 
 function _setPrototypeOf(o, p) {
@@ -83,14 +83,6 @@ function _setPrototypeOf(o, p) {
     return o;
   };
   return _setPrototypeOf(o, p);
-}
-
-function _isNativeFunction(fn) {
-  try {
-    return Function.toString.call(fn).indexOf("[native code]") !== -1;
-  } catch (e) {
-    return typeof fn === "function";
-  }
 }
 
 function _isNativeReflectConstruct$1() {
@@ -108,76 +100,6 @@ function _construct(t, e, r) {
   o.push.apply(o, e);
   var p = new (t.bind.apply(t, o))();
   return r && _setPrototypeOf(p, r.prototype), p;
-}
-
-function _wrapNativeSuper(Class) {
-  var _cache = typeof Map === "function" ? new Map() : undefined;
-  _wrapNativeSuper = function _wrapNativeSuper(Class) {
-    if (Class === null || !_isNativeFunction(Class)) return Class;
-    if (typeof Class !== "function") {
-      throw new TypeError("Super expression must either be null or a function");
-    }
-    if (typeof _cache !== "undefined") {
-      if (_cache.has(Class)) return _cache.get(Class);
-      _cache.set(Class, Wrapper);
-    }
-    function Wrapper() {
-      return _construct(Class, arguments, _getPrototypeOf(this).constructor);
-    }
-    Wrapper.prototype = Object.create(Class.prototype, {
-      constructor: {
-        value: Wrapper,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-    return _setPrototypeOf(Wrapper, Class);
-  };
-  return _wrapNativeSuper(Class);
-}
-
-function _typeof$1(o) {
-  "@babel/helpers - typeof";
-
-  return _typeof$1 = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
-    return typeof o;
-  } : function (o) {
-    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-  }, _typeof$1(o);
-}
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-  return self;
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (call && (_typeof$1(call) === "object" || typeof call === "function")) {
-    return call;
-  } else if (call !== void 0) {
-    throw new TypeError("Derived constructors may only return object or undefined");
-  }
-  return _assertThisInitialized(self);
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function");
-  }
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      writable: true,
-      configurable: true
-    }
-  });
-  Object.defineProperty(subClass, "prototype", {
-    writable: false
-  });
-  if (superClass) _setPrototypeOf(subClass, superClass);
 }
 
 function _arrayWithHoles(arr) {
@@ -209,6 +131,84 @@ function _nonIterableRest() {
 
 function _toArray(arr) {
   return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableRest();
+}
+
+function _typeof$1(o) {
+  "@babel/helpers - typeof";
+
+  return _typeof$1 = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+    return typeof o;
+  } : function (o) {
+    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+  }, _typeof$1(o);
+}
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (_typeof$1(call) === "object" || typeof call === "function")) {
+    return call;
+  } else if (call !== void 0) {
+    throw new TypeError("Derived constructors may only return object or undefined");
+  }
+  return _assertThisInitialized(self);
+}
+
+function _getPrototypeOf(o) {
+  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function");
+  }
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      writable: true,
+      configurable: true
+    }
+  });
+  Object.defineProperty(subClass, "prototype", {
+    writable: false
+  });
+  if (superClass) _setPrototypeOf(subClass, superClass);
+}
+
+function _isNativeFunction(fn) {
+  try {
+    return Function.toString.call(fn).indexOf("[native code]") !== -1;
+  } catch (e) {
+    return typeof fn === "function";
+  }
+}
+
+function _wrapNativeSuper(Class) {
+  var _cache = typeof Map === "function" ? new Map() : undefined;
+  _wrapNativeSuper = function _wrapNativeSuper(Class) {
+    if (Class === null || !_isNativeFunction(Class)) return Class;
+    if (typeof Class !== "function") {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+    if (typeof _cache !== "undefined") {
+      if (_cache.has(Class)) return _cache.get(Class);
+      _cache.set(Class, Wrapper);
+    }
+    function Wrapper() {
+      return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+    }
+    Wrapper.prototype = Object.create(Class.prototype, {
+      constructor: {
+        value: Wrapper,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    return _setPrototypeOf(Wrapper, Class);
+  };
+  return _wrapNativeSuper(Class);
 }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -4699,7 +4699,12 @@ var Lexer = /*#__PURE__*/function () {
         }
         // no rule for token
         var line = this.__input__.split('\n')[this._line];
-        throw new Error("Invalid Syntax at line ".concat(this._line, "\n").concat(line));
+        throw new Error("Invalid Syntax at line ".concat(this._line + 1, "\n").concat(line));
+      }
+      if (this._state !== null) {
+        var _this$__input__$subst, _this$__input__$subst2;
+        var line_number = (_this$__input__$subst = (_this$__input__$subst2 = this.__input__.substring(0, this._newline).match(/\n/g)) === null || _this$__input__$subst2 === void 0 ? void 0 : _this$__input__$subst2.length) !== null && _this$__input__$subst !== void 0 ? _this$__input__$subst : 0;
+        throw new Unterminated("Invalid Syntax at line ".concat(line_number + 1, ": Unterminated expression"));
       }
     }
   }]);
@@ -5464,7 +5469,17 @@ var Parser = /*#__PURE__*/function () {
     }()
   }]);
   return Parser;
-}(); // ----------------------------------------------------------------------
+}();
+var Unterminated = /*#__PURE__*/function (_Error) {
+  _inherits(Unterminated, _Error);
+  function Unterminated() {
+    _classCallCheck(this, Unterminated);
+    return _callSuper(this, Unterminated, arguments);
+  }
+  return _createClass(Unterminated);
+}( /*#__PURE__*/_wrapNativeSuper(Error));
+Parser.Unterminated = Unterminated;
+// ----------------------------------------------------------------------
 // :: Parser helper that handles circular list structures
 // :: using datum labels
 // ----------------------------------------------------------------------
@@ -12781,8 +12796,8 @@ LipsError.prototype.constructor = LipsError;
 // :: Fake exception to handle try catch to break the execution
 // :: of body expression #163
 // -------------------------------------------------------------------------
-var IgnoreException = /*#__PURE__*/function (_Error) {
-  _inherits(IgnoreException, _Error);
+var IgnoreException = /*#__PURE__*/function (_Error2) {
+  _inherits(IgnoreException, _Error2);
   function IgnoreException() {
     _classCallCheck(this, IgnoreException);
     return _callSuper(this, IgnoreException, arguments);
@@ -16609,7 +16624,14 @@ function balanced(code) {
   };
   var tokens;
   if (typeof code === 'string') {
-    tokens = tokenize(code);
+    try {
+      tokens = tokenize(code);
+    } catch (e) {
+      if (e instanceof Unterminated) {
+        return false;
+      }
+      throw e;
+    }
   } else {
     tokens = code.map(function (x) {
       return x && x.token ? x.token : x;
@@ -17124,10 +17146,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 25 Mar 2024 15:03:27 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 25 Mar 2024 20:27:02 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 25 Mar 2024 15:03:27 +0000').valueOf();
+  var date = LString('Mon, 25 Mar 2024 20:27:02 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17167,7 +17189,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 25 Mar 2024 15:03:27 +0000';
+var date = 'Mon, 25 Mar 2024 20:27:02 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

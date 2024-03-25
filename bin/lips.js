@@ -537,7 +537,12 @@ function run_repl(err, rl) {
                             rl.write(' '.repeat(prompt.length - continuePrompt.length));
                         }
                     } else {
-                        const ind = indent(code, 2, prompt.length - continuePrompt.length);
+                        let ind;
+                        try {
+                            ind = indent(code, 2, prompt.length - continuePrompt.length);
+                        } catch (e) {
+                            ind = 0;
+                        }
                         const spaces = new Array(ind + 1).join(' ');
                         if (is_emacs) {
                             rl.setPrompt('');
