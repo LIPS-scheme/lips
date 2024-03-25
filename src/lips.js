@@ -1309,7 +1309,7 @@ Lexer._rules = [
     [/#/, Lexer.boundary, /\//, null, Lexer.regex_init],
     [/./, /\//, null, Lexer.regex_init, Lexer.regex],
     [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
-    [/\[/, null, null, Lexer.regex, Lexer.regex_class],
+    [/\[/, /[^\\]/, null, Lexer.regex, Lexer.regex_class],
     [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex],
     [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
     [/\//, /\\/, null, Lexer.regex, Lexer.regex],
@@ -1583,6 +1583,10 @@ class Parser {
         return object;
     }
     balanced() {
+        const ret = this._state.parentheses === 0;
+        if (!ret) {
+            console.log({state: this._state});
+        }
         return this._state.parentheses === 0;
     }
     ballancing_error(expr, prev) {
@@ -1770,6 +1774,7 @@ async function* _parse(arg, env) {
     while (true) {
         const expr = await parser.read_object();
         if (!parser.balanced()) {
+            console.log(toString(expr));
             parser.ballancing_error(expr, prev);
         }
         if (expr === eof) {

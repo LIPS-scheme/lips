@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 24 Mar 2024 13:45:51 +0000
+ * build: Mon, 25 Mar 2024 12:39:52 +0000
  */
 
 (function (global, factory) {
@@ -4774,7 +4774,7 @@
   // characters
   [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null],
   // regex
-  [/#/, Lexer.boundary, /\//, null, Lexer.regex_init], [/./, /\//, null, Lexer.regex_init, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, null, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, null, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null],
+  [/#/, Lexer.boundary, /\//, null, Lexer.regex_init], [/./, /\//, null, Lexer.regex_init, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, /[^\\]/, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, null, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null],
   // comment
   [/;/, /^$|[^#]/, null, null, Lexer.comment], [/\n/, ';', null, Lexer.comment, null], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment],
   // block comment
@@ -5195,6 +5195,12 @@
     }, {
       key: "balanced",
       value: function balanced() {
+        var ret = this._state.parentheses === 0;
+        if (!ret) {
+          console.log({
+            state: this._state
+          });
+        }
         return this._state.parentheses === 0;
       }
     }, {
@@ -5521,6 +5527,7 @@
           case 5:
             expr = _context9.sent;
             if (!parser.balanced()) {
+              console.log(toString(expr));
               parser.ballancing_error(expr, prev);
             }
             if (!(expr === eof)) {
@@ -17127,10 +17134,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 24 Mar 2024 13:45:51 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 25 Mar 2024 12:39:52 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 24 Mar 2024 13:45:51 +0000').valueOf();
+    var date = LString('Mon, 25 Mar 2024 12:39:52 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17170,7 +17177,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 24 Mar 2024 13:45:51 +0000';
+  var date = 'Mon, 25 Mar 2024 12:39:52 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

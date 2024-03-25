@@ -75,6 +75,7 @@
 * fix `equal?` on cycles [#302](https://github.com/jcubic/lips/issues/302)
 * fix Petrofsky let [#341](https://github.com/jcubic/lips/issues/341)
 * fix `repr` of cycles
+* fix parsing regex that have escaped open bracket
 
 ## 1.0.0-beta.18
 ### Breaking
