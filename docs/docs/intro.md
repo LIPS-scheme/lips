@@ -160,7 +160,7 @@ npm init -y
 Then you can install npm packages
 
 ```bash
-npm install braces # example npm package
+npm install braces
 ```
 
 and use them in LIPS Scheme:
