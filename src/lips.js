@@ -1232,7 +1232,7 @@ class Lexer {
             var line = this.__input__.split('\n')[this._line];
             throw new Error(`Invalid Syntax at line ${this._line + 1}\n${line}`);
         }
-        // we need to ignore comments becase they can be the last expression in code
+        // we need to ignore comments because they can be the last expression in code
         // without extra newline at the end
         if (![null, Lexer.comment].includes(this._state)) {
             const line_number = this.__input__.substring(0, this._newline).match(/\n/g)?.length ?? 0;
