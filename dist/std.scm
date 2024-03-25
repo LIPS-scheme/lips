@@ -590,19 +590,20 @@
       '()))
 
 ;; -----------------------------------------------------------------------------
-(define (%r re . rest)
-  "(%r re)
+(define (regex re . rest)
+  "(regex re)
 
    Creates a new regular expression from string, to not break Emacs formatting."
-   (if (null? rest)
-     (new RegExp re)
-     (new RegExp re (car rest))))
+  (typecheck "regex" re "string")
+  (if (null? rest)
+      (new RegExp re)
+      (new RegExp re (car rest))))
 
 ;; -----------------------------------------------------------------------------
 ;; replaced by more general formatter in JS, this is left as example of usage
 ;; -----------------------------------------------------------------------------
 #;(define-formatter-rule ((list (list "("
-                                    (%r "(?:#:)?cond")
+                                    (regex "(?:#:)?cond")
                                     (Pattern (list "(" * ")") "+"))
                                1
                                (Ahead "[^)]"))))
