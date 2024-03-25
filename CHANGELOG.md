@@ -79,6 +79,7 @@
 * fix Petrofsky let [#341](https://github.com/jcubic/lips/issues/341)
 * fix `repr` of cycles
 * fix parsing regex that have escaped open bracket
+* fix parsing quotation without data
 
 ## 1.0.0-beta.18
 ### Breaking

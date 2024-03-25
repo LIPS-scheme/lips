@@ -1511,18 +1511,10 @@ class Parser {
         return m && m[1];
     }
     is_open(token) {
-        const result = ['(', '['].includes(token);
-        if (result) {
-            this._state.parentheses++;
-        }
-        return result;
+        return ['(', '['].includes(token);
     }
     is_close(token) {
-        const result = [')', ']'].includes(token);
-        if (result) {
-            this._state.parentheses--;
-        }
-        return result;
+        return [')', ']'].includes(token);
     }
     async read_list() {
         let head = nil, prev = head, dot;
@@ -1532,6 +1524,7 @@ class Parser {
                 break;
             }
             if (this.is_close(token)) {
+                --this._state.parentheses;
                 this.skip();
                 break;
             }
@@ -1542,7 +1535,8 @@ class Parser {
             } else if (dot) {
                 throw new Error('Parser: syntax error more than one element after dot');
             } else {
-                const cur = new Pair(await this._read_object(), nil);
+                const node = await this._read_object();
+                const cur = new Pair(node, nil);
                 if (is_nil(head)) {
                     head = cur;
                 } else {
@@ -1587,10 +1581,6 @@ class Parser {
         return object;
     }
     balanced() {
-        const ret = this._state.parentheses === 0;
-        if (!ret) {
-            console.log({state: this._state});
-        }
         return this._state.parentheses === 0;
     }
     ballancing_error(expr, prev) {
@@ -1657,7 +1647,11 @@ class Parser {
             this.skip();
             let expr;
             const is_symbol = is_symbol_extension(token);
+            const was_close_paren = this.is_close(await this.peek());
             const object = is_symbol ? undefined : await this._read_object();
+            if (object === eof) {
+                throw new Unterminated('Expecting expression eof found');
+            }
             if (!builtin) {
                 var extension = this.__env__.get(special.symbol);
                 if (typeof extension === 'function') {
@@ -1681,6 +1675,9 @@ class Parser {
                 }
             }
             if (is_literal(token)) {
+                if (was_close_paren) {
+                    throw new Error('Parse Error: expecting datum');
+                }
                 expr = new Pair(
                     special.symbol,
                     new Pair(
@@ -1727,9 +1724,11 @@ class Parser {
             this._refs[ref_label] = this._read_object();
             return this._refs[ref_label];
         } else if (this.is_close(token)) {
+            --this._state.parentheses;
             this.skip();
             // invalid state, we don't need to return anything
         } else if (this.is_open(token)) {
+            ++this._state.parentheses;
             this.skip();
             return this.read_list();
         } else {

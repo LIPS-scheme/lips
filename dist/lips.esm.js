@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 Mar 2024 20:27:02 +0000
+ * build: Mon, 25 Mar 2024 21:04:35 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -5014,26 +5014,18 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "is_open",
     value: function is_open(token) {
-      var result = ['(', '['].includes(token);
-      if (result) {
-        this._state.parentheses++;
-      }
-      return result;
+      return ['(', '['].includes(token);
     }
   }, {
     key: "is_close",
     value: function is_close(token) {
-      var result = [')', ']'].includes(token);
-      if (result) {
-        this._state.parentheses--;
-      }
-      return result;
+      return [')', ']'].includes(token);
     }
   }, {
     key: "read_list",
     value: function () {
       var _read_list = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3() {
-        var head, prev, dot, token, cur;
+        var head, prev, dot, token, node, cur;
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) switch (_context3.prev = _context3.next) {
             case 0:
@@ -5047,53 +5039,52 @@ var Parser = /*#__PURE__*/function () {
                 _context3.next = 7;
                 break;
               }
-              return _context3.abrupt("break", 32);
+              return _context3.abrupt("break", 31);
             case 7:
               if (!this.is_close(token)) {
-                _context3.next = 10;
+                _context3.next = 11;
                 break;
               }
+              --this._state.parentheses;
               this.skip();
-              return _context3.abrupt("break", 32);
-            case 10:
+              return _context3.abrupt("break", 31);
+            case 11:
               if (!(token === '.' && !is_nil(head))) {
-                _context3.next = 18;
+                _context3.next = 19;
                 break;
               }
               this.skip();
-              _context3.next = 14;
+              _context3.next = 15;
               return this._read_object();
-            case 14:
+            case 15:
               prev.cdr = _context3.sent;
               dot = true;
-              _context3.next = 30;
+              _context3.next = 29;
               break;
-            case 18:
+            case 19:
               if (!dot) {
-                _context3.next = 22;
+                _context3.next = 23;
                 break;
               }
               throw new Error('Parser: syntax error more than one element after dot');
-            case 22:
-              _context3.t0 = Pair;
+            case 23:
               _context3.next = 25;
               return this._read_object();
             case 25:
-              _context3.t1 = _context3.sent;
-              _context3.t2 = _nil;
-              cur = new _context3.t0(_context3.t1, _context3.t2);
+              node = _context3.sent;
+              cur = new Pair(node, _nil);
               if (is_nil(head)) {
                 head = cur;
               } else {
                 prev.cdr = cur;
               }
               prev = cur;
-            case 30:
+            case 29:
               _context3.next = 1;
               break;
-            case 32:
+            case 31:
               return _context3.abrupt("return", head);
-            case 33:
+            case 32:
             case "end":
               return _context3.stop();
           }
@@ -5193,12 +5184,6 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "balanced",
     value: function balanced() {
-      var ret = this._state.parentheses === 0;
-      if (!ret) {
-        console.log({
-          state: this._state
-        });
-      }
       return this._state.parentheses === 0;
     }
   }, {
@@ -5315,7 +5300,7 @@ var Parser = /*#__PURE__*/function () {
     key: "_read_object",
     value: function () {
       var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
-        var token, special, builtin, expr, is_symbol, object, extension, args, result, ref, ref_label;
+        var token, special, builtin, expr, is_symbol, was_close_paren, object, extension, args, result, ref, ref_label;
         return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) switch (_context8.prev = _context8.next) {
             case 0:
@@ -5330,7 +5315,7 @@ var Parser = /*#__PURE__*/function () {
               return _context8.abrupt("return", token);
             case 5:
               if (!is_special(token)) {
-                _context8.next = 38;
+                _context8.next = 51;
                 break;
               }
               // Built-in parser extensions are mapping short symbols to longer symbols
@@ -5344,27 +5329,39 @@ var Parser = /*#__PURE__*/function () {
               builtin = is_builtin(token);
               this.skip();
               is_symbol = is_symbol_extension(token);
+              _context8.t0 = this;
+              _context8.next = 13;
+              return this.peek();
+            case 13:
+              _context8.t1 = _context8.sent;
+              was_close_paren = _context8.t0.is_close.call(_context8.t0, _context8.t1);
               if (!is_symbol) {
-                _context8.next = 14;
+                _context8.next = 19;
                 break;
               }
-              _context8.t0 = undefined;
-              _context8.next = 17;
+              _context8.t2 = undefined;
+              _context8.next = 22;
               break;
-            case 14:
-              _context8.next = 16;
+            case 19:
+              _context8.next = 21;
               return this._read_object();
-            case 16:
-              _context8.t0 = _context8.sent;
-            case 17:
-              object = _context8.t0;
-              if (builtin) {
+            case 21:
+              _context8.t2 = _context8.sent;
+            case 22:
+              object = _context8.t2;
+              if (!(object === eof)) {
                 _context8.next = 25;
+                break;
+              }
+              throw new Unterminated('Expecting expression eof found');
+            case 25:
+              if (builtin) {
+                _context8.next = 32;
                 break;
               }
               extension = this.__env__.get(special.symbol);
               if (!(typeof extension === 'function')) {
-                _context8.next = 25;
+                _context8.next = 32;
                 break;
               }
               if (is_literal(token)) {
@@ -5375,7 +5372,7 @@ var Parser = /*#__PURE__*/function () {
                 args = object.to_array(false);
               }
               if (!(args || is_symbol)) {
-                _context8.next = 24;
+                _context8.next = 31;
                 break;
               }
               return _context8.abrupt("return", call_function(extension, is_symbol ? [] : args, {
@@ -5383,80 +5380,92 @@ var Parser = /*#__PURE__*/function () {
                 dynamic_env: this.__env__,
                 use_dynamic: false
               }));
-            case 24:
+            case 31:
               throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
-            case 25:
-              if (is_literal(token)) {
-                expr = new Pair(special.symbol, new Pair(object, _nil));
-              } else {
-                expr = new Pair(special.symbol, object);
+            case 32:
+              if (!is_literal(token)) {
+                _context8.next = 38;
+                break;
               }
-              // Built-in parser extensions just expand into lists like 'x ==> (quote x)
+              if (!was_close_paren) {
+                _context8.next = 35;
+                break;
+              }
+              throw new Error('Parse Error: expecting datum');
+            case 35:
+              expr = new Pair(special.symbol, new Pair(object, _nil));
+              _context8.next = 39;
+              break;
+            case 38:
+              expr = new Pair(special.symbol, object);
+            case 39:
               if (!builtin) {
-                _context8.next = 28;
+                _context8.next = 41;
                 break;
               }
               return _context8.abrupt("return", expr);
-            case 28:
+            case 41:
               if (!(extension instanceof Macro)) {
-                _context8.next = 37;
+                _context8.next = 50;
                 break;
               }
-              _context8.next = 31;
+              _context8.next = 44;
               return this.evaluate(expr);
-            case 31:
+            case 44:
               result = _context8.sent;
               if (!(is_pair(result) || result instanceof LSymbol)) {
-                _context8.next = 34;
+                _context8.next = 47;
                 break;
               }
               return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
-            case 34:
+            case 47:
               return _context8.abrupt("return", result);
-            case 37:
+            case 50:
               throw new Error('Parse Error: invalid parser extension: ' + special.symbol);
-            case 38:
+            case 51:
               ref = this.match_datum_ref(token);
               if (!(ref !== null)) {
-                _context8.next = 44;
+                _context8.next = 57;
                 break;
               }
               this.skip();
               if (!this._refs[ref]) {
-                _context8.next = 43;
+                _context8.next = 56;
                 break;
               }
               return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
-            case 43:
+            case 56:
               throw new Error("Parse Error: invalid datum label #".concat(ref, "#"));
-            case 44:
+            case 57:
               ref_label = this.match_datum_label(token);
               if (!(ref_label !== null)) {
-                _context8.next = 51;
+                _context8.next = 64;
                 break;
               }
               this.skip();
               this._refs[ref_label] = this._read_object();
               return _context8.abrupt("return", this._refs[ref_label]);
-            case 51:
+            case 64:
               if (!this.is_close(token)) {
-                _context8.next = 55;
+                _context8.next = 69;
                 break;
               }
+              --this._state.parentheses;
               this.skip();
               // invalid state, we don't need to return anything
-              _context8.next = 61;
+              _context8.next = 76;
               break;
-            case 55:
+            case 69:
               if (!this.is_open(token)) {
-                _context8.next = 60;
+                _context8.next = 75;
                 break;
               }
+              ++this._state.parentheses;
               this.skip();
               return _context8.abrupt("return", this.read_list());
-            case 60:
+            case 75:
               return _context8.abrupt("return", this.read_value());
-            case 61:
+            case 76:
             case "end":
               return _context8.stop();
           }
@@ -17146,10 +17155,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 25 Mar 2024 20:27:02 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 25 Mar 2024 21:04:35 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 25 Mar 2024 20:27:02 +0000').valueOf();
+  var date = LString('Mon, 25 Mar 2024 21:04:35 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17189,7 +17198,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 25 Mar 2024 20:27:02 +0000';
+var date = 'Mon, 25 Mar 2024 21:04:35 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

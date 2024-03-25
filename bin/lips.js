@@ -13,6 +13,7 @@ import {
     exec,
     compile,
     parse,
+    Parser,
     Formatter,
     serialize,
     unserialize,
@@ -76,7 +77,10 @@ function debug(message) {
 async function run(code, interpreter, use_dynamic = false, env = null, stack = false) {
     try {
         return await interpreter.exec(code, { use_dynamic, env });
-    } catch (e) {
+    } catch(e) {
+        if (e instanceof Parser.Unterminated) {
+            return;
+        }
         print_error(e, stack);
     }
 }
@@ -457,6 +461,36 @@ function run_repl(err, rl) {
     }
     let prev_line;
     const is_emacs = process.env.INSIDE_EMACS;
+    function continue_multiline() {
+        multiline = true;
+        if (cmd.match(/\x1b\[200~/) || !supports_paste_brackets) {
+            rl.prompt();
+            if (is_emacs) {
+                rl.setPrompt('');
+            } else {
+                rl.setPrompt(continuePrompt);
+            }
+            if (terminal) {
+                rl.write(' '.repeat(prompt.length - continuePrompt.length));
+            }
+        } else {
+            let ind;
+            try {
+                ind = indent(code, 2, prompt.length - continuePrompt.length);
+            } catch (e) {
+                ind = 0;
+            }
+            const spaces = new Array(ind + 1).join(' ');
+            if (is_emacs) {
+                rl.setPrompt('');
+                rl.prompt();
+            } else {
+                rl.setPrompt(continuePrompt);
+                rl.prompt();
+                rl.write(spaces);
+            }
+        }
+    }
     bootstrap(interp).then(function() {
         if (supports_paste_brackets) {
             process.stdin.on('keypress', (c, k) => {
@@ -525,34 +559,7 @@ function run_repl(err, rl) {
                         rl.resume();
                     });
                 } else {
-                    multiline = true;
-                    if (cmd.match(/\x1b\[200~/) || !supports_paste_brackets) {
-                        rl.prompt();
-                        if (is_emacs) {
-                            rl.setPrompt('');
-                        } else {
-                            rl.setPrompt(continuePrompt);
-                        }
-                        if (terminal) {
-                            rl.write(' '.repeat(prompt.length - continuePrompt.length));
-                        }
-                    } else {
-                        let ind;
-                        try {
-                            ind = indent(code, 2, prompt.length - continuePrompt.length);
-                        } catch (e) {
-                            ind = 0;
-                        }
-                        const spaces = new Array(ind + 1).join(' ');
-                        if (is_emacs) {
-                            rl.setPrompt('');
-                            rl.prompt();
-                        } else {
-                            rl.setPrompt(continuePrompt);
-                            rl.prompt();
-                            rl.write(spaces);
-                        }
-                    }
+                    continue_multiline();
                 }
             } catch (e) {
                 console.error(e.message);
