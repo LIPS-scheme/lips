@@ -39,3 +39,5 @@ There are few procedures useful in the REPL:
 * `apropos` - function return list of procedures from environment that match a string or a regex,
 * `env` - function returns list of symbols which is everything that is inside an environment,
 * `dir` - function return all properties from an object including those in prototype chain (a class).
+
+To read more about introspection of LIPS Scheme in REPL see [documentation about Reflection](/docs/lips/reflection).
