@@ -148,7 +148,7 @@ export $PATH=".:$PATH"
 ### Node.js project
 
 Afeter you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
-instead of JavaScript, using everything Node.js provide See documentation about [Integration with
+instead of JavaScript, using everything Node.js provides. See documentation about [Integration with
 JavaScript](/docs/lips/intro#integration-with-javascript).
 
 ```bash
