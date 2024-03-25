@@ -5,6 +5,9 @@ description: features of Node.js and Web REPL
 
 # REPL
 
+LIPS Scheme REPL ([Read Even Print Loop](https://en.wikipedia.org/wiki/Read–eval–print_loop)) is
+a way to interact with running LIPS Scheme session.
+
 ## Web REPL
 
 Web REPL you can access from [Home page](/) or as a [bookmarklet](/#bookmark) use
@@ -26,3 +29,13 @@ code.
 In the future the Node.js REPL may also support parentheses matching. It's supported by
 [CLisp](https://www.gnu.org/software/clisp/) and [Common Lisp](https://common-lisp.net/)
 interpreter.
+
+## Procedures useful in REPL
+
+There are few procedures useful in the REPL:
+
+* `help` - prints doc string for a given procedure, macro, or a variable (see documentation about
+  [Doc Strings](/docs/lips/intro#doc-strings)),
+* `apropos` - function return list of procedures from environment that match a string or a regex,
+* `env` - function returns list of symbols which is everything that is inside an environment,
+* `dir` - function return all properties from an object including those in prototype chain (a class).
