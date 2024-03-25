@@ -1437,7 +1437,7 @@ function match_or_null(re, char) {
 class Parser {
     constructor({ env, meta = false, formatter = multiline_formatter } = {}) {
         read_only(this, '_formatter', formatter, { hidden: true });
-        read_only(this, '__env__', env ?? env.inerit('parser'));
+        read_only(this, '__env__', env ?? env.inherit('parser'));
         read_only(this, '_meta', meta, { hidden: true });
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
