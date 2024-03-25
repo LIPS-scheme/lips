@@ -129,11 +129,15 @@ const config: Config = {
           items: [
             {
               label: 'Getting Started',
-              to: '/docs/intro',
+              to: '/docs/intro'
             },
             {
               label: 'Introduction to Scheme',
               to: '/docs/scheme-intro/what-is-lisp'
+            },
+            {
+              label: 'LIPS Scheme Introduction',
+              to: '/docs/category/lips-introduction'
             },
           ],
         },
