@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 Mar 2024 21:04:35 +0000
+ * build: Mon, 25 Mar 2024 21:23:20 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -4701,10 +4701,13 @@ var Lexer = /*#__PURE__*/function () {
         var line = this.__input__.split('\n')[this._line];
         throw new Error("Invalid Syntax at line ".concat(this._line + 1, "\n").concat(line));
       }
-      if (this._state !== null) {
+      // we need to ignore comments becase they can be the last expression in code
+      // without extra newline at the end
+      if (![null, Lexer.comment].includes(this._state)) {
         var _this$__input__$subst, _this$__input__$subst2;
         var line_number = (_this$__input__$subst = (_this$__input__$subst2 = this.__input__.substring(0, this._newline).match(/\n/g)) === null || _this$__input__$subst2 === void 0 ? void 0 : _this$__input__$subst2.length) !== null && _this$__input__$subst !== void 0 ? _this$__input__$subst : 0;
-        throw new Unterminated("Invalid Syntax at line ".concat(line_number + 1, ": Unterminated expression"));
+        var _line = this.__input__.substring(this._newline);
+        throw new Unterminated("Invalid Syntax at line ".concat(line_number + 1, ": Unterminated expression ").concat(_line));
       }
     }
   }]);
@@ -17155,10 +17158,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 25 Mar 2024 21:04:35 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 25 Mar 2024 21:23:20 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 25 Mar 2024 21:04:35 +0000').valueOf();
+  var date = LString('Mon, 25 Mar 2024 21:23:20 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17198,7 +17201,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 25 Mar 2024 21:04:35 +0000';
+var date = 'Mon, 25 Mar 2024 21:23:20 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

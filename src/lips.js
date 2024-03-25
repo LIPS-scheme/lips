@@ -1232,9 +1232,12 @@ class Lexer {
             var line = this.__input__.split('\n')[this._line];
             throw new Error(`Invalid Syntax at line ${this._line + 1}\n${line}`);
         }
-        if (this._state !== null) {
+        // we need to ignore comments becase they can be the last expression in code
+        // without extra newline at the end
+        if (![null, Lexer.comment].includes(this._state)) {
             const line_number = this.__input__.substring(0, this._newline).match(/\n/g)?.length ?? 0;
-            throw new Unterminated(`Invalid Syntax at line ${line_number + 1}: Unterminated expression`);
+            const line = this.__input__.substring(this._newline);
+            throw new Unterminated(`Invalid Syntax at line ${line_number + 1}: Unterminated expression ${line}`);
         }
     }
 }

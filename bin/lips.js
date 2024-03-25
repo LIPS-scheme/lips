@@ -74,11 +74,11 @@ function debug(message) {
     console.log(message);
 }
 // -----------------------------------------------------------------------------
-async function run(code, interpreter, use_dynamic = false, env = null, stack = false) {
+async function run(code, interpreter, use_dynamic = false, env = null, stack = false, log_unterminated = true) {
     try {
         return await interpreter.exec(code, { use_dynamic, env });
     } catch(e) {
-        if (e instanceof Parser.Unterminated) {
+        if (e instanceof Parser.Unterminated && !log_unterminated) {
             return;
         }
         print_error(e, stack);
@@ -531,7 +531,7 @@ function run_repl(err, rl) {
                     rl.setPrompt('');
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
-                        const result = run(code, interp, dynamic, null, options.t || options.trace);
+                        const result = run(code, interp, dynamic, null, options.t || options.trace, false);
                         cmd = '';
                         return result;
                     }).then(function(result) {
