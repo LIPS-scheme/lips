@@ -1437,7 +1437,7 @@ function match_or_null(re, char) {
 class Parser {
     constructor({ env, meta = false, formatter = multiline_formatter } = {}) {
         read_only(this, '_formatter', formatter, { hidden: true });
-        read_only(this, '__env__', env);
+        read_only(this, '__env__', env ?? env.inerit('parser'));
         read_only(this, '_meta', meta, { hidden: true });
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
@@ -1445,6 +1445,9 @@ class Parser {
             parentheses: 0,
             fold_case: false
         }, { hidden: true });
+        if (this.__env__) {
+            this.__env__.set('lips',  { ...lips, __parser__: this });
+        }
     }
     parse(arg) {
         if (arg instanceof LString) {

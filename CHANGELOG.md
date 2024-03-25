@@ -36,6 +36,7 @@
 * allow to use unquoted symbols in `-->` to get the function
 * add `regex` procedure (rename from `%r` used in bootstrap.scm)
 * support unterminated strings in REPL [#280](https://github.com/jcubic/lips/issues/280)
+* expose parser and lexer instance from syntax extensions [#308](https://github.com/jcubic/lips/issues/308)
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 Mar 2024 21:36:51 +0000
+ * build: Mon, 25 Mar 2024 22:11:59 +0000
  */
 
 (function (global, factory) {
@@ -4870,7 +4870,7 @@
       read_only(this, '_formatter', formatter, {
         hidden: true
       });
-      read_only(this, '__env__', env);
+      read_only(this, '__env__', env !== null && env !== void 0 ? env : env.inerit('parser'));
       read_only(this, '_meta', meta, {
         hidden: true
       });
@@ -4884,6 +4884,11 @@
       }, {
         hidden: true
       });
+      if (this.__env__) {
+        this.__env__.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
+          __parser__: this
+        }));
+      }
     }
     _createClass(Parser, [{
       key: "parse",
@@ -17165,10 +17170,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 25 Mar 2024 21:36:51 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 25 Mar 2024 22:11:59 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 25 Mar 2024 21:36:51 +0000').valueOf();
+    var date = LString('Mon, 25 Mar 2024 22:11:59 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17208,7 +17213,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 25 Mar 2024 21:36:51 +0000';
+  var date = 'Mon, 25 Mar 2024 22:11:59 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
