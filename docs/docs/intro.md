@@ -173,7 +173,7 @@ and use them in LIPS Scheme:
 ```
 
 **NOTE**: [braces](https://www.npmjs.com/package/braces) is a popular package to expand bash like
-expressions, it's used as [deep dependeny for
+expressions, it's used as [deep dependency for
 TailwindCSS](https://shubhamjain.co/2024/02/29/why-is-number-package-have-59m-downloads/).
 
 ## Executing LIPS prammatically
