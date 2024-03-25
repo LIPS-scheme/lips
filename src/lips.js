@@ -10492,9 +10492,6 @@ var global_env = new Environment({
 
         Function that left shifts the value a by value b bits.`),
     not: doc('not', function not(value) {
-        if (is_null(value)) {
-            return true;
-        }
         return !value;
     }, `(not object)
 

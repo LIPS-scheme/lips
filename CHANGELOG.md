@@ -33,6 +33,7 @@
 * add `with-input-from-string` and `read-all` [#327](https://github.com/jcubic/lips/issues/327)
 * add `#!fold-case` and `#!no-fold-case` directives [#342](https://github.com/jcubic/lips/issues/342)
 * add `drop` procedure
+* allow to use unquoted symbols in `-->` to get the function
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
