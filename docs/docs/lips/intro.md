@@ -322,8 +322,8 @@ The same as with JavaScript if you don't pass an argument it will be undefined. 
 ```
 
 ### Helper macros and functions
-The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it
-acts like a chain of method calls in JavaScript
+The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it acts like a chain of
+method calls in JavaScript
 
 ```scheme
 (--> "this is string" (split " ") (reverse) (join " "))
@@ -337,7 +337,28 @@ is the same as JavaScript:
 "this is string".split(' ').reverse().join(' ');
 ```
 
-#### Lagacy macros and functions
+With --> you can also gab property of a function:
+
+```scheme
+(--> #/x/ (test.call #/foo/ "foo"))
+;; ==> #t
+(let ((test-bar (--> #/x/ (test.bind #/bar/i))))
+  (test-bar "BAR"))
+;; ==> #t
+```
+
+You can also return a function:
+
+```scheme
+(define test (--> #/x/ test))
+(test.call #/foo/ "foo")
+;; ==> #t
+```
+
+Read more about [function::bind](https://tinyurl.com/ykvb836s) and
+[function::call](https://tinyurl.com/yc6j7fdh) on [MDN](https://developer.mozilla.org/en-US/).
+
+#### Legacy macros and functions
 There are two legacy macros that are still part of LIPS, but you don't need
 them most of the time.
 
@@ -348,7 +369,10 @@ them most of the time.
 (. document 'querySelector)
 ```
 
-This returned function querySelector from document object in browser.
+This returned function querySelector from document object in browser. Note that dot a function can only appear
+as first element of the list (it's handled in special way by the parser). In any other place dot is a pair separator,
+see documentation abount [Pairs in Scheme](/docs/scheme-intro/data-types#pairs).
+
 * `..` - this is a macro is that simplify usage of `.` procedure:
 
 ```scheme
