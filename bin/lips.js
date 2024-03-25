@@ -474,7 +474,7 @@ function run_repl(err, rl) {
             }
             const code = cmd.replace(re, '');
             const lines = code.split('\n');
-            if (terminal && lines.length > 2) {
+            if (terminal) {
                 const stdout = scheme(code).split('\n').map((line, i) => {
                     let prefix;
                     if (i === 0) {
