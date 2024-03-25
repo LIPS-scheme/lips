@@ -145,6 +145,17 @@ You can change that if you add dot (current working directory) to the `$PATH` en
 export $PATH=".:$PATH"
 ```
 
+If you prefer to install lips locally instead of globally you can use this shebang:
+
+```scheme
+#!/usr/bin/env -S npx @jcubic/lips
+(let ((what "World"))
+  (print (string-append "Hello " what)))
+```
+
+**NOTE**: if you run this code outside of [Node.js project](#nodejs-project) npx will install the
+package before execution.
+
 ### Node.js project
 
 Afeter you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
