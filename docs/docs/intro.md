@@ -58,7 +58,7 @@ You can also use `src` attribute to link to source file. Like you normally do wi
 <script type="text/x-scheme" src="example.scm"><script>
 ```
 
-## NodeJS / Bun
+## Node.js
 
 To install LIPS you can use NPM:
 
