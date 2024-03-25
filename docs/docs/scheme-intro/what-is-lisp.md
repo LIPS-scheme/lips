@@ -93,6 +93,10 @@ scheme>
 
 And you can type your scheme code and press enter to execute it (it's often called evaluation of the expression).
 
+**NOTE**: you can run [LIPS bookmarklet](/#bookmark) while reading this tutorial. But note that it
+doesn't yet support [continuations](/docs/scheme-intro/continuations) and TCO ([Tail Call
+Optimization](/docs/scheme-intro/core#tail-call-optimization)).
+
 ### Standards
 
 Scheme is standardized in form of [R<sup>n</sup>RS documents](https://standards.scheme.org/).
