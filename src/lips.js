@@ -1463,8 +1463,7 @@ class Parser {
     _with_stdin(fn) {
         // change stdin to parser extension can use current-input
         // to read data from the parser stream #150
-        const interaction = this.__env__.get('**interaction-environment**');
-        const internal = interaction.get('**internal-env**');
+        const internal = get_internal(this.__env__);
         const stdin = internal.get('stdin');
         internal.set('stdin', new ParserInputPort(this, this.__env__));
         return unpromise(fn(), (result) => {
@@ -7841,8 +7840,12 @@ var get = doc('get', function get(object, ...args) {
 // -------------------------------------------------------------------------
 // Function gets internal protected data
 // -------------------------------------------------------------------------
+function get_internal(env) {
+    return interaction(env, '**internal-env**');
+}
+// -------------------------------------------------------------------------
 function internal(env, name) {
-    var internal_env = interaction(env, '**internal-env**');
+    const internal_env = get_internal(env);
     return internal_env.get(name);
 }
 // -------------------------------------------------------------------------
