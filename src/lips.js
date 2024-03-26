@@ -9823,6 +9823,17 @@ var global_env = new Environment({
 
         Returns a shallow list from tree structure (pairs).`),
     // ------------------------------------------------------------------
+    'vector-append': doc('vector-append', function(...args) {
+        if (!args.length) {
+            return [];
+        }
+        typecheck_args('vector-append', args, 'array');
+        const [first, ...rest] = args;
+        return first.concat(...rest);
+    }, `(vector-append v1 v2 ...)
+
+         Returns new vector by combining it's arguments that should be vectors.`),
+    // ------------------------------------------------------------------
     'array->list': doc('array->list', function(array) {
         typecheck('array->list', array, 'array');
         return Pair.fromArray(array);
