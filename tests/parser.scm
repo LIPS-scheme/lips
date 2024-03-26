@@ -234,6 +234,10 @@
       (lambda (t)
         (t.is (to.throw (lips.parse "(1 . 2 3)")) #t)))
 
+(test "parser: should throw error on invalid hash token"
+      (lambda (t)
+        (t.is (to.throw (lips.parse "#f10")) #t)))
+
 (test "lexer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")

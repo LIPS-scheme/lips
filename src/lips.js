@@ -1237,6 +1237,10 @@ class Lexer {
         if (![null, Lexer.comment].includes(this._state)) {
             const line_number = this.__input__.substring(0, this._newline).match(/\n/g)?.length ?? 0;
             const line = this.__input__.substring(this._newline);
+            if (this.__input__[this._i] === '#') {
+                const expr = this.__input__.substring(this._i).replace(/^([^\s()\[\]]+).*/, '$1');
+                throw new Error(`Invalid Syntax at line ${line_number + 1}: invalid token ${expr}`);
+            }
             throw new Unterminated(`Invalid Syntax at line ${line_number + 1}: Unterminated expression ${line}`);
         }
     }
@@ -1303,7 +1307,7 @@ Lexer._rules = [
 
     // hash special symbols, lexer don't need to distinguish those
     // we only care if it's not pick up by vectors literals
-    [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
+    [/#/, null, /[bdxoei]/i, null, Lexer.symbol],
 
     // characters
     [/#/, null, /\\/, null, Lexer.character],
@@ -1389,30 +1393,37 @@ const directives = [
     '#!fold-case',
     '#!no-fold-case'
 ];
+const hash_literals = ['#t', '#f'];
 // ----------------------------------------------------------------------
 Object.defineProperty(Lexer, 'rules', {
     get() {
         if (Lexer._cache.valid) {
             return Lexer._cache.rules;
         }
-        const parsable = Object.keys(parsable_contants).concat(directives);
+        const parsable = Object.keys(parsable_contants).concat(directives, hash_literals);
         const tokens = specials.names().concat(parsable).sort((a, b) => {
             return b.length - a.length || a.localeCompare(b);
         });
 
+        // syntax-extensions tokens that share the same first character after hash
+        // should have same symbol, but becase tokens are sorted, the longer
+        // tokens are always process first.
         const special_rules = tokens.reduce((acc, token) => {
             let symbol;
-            // we need distinct symbols_ for syntax extensions
+            let after = null;
             if (token[0] === '#') {
                 if (token.length === 1) {
                     symbol = Symbol.for(token);
                 } else {
+                    if (hash_literals.includes(token)) {
+                        after = Lexer.boundary;
+                    }
                     symbol = Symbol.for(token[1]);
                 }
             } else {
                 symbol = Symbol.for(token);
             }
-            const rules = Lexer.literal_rule(token, symbol);
+            const rules = Lexer.literal_rule(token, symbol, null, after);
             return acc.concat(rules);
         }, []);
 

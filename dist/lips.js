@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 Mar 2024 22:11:59 +0000
+ * build: Tue, 26 Mar 2024 00:57:14 +0000
  */
 
 (function (global, factory) {
@@ -4714,6 +4714,10 @@
           var _this$__input__$subst, _this$__input__$subst2;
           var line_number = (_this$__input__$subst = (_this$__input__$subst2 = this.__input__.substring(0, this._newline).match(/\n/g)) === null || _this$__input__$subst2 === void 0 ? void 0 : _this$__input__$subst2.length) !== null && _this$__input__$subst !== void 0 ? _this$__input__$subst : 0;
           var _line = this.__input__.substring(this._newline);
+          if (this.__input__[this._i] === '#') {
+            var expr = this.__input__.substring(this._i).replace(/^([^\s()\[\]]+).*/, '$1');
+            throw new Error("Invalid Syntax at line ".concat(line_number + 1, ": invalid token ").concat(expr));
+          }
           throw new Unterminated("Invalid Syntax at line ".concat(line_number + 1, ": Unterminated expression ").concat(_line));
         }
       }
@@ -4778,7 +4782,7 @@
   [/"/, null, null, Lexer.string, null], [/"/, null, null, null, Lexer.string], [/"/, null, null, Lexer.string_escape, Lexer.string], [/\\/, null, null, Lexer.string, Lexer.string_escape], [/./, /\\/, null, Lexer.string_escape, Lexer.string],
   // hash special symbols, lexer don't need to distinguish those
   // we only care if it's not pick up by vectors literals
-  [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
+  [/#/, null, /[bdxoei]/i, null, Lexer.symbol],
   // characters
   [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null],
   // regex
@@ -4820,29 +4824,37 @@
     '#void': undefined
   };
   var directives = ['#!fold-case', '#!no-fold-case'];
+  var hash_literals = ['#t', '#f'];
   // ----------------------------------------------------------------------
   Object.defineProperty(Lexer, 'rules', {
     get: function get() {
       if (Lexer._cache.valid) {
         return Lexer._cache.rules;
       }
-      var parsable = Object.keys(parsable_contants).concat(directives);
+      var parsable = Object.keys(parsable_contants).concat(directives, hash_literals);
       var tokens = specials.names().concat(parsable).sort(function (a, b) {
         return b.length - a.length || a.localeCompare(b);
       });
+
+      // syntax-extensions tokens that share the same first character after hash
+      // should have same symbol, but becase tokens are sorted, the longer
+      // tokens are always process first.
       var special_rules = tokens.reduce(function (acc, token) {
         var symbol;
-        // we need distinct symbols_ for syntax extensions
+        var after = null;
         if (token[0] === '#') {
           if (token.length === 1) {
             symbol = Symbol["for"](token);
           } else {
+            if (hash_literals.includes(token)) {
+              after = Lexer.boundary;
+            }
             symbol = Symbol["for"](token[1]);
           }
         } else {
           symbol = Symbol["for"](token);
         }
-        var rules = Lexer.literal_rule(token, symbol);
+        var rules = Lexer.literal_rule(token, symbol, null, after);
         return acc.concat(rules);
       }, []);
       Lexer._cache.rules = Lexer._rules.concat(Lexer._brackets, special_rules, Lexer._symbol_rules);
@@ -4870,7 +4882,7 @@
       read_only(this, '_formatter', formatter, {
         hidden: true
       });
-      read_only(this, '__env__', env !== null && env !== void 0 ? env : env.inerit('parser'));
+      read_only(this, '__env__', env !== null && env !== void 0 ? env : env.inherit('parser'));
       read_only(this, '_meta', meta, {
         hidden: true
       });
@@ -17170,10 +17182,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 25 Mar 2024 22:11:59 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 26 Mar 2024 00:57:14 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 25 Mar 2024 22:11:59 +0000').valueOf();
+    var date = LString('Tue, 26 Mar 2024 00:57:14 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17213,7 +17225,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 25 Mar 2024 22:11:59 +0000';
+  var date = 'Tue, 26 Mar 2024 00:57:14 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
