@@ -3459,17 +3459,6 @@
    need to evaluate to result of calling values.")
 
 ;; -----------------------------------------------------------------------------
-(define (vector-append . args)
-  "(vector-append v1 v2 ...)
-
-   Returns new vector by combining it's arguments that should be vectors."
-  (if (null? args)
-      (vector)
-      (begin
-        (typecheck "vector-append" (car args) "array")
-        (--> (car args) (concat (apply vector-append (cdr args)))))))
-
-;; -----------------------------------------------------------------------------
 (define (vector-copy vector . rest)
   "(vector-copy vector)
    (vector-copy vector start)

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 26 Mar 2024 13:16:44 +0000
+ * build: Tue, 26 Mar 2024 22:16:30 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -4896,6 +4896,22 @@ var Parser = /*#__PURE__*/function () {
     }
   }
   _createClass(Parser, [{
+    key: "_with_stdin",
+    value: function _with_stdin(fn) {
+      // change stdin to parser extention can use current-input
+      // to read data from the parser stream #150
+      var interaction = this.__env__.get('**interaction-environment**');
+      var internal = interaction.get('**internal-env**');
+      var stdin = internal.get('stdin');
+      internal.set('stdin', new ParserInputPort(this, this.__env__));
+      return unpromise(fn(), function (result) {
+        internal.set('stdin', stdin);
+        return result;
+      }, function () {
+        internal.set('stdin', stdin);
+      });
+    }
+  }, {
     key: "parse",
     value: function parse(arg) {
       if (arg instanceof LString) {
@@ -5320,6 +5336,7 @@ var Parser = /*#__PURE__*/function () {
     key: "_read_object",
     value: function () {
       var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
+        var _this6 = this;
         var token, special, builtin, expr, is_symbol, was_close_paren, object, extension, args, result, ref, ref_label;
         return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) switch (_context8.prev = _context8.next) {
@@ -5395,10 +5412,12 @@ var Parser = /*#__PURE__*/function () {
                 _context8.next = 31;
                 break;
               }
-              return _context8.abrupt("return", call_function(extension, is_symbol ? [] : args, {
-                env: this.__env__,
-                dynamic_env: this.__env__,
-                use_dynamic: false
+              return _context8.abrupt("return", this._with_stdin(function () {
+                return call_function(extension, is_symbol ? [] : args, {
+                  env: _this6.__env__,
+                  dynamic_env: _this6.__env__,
+                  use_dynamic: false
+                });
               }));
             case 31:
               throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
@@ -5430,7 +5449,9 @@ var Parser = /*#__PURE__*/function () {
                 break;
               }
               _context8.next = 44;
-              return this.evaluate(expr);
+              return this._with_stdin(function () {
+                return _this6.evaluate(expr);
+              });
             case 44:
               result = _context8.sent;
               if (!(is_pair(result) || result instanceof LSymbol)) {
@@ -10436,7 +10457,7 @@ function guard_math_call(fn) {
 }
 // ----------------------------------------------------------------------
 function pipe() {
-  var _this6 = this;
+  var _this7 = this;
   for (var _len8 = arguments.length, fns = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
     fns[_key8] = arguments[_key8];
   }
@@ -10448,7 +10469,7 @@ function pipe() {
       args[_key9] = arguments[_key9];
     }
     return fns.reduce(function (args, f) {
-      return [f.apply(_this6, args)];
+      return [f.apply(_this7, args)];
     }, args)[0];
   };
 }
@@ -11582,9 +11603,9 @@ LComplex.prototype.mul = function (n) {
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.complex_op = function (name, n, fn) {
-  var _this7 = this;
+  var _this8 = this;
   var calc = function calc(re, im) {
-    var result = fn(_this7.__re__, re, _this7.__im__, im);
+    var result = fn(_this8.__re__, re, _this8.__im__, im);
     if ('im' in result && 're' in result) {
       if (result.im.cmp(0) === 0) {
         return result.re;
@@ -12180,7 +12201,7 @@ LComplex.i = LComplex({
 // :: Port abstraction - read should be a function that return next line
 // -------------------------------------------------------------------------
 function InputPort(read) {
-  var _this8 = this;
+  var _this9 = this;
   var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : global_env;
   if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
     return new InputPort(read);
@@ -12204,12 +12225,12 @@ function InputPort(read) {
     return _regeneratorRuntime.wrap(function _callee14$(_context14) {
       while (1) switch (_context14.prev = _context14.next) {
         case 0:
-          if (_this8.char_ready()) {
+          if (_this9.char_ready()) {
             _context14.next = 6;
             break;
           }
           _context14.next = 3;
-          return _this8._read();
+          return _this9._read();
         case 3:
           line = _context14.sent;
           parser = new Parser({
@@ -12217,7 +12238,7 @@ function InputPort(read) {
           });
           parser.parse(line);
         case 6:
-          return _context14.abrupt("return", _this8.__parser__);
+          return _context14.abrupt("return", _this9.__parser__);
         case 7:
         case "end":
           return _context14.stop();
@@ -12280,13 +12301,13 @@ InputPort.prototype.is_open = function () {
   return this._with_parser !== null;
 };
 InputPort.prototype.close = function () {
-  var _this9 = this;
+  var _this10 = this;
   this.__parser__ = null;
   // make content garbage collected, we assign null,
   // because the value is in prototype
   this._with_parser = null;
   ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-    _this9[name] = function () {
+    _this10[name] = function () {
       throw new Error('input-port: port is closed');
     };
   });
@@ -12332,20 +12353,20 @@ OutputPort.prototype.toString = function () {
 var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
   _inherits(BufferedOutputPort, _OutputPort);
   function BufferedOutputPort(fn) {
-    var _this10;
+    var _this11;
     _classCallCheck(this, BufferedOutputPort);
-    _this10 = _callSuper(this, BufferedOutputPort, [function () {
-      var _this11;
-      return (_this11 = _this10)._write.apply(_this11, arguments);
+    _this11 = _callSuper(this, BufferedOutputPort, [function () {
+      var _this12;
+      return (_this12 = _this11)._write.apply(_this12, arguments);
     }]);
     typecheck('BufferedOutputPort', fn, 'function');
-    read_only(_assertThisInitialized(_this10), '_fn', fn, {
+    read_only(_assertThisInitialized(_this11), '_fn', fn, {
       hidden: true
     });
-    read_only(_assertThisInitialized(_this10), '_buffer', [], {
+    read_only(_assertThisInitialized(_this11), '_buffer', [], {
       hidden: true
     });
-    return _this10;
+    return _this11;
   }
   _createClass(BufferedOutputPort, [{
     key: "flush",
@@ -12358,13 +12379,13 @@ var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
   }, {
     key: "_write",
     value: function _write() {
-      var _this12 = this;
+      var _this13 = this;
       for (var _len18 = arguments.length, args = new Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
         args[_key18] = arguments[_key18];
       }
       if (args.length) {
         args.forEach(function (arg) {
-          _this12._buffer.push(arg);
+          _this13._buffer.push(arg);
         });
         var last_value = this._buffer[this._buffer.length - 1];
         if (last_value.match(/\n$/)) {
@@ -12377,7 +12398,7 @@ var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
   return BufferedOutputPort;
 }(OutputPort); // -------------------------------------------------------------------------
 function OutputStringPort(toString) {
-  var _this13 = this;
+  var _this14 = this;
   if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
     return new OutputStringPort(toString);
   }
@@ -12390,7 +12411,7 @@ function OutputStringPort(toString) {
     } else {
       x = x.valueOf();
     }
-    _this13.__buffer__.push(x);
+    _this14.__buffer__.push(x);
   };
 }
 OutputStringPort.prototype = Object.create(OutputPort.prototype);
@@ -12405,7 +12426,7 @@ OutputStringPort.prototype.valueOf = function () {
 };
 // -------------------------------------------------------------------------
 function OutputFilePort(filename, fd) {
-  var _this14 = this;
+  var _this15 = this;
   if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
     return new OutputFilePort(filename, fd);
   }
@@ -12421,7 +12442,7 @@ function OutputFilePort(filename, fd) {
     } else {
       x = x.valueOf();
     }
-    _this14.fs().write(_this14._fd, x, function (err) {
+    _this15.fs().write(_this15._fd, x, function (err) {
       if (err) {
         throw err;
       }
@@ -12440,16 +12461,16 @@ OutputFilePort.prototype.internal = function (name) {
   return user_env.get('**internal-env**').get(name);
 };
 OutputFilePort.prototype.close = function () {
-  var _this15 = this;
+  var _this16 = this;
   return new Promise(function (resolve, reject) {
-    _this15.fs().close(_this15._fd, function (err) {
+    _this16.fs().close(_this16._fd, function (err) {
       if (err) {
         reject(err);
       } else {
-        read_only(_this15, '_fd', null, {
+        read_only(_this16, '_fd', null, {
           hidden: true
         });
-        OutputPort.prototype.close.call(_this15);
+        OutputPort.prototype.close.call(_this16);
         resolve();
       }
     });
@@ -12460,7 +12481,7 @@ OutputFilePort.prototype.toString = function () {
 };
 // -------------------------------------------------------------------------
 function InputStringPort(string) {
-  var _this16 = this;
+  var _this17 = this;
   var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : global_env;
   if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
     return new InputStringPort(string);
@@ -12468,13 +12489,13 @@ function InputStringPort(string) {
   typecheck('InputStringPort', string, 'string');
   string = string.valueOf();
   this._with_parser = this._with_init_parser.bind(this, function () {
-    if (!_this16.__parser__) {
-      _this16.__parser__ = new Parser({
+    if (!_this17.__parser__) {
+      _this17.__parser__ = new Parser({
         env: env
       });
-      _this16.__parser__.parse(string);
+      _this17.__parser__.parse(string);
     }
-    return _this16.__parser__;
+    return _this17.__parser__;
   });
   read_only(this, '__type__', text_port);
   this._make_defaults();
@@ -12486,6 +12507,25 @@ InputStringPort.prototype = Object.create(InputPort.prototype);
 InputStringPort.prototype.constructor = InputStringPort;
 InputStringPort.prototype.toString = function () {
   return "#<input-port (string)>";
+};
+// -------------------------------------------------------------------------
+function ParserInputPort(parser) {
+  if (typeof this !== 'undefined' && !(this instanceof ParserInputPort) || typeof this === 'undefined') {
+    return new ParserInputPort(parser);
+  }
+  this._with_parser = this._with_init_parser.bind(this, function () {
+    return parser;
+  });
+  read_only(this, '__type__', text_port);
+  this._make_defaults();
+}
+ParserInputPort.prototype.char_ready = function () {
+  return true;
+};
+ParserInputPort.prototype = Object.create(InputPort.prototype);
+ParserInputPort.prototype.constructor = ParserInputPort;
+ParserInputPort.prototype.toString = function () {
+  return "#<input-port (parser)>";
 };
 // -------------------------------------------------------------------------
 function InputByteVectorPort(bytevectors) {
@@ -12522,13 +12562,13 @@ InputByteVectorPort.prototype.toString = function () {
   return "#<input-port (bytevector)>";
 };
 InputByteVectorPort.prototype.close = function () {
-  var _this17 = this;
+  var _this18 = this;
   read_only(this, '__vector__', _nil);
   var err = function err() {
     throw new Error('Input-binary-port: port is closed');
   };
   ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
-    _this17[name] = err;
+    _this18[name] = err;
   });
   this.u8_ready = this.char_ready = function () {
     return false;
@@ -12646,7 +12686,7 @@ InputBinaryFilePort.prototype.toString = function () {
 };
 // -------------------------------------------------------------------------
 function OutputBinaryFilePort(filename, fd) {
-  var _this18 = this;
+  var _this19 = this;
   if (typeof this !== 'undefined' && !(this instanceof OutputBinaryFilePort) || typeof this === 'undefined') {
     return new OutputBinaryFilePort(filename, fd);
   }
@@ -12661,7 +12701,7 @@ function OutputBinaryFilePort(filename, fd) {
     typecheck('write', x, ['number', 'uint8array']);
     var buffer;
     if (!fs) {
-      fs = _this18.internal('fs');
+      fs = _this19.internal('fs');
     }
     if (LNumber.isNumber(x)) {
       buffer = new Uint8Array([x.valueOf()]);
@@ -12669,7 +12709,7 @@ function OutputBinaryFilePort(filename, fd) {
       buffer = new Uint8Array(Array.from(x));
     }
     return new Promise(function (resolve, reject) {
-      fs.write(_this18._fd, buffer, function (err) {
+      fs.write(_this19._fd, buffer, function (err) {
         if (err) {
           reject(err);
         } else {
@@ -12701,7 +12741,7 @@ EOF.prototype.toString = function () {
 // Simpler way to create interpreter with interaction-environment
 // -------------------------------------------------------------------------
 function Interpreter(name) {
-  var _this19 = this;
+  var _this20 = this;
   var _ref27 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
     stderr = _ref27.stderr,
     stdin = _ref27.stdin,
@@ -12725,7 +12765,7 @@ function Interpreter(name) {
     env: this.__env__
   });
   this.__env__.set('parent.frame', doc('parent.frame', function () {
-    return _this19.__env__;
+    return _this20.__env__;
   }, global_env.__env__['parent.frame'].__doc__));
   var defaults_name = '**interaction-environment-defaults**';
   this.set(defaults_name, get_props(obj).concat(defaults_name));
@@ -12745,7 +12785,7 @@ function Interpreter(name) {
 // -------------------------------------------------------------------------
 Interpreter.prototype.exec = /*#__PURE__*/function () {
   var _ref28 = _asyncToGenerator(function (arg) {
-    var _this20 = this;
+    var _this21 = this;
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     return /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
       var _options$use_dynamic, use_dynamic, dynamic_env, env;
@@ -12758,12 +12798,12 @@ Interpreter.prototype.exec = /*#__PURE__*/function () {
             // simple solution to overwrite this variable in each interpreter
             // before evaluation of user code
             if (!env) {
-              env = _this20.__env__;
+              env = _this21.__env__;
             }
             if (!dynamic_env) {
               dynamic_env = env;
             }
-            global_env.set('**interaction-environment**', _this20.__env__);
+            global_env.set('**interaction-environment**', _this21.__env__);
             if (!Array.isArray(arg)) {
               _context16.next = 10;
               break;
@@ -12774,8 +12814,8 @@ Interpreter.prototype.exec = /*#__PURE__*/function () {
               use_dynamic: use_dynamic
             }));
           case 10:
-            _this20.__parser__.parse(arg);
-            return _context16.abrupt("return", exec(_this20.__parser__, {
+            _this21.__parser__.parse(arg);
+            return _context16.abrupt("return", exec(_this21.__parser__, {
               env: env,
               dynamic_env: dynamic_env,
               use_dynamic: use_dynamic
@@ -12951,12 +12991,12 @@ Environment.prototype.toString = function () {
 };
 // -------------------------------------------------------------------------
 Environment.prototype.clone = function () {
-  var _this21 = this;
+  var _this22 = this;
   // duplicate refs
   var env = {};
   // TODO: duplicated Symbols
   Object.keys(this.__env__).forEach(function (key) {
-    env[key] = _this21.__env__[key];
+    env[key] = _this22.__env__[key];
   });
   return new Environment(env, this.__parent__, this.__name__);
 };
@@ -13090,14 +13130,14 @@ Environment.prototype.set = function (name, value) {
 // For internal use only
 // -------------------------------------------------------------------------
 Environment.prototype.constant = function (name, value) {
-  var _this22 = this;
+  var _this23 = this;
   if (this.__env__.hasOwnProperty(name)) {
     throw new Error("Environment::constant: ".concat(name, " already exists"));
   }
   if (arguments.length === 1 && is_plain_object(arguments[0])) {
     var obj = arguments[0];
     Object.keys(obj).forEach(function (key) {
-      _this22.constant(name, obj[key]);
+      _this23.constant(name, obj[key]);
     });
   } else {
     Object.defineProperty(this.__env__, name, {
@@ -13269,14 +13309,14 @@ var global_env = new Environment({
   // ------------------------------------------------------------------
   read: doc('read', /*#__PURE__*/function () {
     var _read2 = _asyncToGenerator(function () {
-      var _this23 = this;
+      var _this24 = this;
       var arg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee17() {
         var env, port;
         return _regeneratorRuntime.wrap(function _callee17$(_context17) {
           while (1) switch (_context17.prev = _context17.next) {
             case 0:
-              env = _this23.env;
+              env = _this24.env;
               if (arg === null) {
                 port = internal(env, 'stdin');
               } else {
@@ -13454,7 +13494,7 @@ var global_env = new Environment({
   }, "(cdr pair)\n\n        This function returns the cdr (all but first) of the list."),
   // ------------------------------------------------------------------
   'set!': doc(new Macro('set!', function (code) {
-    var _this24 = this;
+    var _this25 = this;
     var _ref30 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
       use_dynamic = _ref30.use_dynamic,
       rest = _objectWithoutProperties(_ref30, _excluded4);
@@ -13508,7 +13548,7 @@ var global_env = new Environment({
         if (parts.length > 1) {
           var key = parts.pop();
           var name = parts.join('.');
-          var obj = _this24.get(name, {
+          var obj = _this25.get(name, {
             throwError: false
           });
           if (obj) {
@@ -13695,7 +13735,7 @@ var global_env = new Environment({
   // ------------------------------------------------------------------
   'do': doc(new Macro('do', /*#__PURE__*/function () {
     var _ref32 = _asyncToGenerator(function (code, _ref33) {
-      var _this25 = this;
+      var _this26 = this;
       var use_dynamic = _ref33.use_dynamic,
         error = _ref33.error;
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee19() {
@@ -13703,7 +13743,7 @@ var global_env = new Environment({
         return _regeneratorRuntime.wrap(function _callee19$(_context20) {
           while (1) switch (_context20.prev = _context20.next) {
             case 0:
-              self = _this25;
+              self = _this26;
               dynamic_env = self;
               scope = self.inherit('do');
               vars = code.car;
@@ -14140,19 +14180,19 @@ var global_env = new Environment({
   }, "(parent.frame)\n\n        Returns the parent environment if called from inside a function.\n        If no parent frame can be found it returns nil."),
   // ------------------------------------------------------------------
   'eval': doc('eval', function (code, env) {
-    var _this26 = this;
+    var _this27 = this;
     env = env || this.get('interaction-environment').call(this);
     return _evaluate(code, {
       env: env,
       dynamic_env: env,
       error: function error(e) {
         var error = global_env.get('display-error');
-        error.call(_this26, e.message);
+        error.call(_this27, e.message);
         if (e.code) {
           var stack = e.code.map(function (line, i) {
             return "[".concat(i + 1, "]: ").concat(line);
           }).join('\n');
-          error.call(_this26, stack);
+          error.call(_this27, stack);
         }
       }
     });
@@ -15043,6 +15083,19 @@ var global_env = new Environment({
     return list.flatten();
   }, "(flatten list)\n\n        Returns a shallow list from tree structure (pairs)."),
   // ------------------------------------------------------------------
+  'vector-append': doc('vector-append', function () {
+    for (var _len30 = arguments.length, args = new Array(_len30), _key30 = 0; _key30 < _len30; _key30++) {
+      args[_key30] = arguments[_key30];
+    }
+    if (!args.length) {
+      return [];
+    }
+    typecheck_args('vector-append', args, 'array');
+    var first = args[0],
+      rest = args.slice(1);
+    return first.concat.apply(first, _toConsumableArray(rest));
+  }, "(vector-append v1 v2 ...)\n\n         Returns new vector by combining it's arguments that should be vectors."),
+  // ------------------------------------------------------------------
   'array->list': doc('array->list', function (array) {
     typecheck('array->list', array, 'array');
     return Pair.fromArray(array);
@@ -15053,8 +15106,8 @@ var global_env = new Environment({
   'list->array': doc('list->array', to_array('list->array'), "(list->array list)\n\n         Function that converts a LIPS list into a JavaScript array."),
   // ------------------------------------------------------------------
   apply: doc('apply', function apply(fn) {
-    for (var _len30 = arguments.length, args = new Array(_len30 > 1 ? _len30 - 1 : 0), _key30 = 1; _key30 < _len30; _key30++) {
-      args[_key30 - 1] = arguments[_key30];
+    for (var _len31 = arguments.length, args = new Array(_len31 > 1 ? _len31 - 1 : 0), _key31 = 1; _key31 < _len31; _key31++) {
+      args[_key31 - 1] = arguments[_key31];
     }
     typecheck('apply', fn, 'function', 1);
     var last = args.pop();
@@ -15098,7 +15151,7 @@ var global_env = new Environment({
   }, "(string->number number [radix])\n\n        Function that parses a string into a number."),
   // ------------------------------------------------------------------
   'try': doc(new Macro('try', function (code, _ref41) {
-    var _this27 = this;
+    var _this28 = this;
     var use_dynamic = _ref41.use_dynamic;
       _ref41.error;
     return new Promise(function (resolve, reject) {
@@ -15134,15 +15187,15 @@ var global_env = new Environment({
         };
       }
       var args = {
-        env: _this27,
+        env: _this28,
         use_dynamic: use_dynamic,
-        dynamic_env: _this27,
+        dynamic_env: _this28,
         error: function error(e) {
           if (e instanceof IgnoreException) {
             throw e;
           }
           if (catch_clause) {
-            var env = _this27.inherit('try');
+            var env = _this28.inherit('try');
             var name = catch_clause.cdr.car.car;
             if (!(name instanceof LSymbol)) {
               throw new Error('try: invalid syntax: catch require variable name');
@@ -15152,7 +15205,7 @@ var global_env = new Environment({
             var catch_args = {
               env: env,
               use_dynamic: use_dynamic,
-              dynamic_env: _this27,
+              dynamic_env: _this28,
               error: function error(e) {
                 catch_error = true;
                 reject(e);
@@ -15204,8 +15257,8 @@ var global_env = new Environment({
   'for-each': doc('for-each', function (fn) {
     var _global_env$get2;
     typecheck('for-each', fn, 'function');
-    for (var _len31 = arguments.length, lists = new Array(_len31 > 1 ? _len31 - 1 : 0), _key31 = 1; _key31 < _len31; _key31++) {
-      lists[_key31 - 1] = arguments[_key31];
+    for (var _len32 = arguments.length, lists = new Array(_len32 > 1 ? _len32 - 1 : 0), _key32 = 1; _key32 < _len32; _key32++) {
+      lists[_key32 - 1] = arguments[_key32];
     }
     lists.forEach(function (arg, i) {
       typecheck('for-each', arg, ['pair', 'nil'], i + 1);
@@ -15220,16 +15273,16 @@ var global_env = new Environment({
   }, "(for-each fn . lists)\n\n        Higher-order function that calls function `fn` on each\n        value of the argument. If you provide more than one list\n        it will take each value from each list and call `fn` function\n        with that many arguments as number of list arguments."),
   // ------------------------------------------------------------------
   map: doc('map', function map(fn) {
-    var _this28 = this;
-    for (var _len32 = arguments.length, lists = new Array(_len32 > 1 ? _len32 - 1 : 0), _key32 = 1; _key32 < _len32; _key32++) {
-      lists[_key32 - 1] = arguments[_key32];
+    var _this29 = this;
+    for (var _len33 = arguments.length, lists = new Array(_len33 > 1 ? _len33 - 1 : 0), _key33 = 1; _key33 < _len33; _key33++) {
+      lists[_key33 - 1] = arguments[_key33];
     }
     typecheck('map', fn, 'function');
     var is_list = global_env.get('list?');
     lists.forEach(function (arg, i) {
       typecheck('map', arg, ['pair', 'nil'], i + 1);
       // detect cycles
-      if (is_pair(arg) && !is_list.call(_this28, arg)) {
+      if (is_pair(arg) && !is_list.call(_this29, arg)) {
         throw new Error("map: argument ".concat(i + 1, " is not a list"));
       }
     });
@@ -15251,7 +15304,7 @@ var global_env = new Environment({
       use_dynamic: use_dynamic
     });
     return unpromise(result, function (head) {
-      return unpromise(map.call.apply(map, [_this28, fn].concat(_toConsumableArray(lists.map(function (l) {
+      return unpromise(map.call.apply(map, [_this29, fn].concat(_toConsumableArray(lists.map(function (l) {
         return l.cdr;
       })))), function (rest) {
         return new Pair(head, rest);
@@ -15288,8 +15341,8 @@ var global_env = new Environment({
   }, "(some fn list)\n\n        Higher-order function that calls fn on each element of the list.\n        It stops and returns true when fn returns true for a value.\n        If none of the values give true, some will return false.\n        Analogous to Python any(map(fn, list))."),
   // ------------------------------------------------------------------
   fold: doc('fold', fold('fold', function (fold, fn, init) {
-    for (var _len33 = arguments.length, lists = new Array(_len33 > 3 ? _len33 - 3 : 0), _key33 = 3; _key33 < _len33; _key33++) {
-      lists[_key33 - 3] = arguments[_key33];
+    for (var _len34 = arguments.length, lists = new Array(_len34 > 3 ? _len34 - 3 : 0), _key34 = 3; _key34 < _len34; _key34++) {
+      lists[_key34 - 3] = arguments[_key34];
     }
     typecheck('fold', fn, 'function');
     lists.forEach(function (arg, i) {
@@ -15309,8 +15362,8 @@ var global_env = new Environment({
   }), "(fold fn init . lists)\n\n         Function fold is left-to-right reversal of reduce. It call `fn`\n         on each pair of elements of the list and returns a single value.\n         e.g. it computes (fn 'a 'x (fn 'b 'y (fn 'c 'z 'foo)))\n         for: (fold fn 'foo '(a b c) '(x y z))"),
   // ------------------------------------------------------------------
   pluck: doc('pluck', function pluck() {
-    for (var _len34 = arguments.length, keys = new Array(_len34), _key34 = 0; _key34 < _len34; _key34++) {
-      keys[_key34] = arguments[_key34];
+    for (var _len35 = arguments.length, keys = new Array(_len35), _key35 = 0; _key35 < _len35; _key35++) {
+      keys[_key35] = arguments[_key35];
     }
     return function (obj) {
       keys = keys.map(function (x) {
@@ -15321,8 +15374,8 @@ var global_env = new Environment({
       } else if (keys.length === 1) {
         var _keys2 = keys,
           _keys3 = _slicedToArray(_keys2, 1),
-          _key35 = _keys3[0];
-        return obj[_key35];
+          _key36 = _keys3[0];
+        return obj[_key36];
       }
       var result = {};
       keys.forEach(function (key) {
@@ -15333,9 +15386,9 @@ var global_env = new Environment({
   }, "(pluck . strings)\n\n        If called with a single string it will return a function that when\n        called with an object will return that key from the object.\n        If called with more then one string the returned function will\n        create a new object by copying all properties from the given object."),
   // ------------------------------------------------------------------
   reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-    var _this29 = this;
-    for (var _len35 = arguments.length, lists = new Array(_len35 > 3 ? _len35 - 3 : 0), _key36 = 3; _key36 < _len35; _key36++) {
-      lists[_key36 - 3] = arguments[_key36];
+    var _this30 = this;
+    for (var _len36 = arguments.length, lists = new Array(_len36 > 3 ? _len36 - 3 : 0), _key37 = 3; _key37 < _len36; _key37++) {
+      lists[_key37 - 3] = arguments[_key37];
     }
     typecheck('reduce', fn, 'function');
     lists.forEach(function (arg, i) {
@@ -15347,7 +15400,7 @@ var global_env = new Environment({
     return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
       return l.car;
     })).concat([init])), function (value) {
-      return reduce.call.apply(reduce, [_this29, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+      return reduce.call.apply(reduce, [_this30, fn, value].concat(_toConsumableArray(lists.map(function (l) {
         return l.cdr;
       }))));
     });
@@ -15381,8 +15434,8 @@ var global_env = new Environment({
   // Numbers
   // ------------------------------------------------------------------
   gcd: doc('gcd', function gcd() {
-    for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
-      args[_key37] = arguments[_key37];
+    for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
+      args[_key38] = arguments[_key38];
     }
     typecheck_args('lcm', args, 'number');
     return args.reduce(function (result, item) {
@@ -15391,8 +15444,8 @@ var global_env = new Environment({
   }, "(gcd n1 n2 ...)\n\n        Function that returns the greatest common divisor of the arguments."),
   // ------------------------------------------------------------------
   lcm: doc('lcm', function lcm() {
-    for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
-      args[_key38] = arguments[_key38];
+    for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
+      args[_key39] = arguments[_key39];
     }
     typecheck_args('lcm', args, 'number');
     // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
@@ -15427,8 +15480,8 @@ var global_env = new Environment({
   }, LNumber(0)), "(+ . numbers)\n\n        Sums all numbers passed as arguments. If single value is passed it will\n        return that value."),
   // ------------------------------------------------------------------
   '-': doc('-', function () {
-    for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
-      args[_key39] = arguments[_key39];
+    for (var _len39 = arguments.length, args = new Array(_len39), _key40 = 0; _key40 < _len39; _key40++) {
+      args[_key40] = arguments[_key40];
     }
     if (args.length === 0) {
       throw new Error('-: procedure require at least one argument');
@@ -15445,8 +15498,8 @@ var global_env = new Environment({
   }, "(- n1 n2 ...)\n        (- n)\n\n        Subtracts n2 and subsequent numbers from n1. If only one argument is passed\n        it will negate the value."),
   // ------------------------------------------------------------------
   '/': doc('/', function () {
-    for (var _len39 = arguments.length, args = new Array(_len39), _key40 = 0; _key40 < _len39; _key40++) {
-      args[_key40] = arguments[_key40];
+    for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
+      args[_key41] = arguments[_key41];
     }
     if (args.length === 0) {
       throw new Error('/: procedure require at least one argument');
@@ -15510,8 +15563,8 @@ var global_env = new Environment({
   // ------------------------------------------------------------------
   // Booleans
   '==': doc('==', function () {
-    for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
-      args[_key41] = arguments[_key41];
+    for (var _len41 = arguments.length, args = new Array(_len41), _key42 = 0; _key42 < _len41; _key42++) {
+      args[_key42] = arguments[_key42];
     }
     typecheck_args('==', args, 'number');
     return seq_compare(function (a, b) {
@@ -15520,8 +15573,8 @@ var global_env = new Environment({
   }, "(== x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        all equal."),
   // ------------------------------------------------------------------
   '>': doc('>', function () {
-    for (var _len41 = arguments.length, args = new Array(_len41), _key42 = 0; _key42 < _len41; _key42++) {
-      args[_key42] = arguments[_key42];
+    for (var _len42 = arguments.length, args = new Array(_len42), _key43 = 0; _key43 < _len42; _key43++) {
+      args[_key43] = arguments[_key43];
     }
     typecheck_numbers('>', args, ['bigint', 'float', 'rational']);
     return seq_compare(function (a, b) {
@@ -15530,8 +15583,8 @@ var global_env = new Environment({
   }, "(> x1 x2 x3 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically decreasing, i.e. x1 > x2 and x2 > x3 and so on."),
   // ------------------------------------------------------------------
   '<': doc('<', function () {
-    for (var _len42 = arguments.length, args = new Array(_len42), _key43 = 0; _key43 < _len42; _key43++) {
-      args[_key43] = arguments[_key43];
+    for (var _len43 = arguments.length, args = new Array(_len43), _key44 = 0; _key44 < _len43; _key44++) {
+      args[_key44] = arguments[_key44];
     }
     typecheck_numbers('<', args, ['bigint', 'float', 'rational']);
     return seq_compare(function (a, b) {
@@ -15540,8 +15593,8 @@ var global_env = new Environment({
   }, "(< x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically increasing, i.e. x1 < x2 and x2 < x3 and so on."),
   // ------------------------------------------------------------------
   '<=': doc('<=', function () {
-    for (var _len43 = arguments.length, args = new Array(_len43), _key44 = 0; _key44 < _len43; _key44++) {
-      args[_key44] = arguments[_key44];
+    for (var _len44 = arguments.length, args = new Array(_len44), _key45 = 0; _key45 < _len44; _key45++) {
+      args[_key45] = arguments[_key45];
     }
     typecheck_numbers('<=', args, ['bigint', 'float', 'rational']);
     return seq_compare(function (a, b) {
@@ -15550,8 +15603,8 @@ var global_env = new Environment({
   }, "(<= x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically nondecreasing, i.e. x1 <= x2 and x2 <= x3 and so on."),
   // ------------------------------------------------------------------
   '>=': doc('>=', function () {
-    for (var _len44 = arguments.length, args = new Array(_len44), _key45 = 0; _key45 < _len44; _key45++) {
-      args[_key45] = arguments[_key45];
+    for (var _len45 = arguments.length, args = new Array(_len45), _key46 = 0; _key46 < _len45; _key46++) {
+      args[_key46] = arguments[_key46];
     }
     typecheck_numbers('>=', args, ['bigint', 'float', 'rational']);
     return seq_compare(function (a, b) {
@@ -15983,10 +16036,10 @@ function type(obj) {
   if (_typeof$1(obj) === 'object') {
     for (var _i5 = 0, _Object$entries2 = Object.entries(type_mapping); _i5 < _Object$entries2.length; _i5++) {
       var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i5], 2),
-        _key46 = _Object$entries2$_i[0],
+        _key47 = _Object$entries2$_i[0],
         value = _Object$entries2$_i[1];
       if (obj instanceof value) {
-        return _key46;
+        return _key47;
       }
     }
     if (is_instance(obj)) {
@@ -16184,8 +16237,8 @@ function prepare_fn_args(fn, args) {
         var arg = args[i];
         if (is_lips_function(arg)) {
           wrapper = function wrapper() {
-            for (var _len45 = arguments.length, args = new Array(_len45), _key47 = 0; _key47 < _len45; _key47++) {
-              args[_key47] = arguments[_key47];
+            for (var _len46 = arguments.length, args = new Array(_len46), _key48 = 0; _key48 < _len46; _key48++) {
+              args[_key48] = arguments[_key48];
             }
             return unpromise(arg.apply(this, args), unbox);
           }; // make wrapper work like output of bind
@@ -17018,8 +17071,8 @@ var cbor = function () {
 
 // -------------------------------------------------------------------------
 function merge_uint8_array() {
-  for (var _len46 = arguments.length, args = new Array(_len46), _key48 = 0; _key48 < _len46; _key48++) {
-    args[_key48] = arguments[_key48];
+  for (var _len47 = arguments.length, args = new Array(_len47), _key49 = 0; _key49 < _len47; _key49++) {
+    args[_key49] = arguments[_key49];
   }
   if (args.length > 1) {
     var len = args.reduce(function (acc, arr) {
@@ -17175,10 +17228,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 26 Mar 2024 13:16:44 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 26 Mar 2024 22:16:30 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 26 Mar 2024 13:16:44 +0000').valueOf();
+  var date = LString('Tue, 26 Mar 2024 22:16:30 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17218,7 +17271,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 26 Mar 2024 13:16:44 +0000';
+var date = 'Tue, 26 Mar 2024 22:16:30 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

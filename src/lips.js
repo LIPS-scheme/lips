@@ -1460,6 +1460,20 @@ class Parser {
             this.__env__.set('lips',  { ...lips, __parser__: this });
         }
     }
+    _with_stdin(fn) {
+        // change stdin to parser extention can use current-input
+        // to read data from the parser stream #150
+        const interaction = this.__env__.get('**interaction-environment**');
+        const internal = interaction.get('**internal-env**');
+        const stdin = internal.get('stdin');
+        internal.set('stdin', new ParserInputPort(this, this.__env__));
+        return unpromise(fn(), (result) => {
+            internal.set('stdin', stdin);
+            return result;
+        }, () => {
+            internal.set('stdin', stdin);
+        });
+    }
     parse(arg) {
         if (arg instanceof LString) {
             arg = arg.toString();
@@ -1681,10 +1695,12 @@ class Parser {
                         args = object.to_array(false);
                     }
                     if (args || is_symbol) {
-                        return call_function(extension, is_symbol ? [] : args, {
-                            env: this.__env__,
-                            dynamic_env: this.__env__,
-                            use_dynamic: false
+                        return this._with_stdin(() => {
+                            return call_function(extension, is_symbol ? [] : args, {
+                                env: this.__env__,
+                                dynamic_env: this.__env__,
+                                use_dynamic: false
+                            });
                         });
                     }
                     throw new Error('Parse Error: Invalid parser extension ' +
@@ -1714,7 +1730,9 @@ class Parser {
             }
             // Evaluate parser extension at parse time
             if (extension instanceof Macro) {
-                var result = await this.evaluate(expr);
+                var result = await this._with_stdin(() => {
+                    return this.evaluate(expr);
+                });
                 // We need literal quotes to make that macro's return pairs works
                 // because after the parser returns the value it will be evaluated again
                 // by the interpreter, so we create quoted expressions.
@@ -7137,6 +7155,27 @@ InputStringPort.prototype = Object.create(InputPort.prototype);
 InputStringPort.prototype.constructor = InputStringPort;
 InputStringPort.prototype.toString = function() {
     return `#<input-port (string)>`;
+};
+// -------------------------------------------------------------------------
+function ParserInputPort(parser, env = global_env) {
+    if (typeof this !== 'undefined' && !(this instanceof ParserInputPort) ||
+        typeof this === 'undefined') {
+        return new ParserInputPort(parser, env);
+    }
+    this._with_parser = this._with_init_parser.bind(this, () => {
+        return parser;
+    });
+    read_only(this, '__type__', text_port);
+    this._make_defaults();
+}
+
+ParserInputPort.prototype.char_ready = function() {
+    return true;
+};
+ParserInputPort.prototype = Object.create(InputPort.prototype);
+ParserInputPort.prototype.constructor = ParserInputPort;
+ParserInputPort.prototype.toString = function() {
+    return `#<input-port (parser)>`;
 };
 // -------------------------------------------------------------------------
 function InputByteVectorPort(bytevectors) {
