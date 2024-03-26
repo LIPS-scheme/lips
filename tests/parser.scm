@@ -55,6 +55,22 @@
 
 (unset-special! "#nil")
 
+(set-special! "$" 'raw-string lips.specials.SYMBOL)
+
+(define (raw-string)
+  (if (char=? (peek-char) #\")
+      (begin
+        (read-char)
+        (let loop ((result (vector)) (char (peek-char)))
+          (read-char)
+          (if (char=? char #\")
+              (apply string (vector->list result))
+              (loop (vector-append result (vector char)) (peek-char)))))))
+
+(define parser/t9 $"foo \ bar")
+
+(unset-special! "$")
+
 (test "parser: #!fold-case"
       (lambda (t)
         (define foo 10)
@@ -75,7 +91,8 @@
         (t.is parser/t5 ':foo)
         (t.is parser/t6 27)
         (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))
-        (t.is parser/t8 '(() () () () ()))))
+        (t.is parser/t8 '(() () () () ()))
+        (t.is parser/t9 "foo \\ bar")))
 
 (test "parser: escape hex literals"
       (lambda (t)
