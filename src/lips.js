@@ -1461,7 +1461,7 @@ class Parser {
         }
     }
     _with_stdin(fn) {
-        // change stdin to parser extention can use current-input
+        // change stdin to parser extension can use current-input
         // to read data from the parser stream #150
         const interaction = this.__env__.get('**interaction-environment**');
         const internal = interaction.get('**internal-env**');
