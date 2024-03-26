@@ -1406,7 +1406,7 @@ Object.defineProperty(Lexer, 'rules', {
         });
 
         // syntax-extensions tokens that share the same first character after hash
-        // should have same symbol, but becase tokens are sorted, the longer
+        // should have same symbol, but because tokens are sorted, the longer
         // tokens are always process first.
         const special_rules = tokens.reduce((acc, token) => {
             let symbol;
@@ -1457,7 +1457,11 @@ class Parser {
             fold_case: false
         }, { hidden: true });
         if (this.__env__) {
-            this.__env__.set('lips',  { ...lips, __parser__: this });
+            try {
+                this.__env__.set('lips',  { ...lips, __parser__: this });
+            } catch(e) {
+                console.log({env: this.__env__});
+            }
         }
     }
     parse(arg) {
@@ -6900,7 +6904,7 @@ LComplex.i = LComplex({ im: 1, re: 0 });
 // -------------------------------------------------------------------------
 // :: Port abstraction - read should be a function that return next line
 // -------------------------------------------------------------------------
-function InputPort(read) {
+function InputPort(read, env = global_env) {
     if (typeof this !== 'undefined' && !(this instanceof InputPort) ||
         typeof this === 'undefined') {
         return new InputPort(read);
@@ -6922,7 +6926,7 @@ function InputPort(read) {
     this._with_parser = this._with_init_parser.bind(this, async () => {
         if (!this.char_ready()) {
             const line = await this._read();
-            parser = new Parser({ env: this });
+            parser = new Parser({ env });
             parser.parse(line);
         }
         return this.__parser__;
@@ -7114,13 +7118,12 @@ OutputFilePort.prototype.toString = function() {
     return `#<output-port ${this.__filename__}>`;
 };
 // -------------------------------------------------------------------------
-function InputStringPort(string, env) {
+function InputStringPort(string, env = global_env) {
     if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
         typeof this === 'undefined') {
         return new InputStringPort(string);
     }
     typecheck('InputStringPort', string, 'string');
-    env = env || global_env;
     string = string.valueOf();
     this._with_parser = this._with_init_parser.bind(this, () => {
         if (!this.__parser__) {

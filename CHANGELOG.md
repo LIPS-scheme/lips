@@ -81,6 +81,8 @@
 * fix `repr` of cycles
 * fix parsing regex that have escaped open bracket
 * fix parsing quotation without data
+* fix reading syntax-extensions from input ports
+* fix parsing syntax-extensions that start with `#f` or `#t` [#343](https://github.com/jcubic/lips/issues/343)
 
 ## 1.0.0-beta.18
 ### Breaking

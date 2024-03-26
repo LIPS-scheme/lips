@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 26 Mar 2024 00:57:14 +0000
+ * build: Tue, 26 Mar 2024 09:53:38 +0000
  */
 
 (function (global, factory) {
@@ -4837,7 +4837,7 @@
       });
 
       // syntax-extensions tokens that share the same first character after hash
-      // should have same symbol, but becase tokens are sorted, the longer
+      // should have same symbol, but because tokens are sorted, the longer
       // tokens are always process first.
       var special_rules = tokens.reduce(function (acc, token) {
         var symbol;
@@ -4897,9 +4897,15 @@
         hidden: true
       });
       if (this.__env__) {
-        this.__env__.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
-          __parser__: this
-        }));
+        try {
+          this.__env__.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
+            __parser__: this
+          }));
+        } catch (e) {
+          console.log({
+            env: this.__env__
+          });
+        }
       }
     }
     _createClass(Parser, [{
@@ -12189,6 +12195,7 @@
   // -------------------------------------------------------------------------
   function InputPort(read) {
     var _this8 = this;
+    var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : global_env;
     if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
       return new InputPort(read);
     }
@@ -12220,7 +12227,7 @@
           case 3:
             line = _context14.sent;
             parser = new Parser({
-              env: _this8
+              env: env
             });
             parser.parse(line);
           case 6:
@@ -12466,13 +12473,13 @@
     return "#<output-port ".concat(this.__filename__, ">");
   };
   // -------------------------------------------------------------------------
-  function InputStringPort(string, env) {
+  function InputStringPort(string) {
     var _this16 = this;
+    var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : global_env;
     if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
       return new InputStringPort(string);
     }
     typecheck('InputStringPort', string, 'string');
-    env = env || global_env;
     string = string.valueOf();
     this._with_parser = this._with_init_parser.bind(this, function () {
       if (!_this16.__parser__) {
@@ -17182,10 +17189,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 26 Mar 2024 00:57:14 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 26 Mar 2024 09:53:38 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 26 Mar 2024 00:57:14 +0000').valueOf();
+    var date = LString('Tue, 26 Mar 2024 09:53:38 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17225,7 +17232,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Tue, 26 Mar 2024 00:57:14 +0000';
+  var date = 'Tue, 26 Mar 2024 09:53:38 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
