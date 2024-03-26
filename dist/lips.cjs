@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 26 Mar 2024 09:53:38 +0000
+ * build: Tue, 26 Mar 2024 13:16:44 +0000
  */
 
 'use strict';
@@ -4878,7 +4878,7 @@ var Parser = /*#__PURE__*/function () {
     read_only(this, '_formatter', formatter, {
       hidden: true
     });
-    read_only(this, '__env__', env !== null && env !== void 0 ? env : env.inherit('parser'));
+    read_only(this, '__env__', env && env.inherit('parser'));
     read_only(this, '_meta', meta, {
       hidden: true
     });
@@ -4893,15 +4893,9 @@ var Parser = /*#__PURE__*/function () {
       hidden: true
     });
     if (this.__env__) {
-      try {
-        this.__env__.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
-          __parser__: this
-        }));
-      } catch (e) {
-        console.log({
-          env: this.__env__
-        });
-      }
+      this.__env__.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
+        __parser__: this
+      }));
     }
   }
   _createClass(Parser, [{
@@ -5573,7 +5567,6 @@ function _parse2() {
         case 5:
           expr = _context9.sent;
           if (!parser.balanced()) {
-            console.log(toString(expr));
             parser.ballancing_error(expr, prev);
           }
           if (!(expr === eof)) {
@@ -17185,10 +17178,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 26 Mar 2024 09:53:38 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 26 Mar 2024 13:16:44 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 26 Mar 2024 09:53:38 +0000').valueOf();
+  var date = LString('Tue, 26 Mar 2024 13:16:44 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17228,7 +17221,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 26 Mar 2024 09:53:38 +0000';
+var date = 'Tue, 26 Mar 2024 13:16:44 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

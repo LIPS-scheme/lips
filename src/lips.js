@@ -1448,7 +1448,7 @@ function match_or_null(re, char) {
 class Parser {
     constructor({ env, meta = false, formatter = multiline_formatter } = {}) {
         read_only(this, '_formatter', formatter, { hidden: true });
-        read_only(this, '__env__', env ?? env.inherit('parser'));
+        read_only(this, '__env__', env && env.inherit('parser'));
         read_only(this, '_meta', meta, { hidden: true });
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
@@ -1457,11 +1457,7 @@ class Parser {
             fold_case: false
         }, { hidden: true });
         if (this.__env__) {
-            try {
-                this.__env__.set('lips',  { ...lips, __parser__: this });
-            } catch(e) {
-                console.log({env: this.__env__});
-            }
+            this.__env__.set('lips',  { ...lips, __parser__: this });
         }
     }
     parse(arg) {
@@ -1800,7 +1796,6 @@ async function* _parse(arg, env) {
     while (true) {
         const expr = await parser.read_object();
         if (!parser.balanced()) {
-            console.log(toString(expr));
             parser.ballancing_error(expr, prev);
         }
         if (expr === eof) {
