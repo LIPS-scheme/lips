@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 27 Mar 2024 18:28:21 +0000
+ * build: Wed, 27 Mar 2024 21:09:44 +0000
  */
 
 'use strict';
@@ -15837,7 +15837,7 @@ function node_specific() {
 /* c8 ignore next 11 */
 function _node_specific() {
   _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
-    var _yield$import, createRequire, moduleURL, __dirname, __filename;
+    var _yield$import, createRequire, moduleURL, __dirname__, __filename__;
     return _regeneratorRuntime.wrap(function _callee23$(_context24) {
       while (1) switch (_context24.prev = _context24.next) {
         case 0:
@@ -15858,11 +15858,11 @@ function _node_specific() {
           global_env.set('global', global);
           global_env.set('self', global);
           global_env.set('window', undefined);
-          moduleURL = new URL((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.src || new URL('lips.cjs', document.baseURI).href)));
-          __dirname = path.dirname(moduleURL.pathname);
-          __filename = path.basename(moduleURL.pathname);
-          global_env.set('__dirname', __dirname);
-          global_env.set('__filename', __filename);
+          moduleURL = new URL((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.src || new URL('lips.cjs', document.baseURI).href))); // using name __direname and __filename breaks after transpilation
+          __dirname__ = path.dirname(moduleURL.pathname);
+          __filename__ = path.basename(moduleURL.pathname);
+          global_env.set('__dirname', __dirname__);
+          global_env.set('__filename', __filename__);
           // ---------------------------------------------------------------------
           global_env.set('require.resolve', doc('require.resolve', function (path) {
             typecheck('require.resolve', path, 'string');
@@ -17246,10 +17246,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Wed, 27 Mar 2024 18:28:21 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Wed, 27 Mar 2024 21:09:44 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Wed, 27 Mar 2024 18:28:21 +0000').valueOf();
+  var date = LString('Wed, 27 Mar 2024 21:09:44 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17289,7 +17289,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Wed, 27 Mar 2024 18:28:21 +0000';
+var date = 'Wed, 27 Mar 2024 21:09:44 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

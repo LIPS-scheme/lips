@@ -10706,10 +10706,11 @@ async function node_specific() {
     global_env.set('self', global);
     global_env.set('window', undefined);
     const moduleURL = new URL(import.meta.url);
-    const __dirname = path.dirname(moduleURL.pathname);
-    const __filename = path.basename(moduleURL.pathname);
-    global_env.set('__dirname', __dirname);
-    global_env.set('__filename', __filename);
+    // using name __direname and __filename breaks after transpilation
+    const __dirname__ = path.dirname(moduleURL.pathname);
+    const __filename__ = path.basename(moduleURL.pathname);
+    global_env.set('__dirname', __dirname__);
+    global_env.set('__filename', __filename__);
     // ---------------------------------------------------------------------
     global_env.set('require.resolve', doc('require.resolve', function(path) {
         typecheck('require.resolve', path, 'string');
