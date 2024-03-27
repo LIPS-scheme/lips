@@ -5447,15 +5447,21 @@ function curry(fn, ...init_args) {
     var len = fn.length;
     return function() {
         var args = init_args.slice();
-        function call(...more_args) {
-            args = args.concat(more_args);
-            if (args.length >= len) {
-                return fn.apply(this, args);
-            } else {
-                return call;
-            }
-        }
-        return call.apply(this, arguments);
+        // HACK: we use IIFE here to get rid of the name of the function.
+        // The JavaScript is smart and add name property to a function
+        // if it's assigned to a variable, with IIFE we can get rid of it.
+        // we need this so the curried function display as #<procedure>
+        const curried = (() => {
+            return (...more_args) => {
+                args = args.concat(more_args);
+                if (args.length >= len) {
+                    return fn.apply(this, args);
+                } else {
+                    return curried;
+                }
+            };
+        })()
+        return curried(...arguments);
     };
 }
 // -------------------------------------------------------------------------
