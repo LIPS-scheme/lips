@@ -71,6 +71,19 @@
 
 (unset-special! "$")
 
+(set-special! "#:num" 'line-num lips.specials.SYMBOL)
+
+(define (line-num)
+  (let* ((lexer lips.__parser__.__lexer__)
+         (token lexer.__token__))
+    (+ token.line 1)))
+
+(define parser/t10 (list
+                    #:num #:num
+                    #:num #:num))
+
+(unset-special! "#:num")
+
 (test "parser: #!fold-case"
       (lambda (t)
         (define foo 10)
@@ -92,7 +105,8 @@
         (t.is parser/t6 27)
         (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))
         (t.is parser/t8 '(() () () () ()))
-        (t.is parser/t9 "foo \\ bar")))
+        (t.is parser/t9 "foo \\ bar")
+        (t.snapshot parser/t10)))
 
 (test "parser: escape hex literals"
       (lambda (t)

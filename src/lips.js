@@ -1077,6 +1077,7 @@ class Lexer {
             return eof;
         }
         if (this._token) {
+            read_only(this, '__token__', this.token(true));
             return this.token(meta);
         }
         var found = this.next_token();
@@ -1174,12 +1175,12 @@ class Lexer {
         if (this._i >= this.__input__.length) {
             return false;
         }
-        var start = true;
+        let start = true;
         loop:
         for (let i = this._i, len = this.__input__.length; i < len; ++i) {
-            var char = this.__input__[i];
-            var prev_char = this.__input__[i - 1] || '';
-            var next_char = this.__input__[i + 1] || '';
+            const char = this.__input__[i];
+            const prev_char = this.__input__[i - 1] || '';
+            const next_char = this.__input__[i + 1] || '';
             if (char === '\n') {
                 ++this._line;
                 const newline = this._newline;
@@ -1229,7 +1230,7 @@ class Lexer {
                 continue loop;
             }
             // no rule for token
-            var line = this.__input__.split('\n')[this._line];
+            const line = this.__input__.split('\n')[this._line];
             throw new Error(`Invalid Syntax at line ${this._line + 1}\n${line}`);
         }
         // we need to ignore comments because they can be the last expression in code
@@ -1448,7 +1449,7 @@ function match_or_null(re, char) {
 class Parser {
     constructor({ env, meta = false, formatter = multiline_formatter } = {}) {
         read_only(this, '_formatter', formatter, { hidden: true });
-        read_only(this, '__env__', env && env.inherit('parser'));
+        read_only(this, '__env__', env);
         read_only(this, '_meta', meta, { hidden: true });
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
@@ -1456,22 +1457,22 @@ class Parser {
             parentheses: 0,
             fold_case: false
         }, { hidden: true });
-        if (this.__env__) {
-            this.__env__.set('lips',  { ...lips, __parser__: this });
-        }
     }
-    _with_stdin(fn) {
-        // change stdin to parser extension can use current-input
+    _with_syntax_scope(fn) {
+        // expose parser and change stdin so parser extension can use current-input
         // to read data from the parser stream #150
         const internal = get_internal(this.__env__);
         const stdin = internal.get('stdin');
+        this.__env__.set('lips',  { ...lips, __parser__: this });
         internal.set('stdin', new ParserInputPort(this, this.__env__));
+        const cleanup = () => {
+            this.__env__.set('lips', lips);
+            internal.set('stdin', stdin);
+        }
         return unpromise(fn(), (result) => {
-            internal.set('stdin', stdin);
+            cleanup();
             return result;
-        }, () => {
-            internal.set('stdin', stdin);
-        });
+        }, cleanup);
     }
     parse(arg) {
         if (arg instanceof LString) {
@@ -1675,7 +1676,7 @@ class Parser {
             const special = specials.get(token);
             const builtin = is_builtin(token);
             this.skip();
-            let expr;
+            let expr, extension;
             const is_symbol = is_symbol_extension(token);
             const was_close_paren = this.is_close(await this.peek());
             const object = is_symbol ? undefined : await this._read_object();
@@ -1683,7 +1684,7 @@ class Parser {
                 throw new Unterminated('Expecting expression eof found');
             }
             if (!builtin) {
-                var extension = this.__env__.get(special.symbol);
+                extension = this.__env__.get(special.symbol);
                 if (typeof extension === 'function') {
                     let args;
                     if (is_literal(token)) {
@@ -1694,7 +1695,7 @@ class Parser {
                         args = object.to_array(false);
                     }
                     if (args || is_symbol) {
-                        return this._with_stdin(() => {
+                        return this._with_syntax_scope(() => {
                             return call_function(extension, is_symbol ? [] : args, {
                                 env: this.__env__,
                                 dynamic_env: this.__env__,
@@ -1729,7 +1730,7 @@ class Parser {
             }
             // Evaluate parser extension at parse time
             if (extension instanceof Macro) {
-                var result = await this._with_stdin(() => {
+                var result = await this._with_syntax_scope(() => {
                     return this.evaluate(expr);
                 });
                 // We need literal quotes to make that macro's return pairs works
@@ -7787,9 +7788,9 @@ Unquote.prototype.toString = function() {
     return '#<unquote[' + this.count + '] ' + this.value + '>';
 };
 // -------------------------------------------------------------------------------
-var native_lambda = _parse(tokenize(`(lambda ()
-                                      "[native code]"
-                                      (throw "Invalid Invocation"))`))[0];
+const native_lambda = _parse(tokenize(`(lambda ()
+                                        "[native code]"
+                                        (throw "Invalid Invocation"))`))[0];
 // -------------------------------------------------------------------------------
 var get = doc('get', function get(object, ...args) {
     var value;
