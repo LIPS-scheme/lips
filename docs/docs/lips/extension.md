@@ -262,9 +262,80 @@ The limitation of this solution is that you can't use strings inside `${ ... }`.
 Lexer.  In the future there may be a way to define such syntax extensions (See [Add full string
 interpolation as syntax extension](https://github.com/jcubic/lips/issues/321)).
 
+### Accessing parser
+In LIPS syntax extensions you can access the parser instance, so you can implement syntax
+extension that return line number:
+
+```scheme
+(set-special! "#:num" 'line-num lips.specials.SYMBOL)
+
+(define (line-num)
+  (let* ((lexer lips.__parser__.__lexer__)
+         (token lexer.__token__))
+    (write token)
+    (newline)
+    ;; line number start from 0
+    (+ token.line 1)))
+
+(print (list
+        #:num
+          #:num))
+;; ==> &(:token "#:num" :col 8 :offset 260 :line 11)
+;; ==> &(:token "#:num" :col 10 :offset 274 :line 12)
+;; ==> (12 13)
+```
+
+**NOTE**: The provided output will be exactly the same, when the code will be put into a single file
+and executed.
+
+### Standard input
+In syntax extensions `current-input-port` points into the parser stream. So you can implement
+your own parser logic. The best way to implement custom syntax extension (that works similar to
+common lips reader macros).
+
+```scheme
+(set-special! "$" 'raw-string lips.specials.SYMBOL)
+
+(define (raw-string)
+  (if (char=? (peek-char) #\")
+      (begin
+        (read-char)
+        (let loop ((result (vector)) (char (peek-char)))
+          (read-char)
+          (if (char=? char #\")
+              (apply string (vector->list result))
+              (loop (vector-append result (vector char)) (peek-char)))))))
+
+(print $"foo \ bar")
+;; ==> "foo \\ bar"
+```
+
+This extension implements raw strig, like in Python, where you don't need to escape the charcters that are thread literally.
+In similar way you can implment strings that use backticks you only need to replace `#\"` with `` #\` ``.
+
+```scheme
+(set-special! "$" 'raw-string lips.specials.SYMBOL)
+
+(define (raw-string)
+  (if (char=? (peek-char) #\`)
+      (begin
+        (read-char)
+        (let loop ((result (vector)) (char (peek-char)))
+          (read-char)
+          (if (char=? char #\`)
+              (apply string (vector->list result))
+              (loop (vector-append result (vector char)) (peek-char)))))))
+
+(print $`foo \ bar`)
+;; ==> "foo \\ bar"
+```
+
+With this feature in hand you can implement full string internolation (that will probbaly be part of
+LIPS Scheme in the future).
+
 ### Limitations
 
-The limitation of syntax extensions is that you can't define variable that starts with the
+The limitation of syntax extensions is that you can't define a variable that starts with the
 same characters as syntax extension. This may be a benefit and not a limitation:
 
 ## New Homoiconic data types
