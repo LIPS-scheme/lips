@@ -131,6 +131,32 @@ procedure. So you can create recursive functions with anonymous lambda:
 
 This is classic factorial function written as lambda without the name.
 
+### length property
+
+LIPS functions similary to JavaScript functions also have `length` property that indicate how many
+arguments a function accepts. If function get more or less argumenets it's not an error like in Scheme. More arguments are ignored,
+and if less arguments are passed they are `undefined` (`#void`).
+
+```scheme
+(define (sum a b c)
+  (+ a b c))
+
+(print sum.length)
+;; ==> 3
+```
+
+It return number of number argumnets the rest (dot notation) arguments are ignored.
+
+```scheme
+(define (sum a b . rest)
+  (apply + a b rest))
+
+(print sum.length)
+;; ==> 3
+(sum 1 2 3 4 5 6)
+;; ==> 21
+```
+
 ## Doc strings
 Procedures, macros, and variables can have doc strings.
 
