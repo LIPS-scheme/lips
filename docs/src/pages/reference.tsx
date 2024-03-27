@@ -32,16 +32,7 @@ const Reference = () => {
 
   const default_list = useMemo(() => {
     return docs.map(item => ({item}));
-  }, [docs]);
-
-  const length = useMemo(() => {
-    const lengths = docs.map(({doc}) => {
-      const lenghts = doc.split('\n').map((line: string) => line.length);
-      return Math.max(...lenghts);
-    });
-    return Math.max(...lengths);
-
-  }, [docs]);
+  }, []);
 
   useEffect(() => {
     const index = Fuse.createIndex(fuse_options.keys, docs)
@@ -56,9 +47,8 @@ const Reference = () => {
 
   const result = term.trim() ? fuse.search(term) : default_list;
 
-  const style: CustomStyle = {'--length': length};
   return (
-    <div className={styles.search} style={style}>
+    <div className={styles.search}>
       <div className={styles.input}>
         <label htmlFor="term">Search</label>
         <input
@@ -69,7 +59,6 @@ const Reference = () => {
       </div>
       <ul>
         {result.map(({item}) => {
-
           return (
             <li key={item.name}>
               <h2>{ item.name }</h2>
@@ -84,6 +73,18 @@ const Reference = () => {
 
 export default function ReferencePage(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
+
+  const length = useMemo(() => {
+    const lengths = docs.map(({doc}) => {
+      const lenghts = doc.split('\n').map((line: string) => line.length);
+      return Math.max(...lenghts);
+    });
+    return Math.max(...lengths);
+
+  }, []);
+
+  const style: CustomStyle = {'--length': length};
+
   return (
     <Layout
       title={siteConfig.title}
@@ -92,7 +93,7 @@ export default function ReferencePage(): JSX.Element {
         <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
                 data-bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb"></script>
       </Head>
-      <main className={styles.container}>
+      <main className={styles.container} style={style}>
         <Heading as="h2" className={styles.header}>LIPS Scheme Function and Macro Reference</Heading>
         <Reference />
       </main>

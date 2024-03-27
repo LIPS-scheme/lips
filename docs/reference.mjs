@@ -1,16 +1,16 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 
-import { env } from '../dist/lips.esm.js';
+import { env, exec } from '../dist/lips.esm.js';
 
 function skip_internal([name]) {
     return name.match(/^%/) === null;
 }
 
 function map_docs(pairs) {
-    return pairs.filter(skip_internal).map(([name, fn]) => {
+    return pairs.filter(skip_internal).map(([name, obj]) => {
         return {
-            name,
-            doc: fn?.__doc__
+            name: name,
+            doc: obj?.__doc__ && obj.__doc__.valueOf()
         };
     }).filter(object => object.doc);
 }
@@ -21,8 +21,9 @@ function get_docs_strings() {
     return docs;
 }
 
-fs.writeFile('reference.json', JSON.stringify(get_docs_strings()), (err) => {
-    if (err) {
-        console.log(err);
-    }
+exec('(let-env lips.env.__parent__ (load "../dist/std.xcb"))').then(() => {
+    const data = JSON.stringify(get_docs_strings());
+    return fs.writeFile('reference.json', data);
+}).catch(e => {
+    console.log(e);
 });
