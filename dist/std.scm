@@ -291,9 +291,9 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander readonly expr . rest)
-  "(object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
-   (object-expander readonly '(:foo :bar))
+(define (%object-expander readonly expr . rest)
+  "(%object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
+   (%object-expander readonly '(:foo :bar))
 
    Recursive function helper for defining LIPS code to create objects
    using key like syntax. If no values are used it will create a JavaScript
@@ -325,7 +325,7 @@
                                                (if (and (pair? second) (key? (car second)))
                                                    `(set-obj! ,name
                                                               ,prop
-                                                              ,(object-expander readonly second quot)
+                                                              ,(%object-expander readonly second quot)
                                                               ,r-only)
                                                    (if quot
                                                        `(set-obj! ,name ,prop ',second ,r-only)
@@ -333,7 +333,7 @@
                                                (if (and (pair? second) (key? (car second)))
                                                    `(set-obj! ,name
                                                               ,prop
-                                                              ,(object-expander readonly second))
+                                                              ,(%object-expander readonly second))
                                                    (if quot
                                                        `(set-obj! ,name ,prop ',second)
                                                        `(set-obj! ,name ,prop ,second))))))
@@ -348,7 +348,7 @@
 
    Creates a JavaScript object using key like syntax."
   (try
-    (object-expander false expr)
+    (%object-expander false expr)
     (catch (e)
       (try
        (error e.message)
@@ -362,7 +362,7 @@
    Creates a JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used by the & object literal."
   (try
-    (object-expander true expr true)
+    (%object-expander true expr true)
     (catch (e)
       (try
         (error e.message)

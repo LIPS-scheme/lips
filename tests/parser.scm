@@ -76,11 +76,9 @@
 (define (line-num)
   (let* ((lexer lips.__parser__.__lexer__)
          (token lexer.__token__))
-    (+ token.line 1)))
+    (+ token.col)))
 
-(define parser/t10 (list
-                    #:num #:num
-                    #:num #:num))
+(define parser/t10 (list #:num #:num #:num #:num))
 
 (unset-special! "#:num")
 
