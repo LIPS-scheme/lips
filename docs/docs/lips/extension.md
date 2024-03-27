@@ -311,7 +311,7 @@ common lips reader macros).
 ```
 
 This extension implements raw strig, like in Python, where you don't need to escape the charcters that are thread literally.
-In similar way you can implment strings that use backticks you only need to replace `#\"` with `` #\` ``.
+Similarly, you can implement strings that use backticks, you only need to replace `#\"` with `` #\` ``.
 
 ```scheme
 (set-special! "$" 'raw-string lips.specials.SYMBOL)
@@ -330,7 +330,7 @@ In similar way you can implment strings that use backticks you only need to repl
 ;; ==> "foo \\ bar"
 ```
 
-With this feature in hand you can implement full string internolation (that will probbaly be part of
+With this feature in hand you can implement full string interpolation (that will probbaly be part of
 LIPS Scheme in the future).
 
 ### Limitations
