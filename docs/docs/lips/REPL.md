@@ -26,7 +26,7 @@ supports [paste bracket mode from Node.js](https://github.com/nodejs/node/pull/4
 [v20.6.0](https://nodejs.org/en/blog/release/v20.6.0)), to properly handle copy-paste of Scheme
 code.
 
-In the future the Node.js REPL may also support parentheses matching. It's supported by
+In the future, the Node.js REPL may also support parentheses matching. It's supported by
 [CLisp](https://www.gnu.org/software/clisp/) and [Common Lisp](https://common-lisp.net/)
 interpreter.
 
@@ -39,5 +39,9 @@ There are few procedures useful in the REPL:
 * `apropos` - function return list of procedures from environment that match a string or a regex,
 * `env` - function returns list of symbols which is everything that is inside an environment,
 * `dir` - function return all properties from an object including those in prototype chain (a class).
+* `repr` - function return representation of the object as a string, it's inspired by Python. The
+  `repr` function accepts two argumnets the second one is a boolean that indicate if it should work
+  like write or like display. Write will write string with quotes. So if you wnat the strings inside
+  the string to be quoted use `(repr obj #t)`
 
-To read more about introspection of LIPS Scheme in REPL see [documentation about Reflection](/docs/lips/reflection).
+To read more about introspection of LIPS Scheme in REPL, see [documentation about Reflection](/docs/lips/reflection).
