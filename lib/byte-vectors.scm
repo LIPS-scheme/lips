@@ -102,7 +102,8 @@
        (define (,vector-set! vector k v)
          ,(format "(~a vector k)
 
-                   Function set value of ~a at index k. If index is out of range it throw exception."
+                   Function set value of ~a at index k.
+                   If index is out of range it throw exception."
                   vector-set!
                   help)
          (typecheck ,(symbol->string vector-set!) vector ,l-type)
