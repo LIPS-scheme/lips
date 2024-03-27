@@ -129,18 +129,6 @@ To see the expansion of syntax extension you can use `lips.parse`:
 
 **NOTE**: The `lips.parse` function return array/vector of parsed expressions.
 
-If you define syntax exntesion as macro it will be invoked at parse time, so it may be harder to debug:
-
-```scheme
-(define-macro (my-function number)
-  `(list ,number ,number))
-```
-
-```scheme
-(lips.parse "##10")
-;; ==> #((quote (10 10)))
-```
-
 There are 3 types of syntax extensions `SPLICE`, `LITERAL`, and `SYMBOL`. You define them using
 constants defined in `lips.specials` object.
 
@@ -155,8 +143,8 @@ constants defined in `lips.specials` object.
 ```scheme
 (set-special! "##" 'complex lips.specials.SPLICE)
 
-(define-macro (complex real imag)
-  `(make-rectangular ,real ,imag))
+(define (complex real imag)
+  (make-rectangular real imag))
 ```
 
 This syntax extension will define complex numbers and will work only on lists:
@@ -177,10 +165,10 @@ With splice syntax extension you can limit the number of arguments (remember tha
 [arity](https://en.wikipedia.org/wiki/Arity)).
 
 ```scheme
-(define-macro (complex . args)
+(define (complex . args)
   (if (not (= (length args) 2))
       (throw "Invalid invocation of ## syntax extension")
-    `(make-rectangular ,@args)))
+    (apply make-rectangular args)))
 ```
 
 ```scheme
