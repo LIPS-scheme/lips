@@ -1579,7 +1579,7 @@
   (typecheck "once" fn "function")
   (let ((result))
     (lambda args
-      (if (string=? (type result) "#void")
+      (if (string=? (type result) "void")
           (set! result (apply fn args)))
       result)))
 

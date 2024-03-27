@@ -9563,7 +9563,7 @@ var global_env = new Environment({
     substring: doc('substring', function substring(string, start, end) {
         typecheck('substring', string, 'string');
         typecheck('substring', start, 'number');
-        typecheck('substring', end, ['number', 'undefined']);
+        typecheck('substring', end, ['number', 'void']);
         return string.substring(start.valueOf(), end && end.valueOf());
     }, `(substring string start end)
 
@@ -10917,6 +10917,9 @@ function type(obj) {
             }
             return obj.constructor.name.toLowerCase();
         }
+    }
+    if (obj === undefined) {
+        return 'void';
     }
     return typeof obj;
 }

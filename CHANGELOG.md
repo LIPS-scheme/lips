@@ -11,6 +11,7 @@
 * characters are again unboxed into strings by JavaScript code [#329](https://github.com/jcubic/lips/issues/329)
 * code that throw exception now return exit code 1
 * change order of arguments in `take`
+* `(type #void)` (JavaScript `undefined`) is now `void`
 ### Features
 * add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
