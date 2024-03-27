@@ -227,7 +227,8 @@ This allow to create named [gensyms](/docs/lips/intro#gensyms) that are unique:
 ;; ==> #f
 ```
 
-You can use them with lisp macros instead of `gensym` expressions.
+You can use them with lisp macros instead of `gensym` expressions. The autogensyms are actually part
+of the standard library.
 
 ### String interpolation
 
