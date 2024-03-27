@@ -103,6 +103,7 @@ const config: Config = {
           position: 'left',
           label: 'Documentation',
         },
+        {to: '/reference', label: 'Reference', position: 'left' },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://twitter.com/LIPS_scheme',

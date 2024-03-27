@@ -21,3 +21,44 @@
   align-items: center;
   justify-content: center;
 }
+
+.container {
+  width: calc(var(--length, 80) * 1ch);
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  font-size: 2em;
+  margin: 0.5em 0;
+}
+
+.search {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.input {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  gap: 10px;
+  padding: 5px 5px;
+}
+
+.search input {
+  flex-grow: 1;
+}
+
+.search  ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: calc(var(--length, 80) * 1ch);
+}

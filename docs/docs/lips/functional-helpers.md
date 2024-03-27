@@ -374,4 +374,3 @@ This procedure flattens the tree structure into flat list, similar to
 (flatten '(((((1) 2) 3) 4) 5))
 ;; ==> (1 2 3 4 5)
 ```
-
