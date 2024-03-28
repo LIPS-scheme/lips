@@ -21,7 +21,7 @@ const config: Config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'jcubic', // Usually your GitHub org/user name.
-  projectName: 'lips-website', // Usually your repo name.
+  projectName: 'lips', // Usually your repo name.
   deploymentBranch: 'docusaurus',
 
 
@@ -42,7 +42,7 @@ const config: Config = {
       {
         blog: {
           showReadingTime: true,
-          editUrl: 'https://github.com/jcubic/lips-website/tree/docusaurus/docs/',
+          editUrl: 'https://github.com/jcubic/lips/tree/master/docs/',
           feedOptions: {
             type: 'rss',
             limit: 10,
@@ -75,7 +75,7 @@ const config: Config = {
         },
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/jcubic/lips-website/tree/docusaurus/docs/',
+          editUrl: 'https://github.com/jcubic/lips/tree/master/docs/',
         },
         theme: {
           customCss: './src/css/custom.css',
