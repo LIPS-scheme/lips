@@ -77,7 +77,6 @@
 * fix let with duplicated variables [#335](https://github.com/jcubic/lips/issues/335)
 * fix escape ellipsis in syntax-rules [#334](https://github.com/jcubic/lips/issues/334)
 * fix parsing inexact complex without real part and `inexact->exact` procedure [#340](https://github.com/jcubic/lips/issues/340)
-* fix `equal?` on cycles [#302](https://github.com/jcubic/lips/issues/302)
 * fix Petrofsky let [#341](https://github.com/jcubic/lips/issues/341)
 * fix `repr` of cycles
 * fix parsing regex that have escaped open bracket
