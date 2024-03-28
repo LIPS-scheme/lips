@@ -23,7 +23,6 @@ defaults:
 jobs:
   deploy:
     name: Build Docusaurus
-    if: ${{ github.repository == 'jcubic/lips-website' || (github.repository == 'jcubic/lips' && github.ref_name == 'master')}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +43,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.repository == 'jcubic/lips-website' || (github.repository == 'jcubic/lips' && github.ref_name == 'master')}}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/build
