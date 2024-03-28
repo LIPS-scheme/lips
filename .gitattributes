@@ -1,6 +1,8 @@
 * text eol=lf
 .* text eol=lf
 dist/* binary
+*png binary
+*ico binary
 package-lock.json binary
 assets/classDiagram.svg binary
 assets/*.png binary
@@ -9,4 +11,5 @@ tests/snapshots/* binary
 *.xcb binary
 dist/** linguist-generated
 *config.js linguist-vendored
+docs/** linguist-vendored
 **/*.lips linguist-language=scheme

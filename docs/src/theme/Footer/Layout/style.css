@@ -1,0 +1,15 @@
+footer {
+  animation-name: hide;
+  animation-timing-function: linear;
+  animation-timeline: view(block);
+  animation-range-start: entry 0%;
+  --display: initial;
+}
+
+@keyframes hide {
+  0.1%,
+  100% {
+    --display: none;
+  }
+}
+

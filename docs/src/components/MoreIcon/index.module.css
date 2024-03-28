@@ -1,0 +1,14 @@
+.arrow {
+    position: fixed;
+    display: var(--display);
+    right: 0;
+    top: 100%;
+    transform: translateY(-100%);
+    margin: -10px 10px 0 0;
+    z-index: 100;
+    opacity: 0.5;
+}
+.arrow svg {
+    width: 80px;
+    height: 80px;
+}

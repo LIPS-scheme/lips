@@ -1,0 +1,16 @@
+.section {
+    margin: 2em auto;
+    max-width: 1000px;
+}
+@media (max-width: 1000px) {
+    .section {
+        margin: 2em 1em;
+    }
+}
+.section video {
+    width: 100%;
+    max-width: 100%;
+}
+.header {
+    font-size: 2em;
+}

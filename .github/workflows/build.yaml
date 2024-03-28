@@ -2,6 +2,15 @@ name: Build and test
 
 on:
   push:
+    paths:
+      - "template/Makefile"
+      - "Makefile"
+      - "scripts/*"
+      - "tests/*"
+      - "bin/*"
+      - "lib/*"
+      - "src/*"
+      - ".github/workflows/build.yaml"
     branches:
       - master
       - devel
