@@ -24,4 +24,4 @@ jobs:
       - name: Codespell
         uses: codespell-project/actions-codespell@v2
         with:
-          skip: docs/package-lock.json
+          skip: ./docs/package-lock.json
