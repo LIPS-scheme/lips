@@ -1,7 +1,7 @@
 .PHONY: publish test coveralls lint zero coverage codespell
 
-VERSION=1.0.0-beta.18.1
-VERSION_DASH=`echo -n "1.0.0-beta.18.1" | sed "s/-/%E2%80%93/"`
+VERSION=1.0.0-beta.19
+VERSION_DASH=`echo -n "1.0.0-beta.19" | sed "s/-/%E2%80%93/"`
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
