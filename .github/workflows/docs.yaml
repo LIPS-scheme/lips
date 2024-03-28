@@ -34,9 +34,6 @@ jobs:
       - name: create version file
         run: npm run version
 
-      - name: Build LIPS reference
-        run: npm run reference
-
       - name: Build website
         run: npm run build
 

@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 
-import { env, exec } from '../dist/lips.esm.js';
+import { env, exec } from '../src/lips.js';
 
 function skip_internal([name]) {
     return name.match(/^%/) === null;
@@ -22,8 +22,5 @@ function get_docs_strings() {
 }
 
 exec('(let-env lips.env.__parent__ (load "../dist/std.xcb"))').then(() => {
-    const data = JSON.stringify(get_docs_strings());
-    return fs.writeFile('reference.json', data);
-}).catch(e => {
-    console.log(e);
+    console.log(JSON.stringify(get_docs_strings()));
 });

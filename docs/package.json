@@ -13,8 +13,7 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "version": "node version.mjs",
-    "reference": "node reference.mjs"
+    "version": "node version.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.1.0",
