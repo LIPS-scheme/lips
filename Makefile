@@ -1,4 +1,4 @@
-.PHONY: publish test coveralls lint zero coverage
+.PHONY: publish test coveralls lint zero coverage codespell
 
 VERSION=1.0.0-beta.18.1
 VERSION_DASH=`echo -n "1.0.0-beta.18.1" | sed "s/-/%E2%80%93/"`
@@ -23,6 +23,7 @@ CAT=cat
 NPM=npm
 NODE=node
 WGET=wget
+CODESPELL=codespell
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
@@ -128,6 +129,9 @@ watch-make:
 
 coverage:
 	$(NPM) run coverage
+
+codespell:
+	$(CODESPELL) -S 'package-lock.json,node_modules,build,coverage'
 
 lint:
 	$(ESLINT) src/lips.js lib/js/bookmark.js
