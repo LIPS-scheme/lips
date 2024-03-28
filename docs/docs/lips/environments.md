@@ -93,7 +93,7 @@ Since environments are JavaScript objects you can access its properties like `__
 ;; ==> "let"
 ```
 
-Here you can acccess name of the lexical environment.
+Here you can access name of the lexical environment.
 
 ## Frames
 
@@ -154,7 +154,7 @@ You can mix lexical scope chain with frames:
 ## Global environment
 
 in `lips.env` is user global environment but real global environment where all functions and macros that are
-located (it's also a place where names from bootstraping are saved) is `lips.env.__parent__`.
+located (it's also a place where names from bootstrapping are saved) is `lips.env.__parent__`.
 
 If you want to really overwrite builtin function.
 

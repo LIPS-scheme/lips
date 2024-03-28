@@ -246,7 +246,7 @@ You also have a shortcut for this case in `when`:
 ;; ==> "this is true"
 ```
 
-There is also create the oposite with `unless`:
+There is also create the opposite with `unless`:
 
 ```scheme
 (unless #f
@@ -879,7 +879,7 @@ In the same way you can use `alist`.
 
 ### Records
 Anther way to create objects in Scheme, are R<sup>7</sup>RS records, they were first defined in
-[SRFI-9](https://srfi.schemers.org/srfi-9) and included in the offcial standard.
+[SRFI-9](https://srfi.schemers.org/srfi-9) and included in the official standard.
 
 You can define records that represent cons cells to create linked lists:
 
@@ -1062,7 +1062,7 @@ You can use it like this:
  (else))
 ```
 
-`cond-expand` have list of lists in format `(identifer . code)`. For example, if you want to add
+`cond-expand` have list of lists in format `(identifier . code)`. For example, if you want to add
 `print` function that is defined in `LIPS`, but not in other implementations, you can use code like
 this:
 

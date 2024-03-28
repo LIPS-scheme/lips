@@ -33,7 +33,7 @@ After adding script tag with main file, you can use Scheme code inside script ta
 
 **NOTE**: Only the core of LIPS is written in JavaScript, almost half of it it's written in Scheme.
 So if you want to load the standard library (to have full LIPS), you should use `bootstrap` or
-`data-bootstrap` attribute that will load it for you. You can optionaly specify the location of the
+`data-bootstrap` attribute that will load it for you. You can optionally specify the location of the
 file.
 
 ```html
@@ -71,7 +71,7 @@ breaking changes no new stable version was released and instead 1.0 beta started
 
 If LIPS is installed globally just use `lips` command to start the REPL:
 
-![LIPS REPL sesssion in Terminal](/img/screencast.gif)
+![LIPS REPL session in Terminal](/img/screencast.gif)
 
 By default, splash screen is shown you can hide it with option `-q`. If you're using bash you can create an
 alias:
@@ -223,9 +223,9 @@ const interpreter = Interpreter('<name>', {
         });
     },
     stdout: OutputPort(function(obj) {
-        // you will get any obect and need to print it
+        // you will get any object and need to print it
         // you can use this.get('repr') function from LIPS environment
-        // to get represention of the object as string
+        // to get representation of the object as string
         if (typeof obj !== 'string') {
             obj = this.get('repr')(obj);
         }
@@ -237,7 +237,7 @@ Anything you add to the object passed to Interpreter will be added to global sco
 
 The Interpreter have a method `exec` that work the same as thhe one exported from LIPS.
 
-### Bootstraping
+### Bootstrapping
 
 **Note**: that you also need to bootstrap the standard library to have fully working Scheme system.
 
@@ -251,7 +251,7 @@ about `let-env` expression check [documentation about LIPS environments](/docs/l
 
 ## Editor support
 
-Note that Scheme is popular lanugage and editors usually support its syntax. But also not every editor
+Note that Scheme is popular language and editors usually support its syntax. But also not every editor
 may support literal regular expressions that are part of LIPS. If your editor doesn't support them,
 you can report an issue if the project is Open Source. Literal Regular Expressions are also part
 of [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) and

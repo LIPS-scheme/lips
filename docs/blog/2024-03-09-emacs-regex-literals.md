@@ -34,7 +34,7 @@ were ignored by Emacs scheme mode (because they were inside symbol).
 
 I asked a [question on emacs-devel mailing
 list](https://lists.gnu.org/archive/html/emacs-devel/2024-02/msg00896.html), on how to solve this
-problem. I didn't get any reply for days, then suddenly somone [reply with this emacs lisp code
+problem. I didn't get any reply for days, then suddenly someone [reply with this emacs lisp code
 snippet](https://lists.gnu.org/archive/html/emacs-devel/2024-03/msg00282.html).
 
 ```lisp

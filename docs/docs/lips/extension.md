@@ -13,7 +13,7 @@ There are two ways to extend LIPS Scheme, one is through [macros](#macros) and t
 LIPS allow creating Lisp macros and Scheme hygienic macros. Right now the limitations of macros is
 that they are runtime.  There are no expansion time. Macros act like function calls, but they
 transform the code and the interpreter evaluates the code that is returned by the macro. They ware
-impemented like this, because this is how I undertood the macros when they first got
+implemented like this, because this is how I understood the macros when they first got
 implemented. There is a [plan to create proper macro
 expansion](https://github.com/jcubic/lips/issues/169).
 
@@ -311,7 +311,7 @@ common lips reader macros).
 ;; ==> "foo \\ bar"
 ```
 
-This extension implements raw strig, like in Python, where you don't need to escape the charcters that are thread literally.
+This extension implements raw string, like in Python, where you don't need to escape the characters that are thread literally.
 Similarly, you can implement strings that use backticks, you only need to replace `#\"` with `` #\` ``.
 
 ```scheme
@@ -331,7 +331,7 @@ Similarly, you can implement strings that use backticks, you only need to replac
 ;; ==> "foo \\ bar"
 ```
 
-With this feature in hand you can implement full string interpolation (that will probbaly be part of
+With this feature in hand you can implement full string interpolation (that will probably be part of
 LIPS Scheme in the future).
 
 ### Limitations
@@ -372,7 +372,7 @@ argument to the `set-repr!` handler.
 
 ### Combining with syntax extensions
 
-You can combine syntax extensions with custom represention:
+You can combine syntax extensions with custom representation:
 
 ```scheme
 (set-special! ":P" 'make-person lips.specials.SPLICE)

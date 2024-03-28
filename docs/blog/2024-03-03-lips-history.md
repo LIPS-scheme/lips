@@ -28,10 +28,10 @@ to make it more powerful and easier to interact with JavaScript.
 
 It all started in February 2018 when I've written the first version of Lisp interpreter. You can
 still see the code on [CodePen](https://codepen.io/jcubic/pen/gvvzdp). Then I moved the
-[devlopment to GitHub](https://github.com/jcubic/lips) and named the project LIPS.  The first release
+[development to GitHub](https://github.com/jcubic/lips) and named the project LIPS.  The first release
 (version 0.2.0) is marked as Mar 2018.
 
-At the begining it was Lisp based on Scheme, but at one point after version
+At the beginning it was Lisp based on Scheme, but at one point after version
 [0.20.1 dated as Jul 1, 2020](https://github.com/jcubic/lips/releases/tag/0.20.1), I've started
 adding features on devel branch and decided that I want full Scheme implementation. But it turns out
 that there are way to many breaking changes to release next version. So I decided that I will

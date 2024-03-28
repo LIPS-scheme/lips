@@ -174,8 +174,8 @@ If you try to evaluate the macro, you will get proper results:
 
 ### Recursive Macros
 
-You can define recursive macros similary to recursive function. But you need to make sure that the
-expansion will stop, similary to recursive functions you may create infinite loops.
+You can define recursive macros similarly to recursive function. But you need to make sure that the
+expansion will stop, similarly to recursive functions you may create infinite loops.
 
 ```scheme
 (define-macro (alist . body)
@@ -192,7 +192,7 @@ You can call this macro to create alist based on its arguments:
 ```
 
 **Note** recursive call is inside quote and only argument is unquoted. This is required since
-recursive macro call needs to appear in the expansion. If you call macro recursivly and don't return
+recursive macro call needs to appear in the expansion. If you call macro recursively and don't return
 macro call as output list you will end up in ifninite recursive call.
 
 You can see the macro will expand with macroexpand:
@@ -446,7 +446,7 @@ The macro works exactly the same as previous one:
 ```
 
 ### Identifiers
-Inside macros you can add identifers can can be used like keywords from other programming langauges. They match only
+Inside macros you can add identifiers can can be used like keywords from other programming languages. They match only
 if literal symbol was used and it was not shadowed (overwritten) by variable with same name.
 
 ```scheme
@@ -531,7 +531,7 @@ expact into series of `cons`:
 (macroexpand '(alist 'foo 10 'bar 20 'baz 30))
 ;; ==> (#:cons (#:cons (quote foo) 10) (#:cons (#:cons (quote bar) 20) (#:cons (#:cons (quote baz) 30) ())))
 ```
-The output may be differnt depening on implementation.
+The output may be different depening on implementation.
 
 ### Anaphoric Hygienic Macros
 By default Scheme `syntax-rules` macros don't allow creating anaphoric macros like lisp macro do.

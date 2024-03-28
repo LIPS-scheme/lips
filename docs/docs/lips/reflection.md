@@ -15,7 +15,7 @@ You can use standard JavaScript methods to inspect LIPS objects.
 * JavaScript functions
   * `Object.keys` - this JavaScript method will return all string keys from an object.
   * `Object.values` - return the value of the object.
-  * `Ojbect.entires` - this return array of `[key,value]` pairs.
+  * `Object.entries` - this return array of `[key,value]` pairs.
   * `Object.getOwnPropertySymbols` - similar to `Object.keys` but return all symbols
 
 ## Numbers

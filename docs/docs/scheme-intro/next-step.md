@@ -22,7 +22,7 @@ A classic, one of the authors of the book is the author of Scheme language.
 ![SICP Cover](./img/SICP-cover.jpg)<br/>
 <small><a href="https://commons.wikimedia.org/wiki/File:SICP_cover.jpg">Harold Abelson and Gerald Jay Sussman with Julie Sussman — MIT Press</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>, Wikimedia Commons</small>
 
-I also recommend video lectures. There are two versions. I recommend orignal by Abelson and Sussman from 1986.
+I also recommend video lectures. There are two versions. I recommend original by Abelson and Sussman from 1986.
 
 [![SICP MIT Lectures](./img/SICP-lectures.jpg)](https://www.youtube.com/playlist?list=PLB63C06FAF154F047)
 
@@ -31,7 +31,7 @@ This is an [official website of the lectures](https://groups.csail.mit.edu/mac/c
 They are not very good quality, but they are great, and you should have no problems in seeing the
 code on the blackboard.
 
-There are also more recent lectures from 2010 at [Berkley](https://www.berkeley.edu/) by
+There are also more recent lectures from 2010 at [Berkeley](https://www.berkeley.edu/) by
 [Brian Harvey](https://people.eecs.berkeley.edu/~bh/).  Only a little bit better quality.
 
 [![UC Berkeley CS 61A The Structure and Interpretation of Computer Programs, Spring 2010](./img/SCIP-lectures-berkley.jpg)](https://www.youtube.com/playlist?list=PLhMnuBfGeCDNgVzLPxF9o5UNKG1b-LFY9)

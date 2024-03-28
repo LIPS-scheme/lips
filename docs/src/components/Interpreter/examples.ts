@@ -46,7 +46,7 @@ const examples = [
 (define re #/<h1>([^>]+)<\\/h1>/)
 ;; --> is a macro that allow chaining
 ;; of JavaScript methods calls
-;; no need to use Promises becasue of automagic
+;; no need to use Promises because of automagic
 ;; promise resolving
 (let ((msg (--> (fetch "https://scheme.org.pl/test/")
                 (text)

@@ -11,12 +11,12 @@ defined in [SRFI-1](https://srfi.schemers.org/srfi-1/srfi-1.html).
 
 ## Curry
 
-[Curry](https://en.wikipedia.org/wiki/Currying) is a common function in functional programing that
+[Curry](https://en.wikipedia.org/wiki/Currying) is a common function in functional programming that
 return a new function with predefined arguments. The classic version, returns functions that accept
-one argumnet and keep returning new function until all argumments are passed. In LIPS there is more
-useful verion of curry, that allow to pass more than one argument at the time. This is a common way
-curry is implemented. This is working in LIPS becase Scheme lambdas has length property that
-indecate number of argumnets.
+one argument and keep returning new function until all argumments are passed. In LIPS there is more
+useful version of curry, that allow to pass more than one argument at the time. This is a common way
+curry is implemented. This is working in LIPS because Scheme lambdas has length property that
+indicate number of arguments.
 
 ```scheme
 (define (sum a b c)
@@ -59,8 +59,8 @@ This is common function from Python. LIPS Scheme version works exactly the same 
 ```
 
 If used with one argument it returns `n` numbers starting from `0`.
-If used with two argumnets, the first one is starting number and the second one is the limit.
-When used with tree arguments, the last argumnets is a step between the result numbers.
+If used with two arguments, the first one is starting number and the second one is the limit.
+When used with tree arguments, the last arguments is a step between the result numbers.
 
 ## filter
 This is a common function in JavaScript and Python. But LIPS procedure also allow accepting
@@ -74,7 +74,7 @@ regular expression as a filter.
 ```
 
 ## complement
-Function return the oposite of the predicate:
+Function return the opposite of the predicate:
 
 ```scheme
 (define not-null? (complement null?))
@@ -120,7 +120,7 @@ The last example use interop with JavaScript see [Integration with
 JavaScript](/docs/lips/intro#integration-with-javascript) to know more.
 
 ## flip
-This is very useful procedure that return new procedure with swaped first two arguments.
+This is very useful procedure that return new procedure with swapped first two arguments.
 
 ```scheme
 (take '(1 2 3 4) 2)
@@ -146,7 +146,7 @@ You can use curry with filter to create filter procedures:
 ;; ==> (1 2 3 4 5 6 7 8 9)
 ```
 
-Another thing you can do is curry the take procedure to get only two elemets from the list with help of flip:
+Another thing you can do is curry the take procedure to get only two elements from the list with help of flip:
 
 ```scheme
 (define first-two (curry (flip take) 2))
@@ -164,7 +164,7 @@ This is a classic error:
 ;; ==> #(1 +nan.0 +nan.0 +nan.0)
 ```
 
-The error happen becase Array::map pass additional argumnets not only a value, and second argument
+The error happen because Array::map pass additional arguments not only a value, and second argument
 to `string->number` is Radix of the number (number base, default `10`). To fix the issue you can use `unary`:
 
 ```scheme
@@ -172,10 +172,10 @@ to `string->number` is Radix of the number (number base, default `10`). To fix t
 ;; ==> #(1 2 3 4)
 ```
 
-Binary and n-ary work similary but limit the number of arguments to 2 or any number.
+Binary and n-ary work similarly but limit the number of arguments to 2 or any number.
 
 ## always and once
-`always` is a procedure that return procedure that alwasy return same value
+`always` is a procedure that return procedure that always return same value
 
 ```scheme
 (map (always 1) (range 10))
@@ -249,7 +249,7 @@ all elemebts (`every`).
 
 ## pipe
 
-Pipe is higher ordder procedure that accept functiosn and aguments and return a new function that apply those function in order:
+Pipe is higher ordder procedure that accept functions and aguments and return a new function that apply those function in order:
 
 ```scheme
 (define non-zero (curry filter (complement zero?)))
@@ -267,7 +267,7 @@ The code removes the zeros from list before applying the fraction that will thro
 ## folding
 
 LIPS define function `reduce` that is an alias to standard Scheme procedure `fold-right` and fold that is the same
-as `fold-left`. Both procedures works similary. The take a procedure and a list and reduce it into a single value.
+as `fold-left`. Both procedures works similarly. The take a procedure and a list and reduce it into a single value.
 
 **NOTE** the reduce works differently than in JavaScript, the callback function get accumulator in last argument.
 
@@ -288,7 +288,7 @@ The function also accept more than one list.
 ;; ==> (4 "quuz" 3 "baz" 2 "bar" 1 "foo")
 ```
 
-`fold` function work similary but the order of execution is reversed.
+`fold` function work similarly but the order of execution is reversed.
 
 ```scheme
 (fold cons '() '(1 2 3 4))

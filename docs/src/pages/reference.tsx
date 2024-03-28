@@ -76,8 +76,8 @@ export default function ReferencePage(): JSX.Element {
 
   const length = useMemo(() => {
     const lengths = docs.map(({doc}) => {
-      const lenghts = doc.split('\n').map((line: string) => line.length);
-      return Math.max(...lenghts);
+      const lengths = doc.split('\n').map((line: string) => line.length);
+      return Math.max(...lengths);
     });
     return Math.max(...lengths);
 

@@ -77,7 +77,7 @@ It also implements:
 
 ### Gensyms
 With lisp macros you can use [gensyms](/docs/scheme-intro/macros#gensyms), they are special Scheme
-symbols that use JavaScript symbols behind the sceen, so they are proven to be unique. Additionaly
+symbols that use JavaScript symbols behind the sceen, so they are proven to be unique. Additionally
 you can use named gensym if you pass string as first argument:
 
 ```scheme
@@ -118,7 +118,7 @@ Read more about [LIPS environments](/docs/lips/environments).
 
 ## Procedures
 Procedures in LIPS have access additional objects `arguments`, but the have nothing to do with JavaScript.
-arguments is an array/vector with calling argumnets and it have an object callee which points to the same
+arguments is an array/vector with calling arguments and it have an object callee which points to the same
 procedure. So you can create recursive functions with anonymous lambda:
 
 ```scheme
@@ -133,7 +133,7 @@ This is classic factorial function written as lambda without the name.
 
 ### length property
 
-LIPS functions similary to JavaScript functions also have `length` property that indicate how many
+LIPS functions similarly to JavaScript functions also have `length` property that indicate how many
 arguments a function accepts. If function get more or less argumenets it's not an error like in Scheme. More arguments are ignored,
 and if less arguments are passed they are `undefined` (`#void`).
 
@@ -145,7 +145,7 @@ and if less arguments are passed they are `undefined` (`#void`).
 ;; ==> 3
 ```
 
-It return number of number argumnets the rest (dot notation) arguments are ignored.
+It return number of number arguments the rest (dot notation) arguments are ignored.
 
 ```scheme
 (define (sum a b . rest)
@@ -297,7 +297,7 @@ Example is `Array::push` using with native LIPS types:
 ;; ==> #(0.5)
 ```
 As you can see the rational number got unboxed and converted into JavaScript float numbers.
-Unboxing always can make you loose some information becase LIPS types needs to be converted into native JavaScript
+Unboxing always can make you loose some information because LIPS types needs to be converted into native JavaScript
 data types. And JavaScript doesn't have a notion of rationals, there are only floating point numbers, and big ints.
 
 ### Procedures
@@ -314,7 +314,7 @@ console.log(greet());
 // ==> {__string__: 'hello, LIPS'}
 ```
 
-Note that the value was not automagically unboxed becase we are no longer in LIPS Scheme code and LIPS can't access native
+Note that the value was not automagically unboxed because we are no longer in LIPS Scheme code and LIPS can't access native
 JavaScript. So to get the real a string you need to call `valueoOf()`:
 
 ```javascript
@@ -348,7 +348,7 @@ The same as with JavaScript if you don't pass an argument it will be undefined. 
 ```
 
 ### Helper macros and functions
-The most usefull macro in LIPS (for interacting with JavaScript) is `-->` it acts like a chain of
+The most useful macro in LIPS (for interacting with JavaScript) is `-->` it acts like a chain of
 method calls in JavaScript
 
 ```scheme
@@ -397,7 +397,7 @@ them most of the time.
 
 This returned function querySelector from document object in browser. Note that dot a function can only appear
 as first element of the list (it's handled in special way by the parser). In any other place dot is a pair separator,
-see documentation abount [Pairs in Scheme](/docs/scheme-intro/data-types#pairs).
+see documentation about [Pairs in Scheme](/docs/scheme-intro/data-types#pairs).
 
 * `..` - this is a macro is that simplify usage of `.` procedure:
 
@@ -432,10 +432,10 @@ object returned by expression.
 ```
 
 Here we get a [style object](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style)
-from [the DOM node](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) wihout soring the
+from [the DOM node](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) without sorting the
 reference to the DOM node.
 
-**NOTE** becasue dot notation in symbols is not special syntax you can use code like this:
+**NOTE** because dot notation in symbols is not special syntax you can use code like this:
 
 ```scheme
 (let ((x #(1 2 3)))
@@ -491,10 +491,10 @@ in JavaScript:
 // ==> [1, NaN, NaN]
 ```
 
-**NOTE**: the value are differnet becaseu in Shceme i
+**NOTE**: the value are different becaseu in Shceme i
 
 To fix the issue you can
-deifne lambda with single argument:
+define lambda with single argument:
 
 ```scheme
 (--> #("1" "2" "3") (map (lambda (str) (string->number str))))
@@ -508,22 +508,22 @@ You can also use one of functional helpers insprired by [Ramda](https://ramdajs.
 ;; ==> #(1 2 3)
 ```
 
-The `unary` [higher-order procedure](/docs/scheme-intro/core#higher-order-functions) acept a singe
-procedure and return new procedure that accept only one argumnet.
+The `unary` [higher-order procedure](/docs/scheme-intro/core#higher-order-functions) accept a single
+procedure and return new procedure that accept only one argument.
 
 To read more check [Functional helpers](/docs/lips/functional-helpers).
 
-**WARNING** be carful when using scheme callback functions inside JavaScript.
+**WARNING** be careful when using scheme callback functions inside JavaScript.
 Since some code may be `async` and your code may break.
 
 Example of procedures that are not wise to use are:
 
-* `Array::forEach` - this function accepts a callaback but becasue it doesn't return
-  anything, LIPS can't automatically await the reponse, and your code may execute out of order.
+* `Array::forEach` - this function accepts a callaback but because it doesn't return
+  anything, LIPS can't automatically await the response, and your code may execute out of order.
 * `String::replace` - this function can accept optional callback and if `lambda` is async
   you will end up with `[object Promise]` in output string. Any macro or function can return
   a promise in LIPS, and if any of the expression inside a function return a Promise, the whole
-  function return a Promise and become async. Here is example code that demostrate the problem:
+  function return a Promise and become async. Here is example code that demonstrate the problem:
 
 ```scheme
 (--> "foo bar" (replace "foo" (lambda () (Promise.resolve "xxx"))))
@@ -542,7 +542,7 @@ Instead of `Array::replace` you should use LIPS Scheme `replace` procedure that 
 ### Regular Expressions
 LIPS define regular expressions it uses native JavaScript regular expressions.
 At first, the syntax looked like in JavaScript. It was problematic for the parser
-so you were not able to put space after `/` to distingish from divide procedure.
+so you were not able to put space after `/` to distinguish from divide procedure.
 Later, the syntax was renamed into form that start with hash `#/[0-9]/`. The same
 syntax is used by [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) implementation. But LIPS supports more flags (same as JavaScript).
 
@@ -569,9 +569,9 @@ In LIPS you can define object literals with `&`
 You can nest object literals and mix them with different object:
 
 ```scheme
-(define obj &(:name "Jack" :hobbies #("swiming" "programming")))
+(define obj &(:name "Jack" :hobbies #("swimming" "programming")))
 (write obj.hobbies)
-;; ==> #("swiming" "programming")
+;; ==> #("swimming" "programming")
 (console.log obj)
 ;; ==> { name: 'Jack', hobbies: [ 'swiming', 'programming' ] }
 ```
@@ -585,7 +585,7 @@ Object similar to Scheme vectors, are immutable, and everything inside is quoted
 ```
 
 But to make it possible to share objects with JavaScript, native LIPS values are automatically unboxed.
-So instead of symbol represention you get a JavaScript string.
+So instead of symbol representation you get a JavaScript string.
 
 You can also use quasiquote with object literals:
 
@@ -722,7 +722,7 @@ You can check if a value is a promise by quoting the expression and using `promi
 ```
 
 ### Exceptions
-LIPS Scheme use JavaSript exception system. To throw an exception you use:
+LIPS Scheme use javascript exception system. To throw an exception you use:
 
 ```scheme
 (throw "This is error")
@@ -735,7 +735,7 @@ or
 (raise (new Error "error"))
 ```
 
-The `raise` procedure throw any object and `throw` wraps the argumnet in `new Error`.
+The `raise` procedure throw any object and `throw` wraps the argument in `new Error`.
 
 You can catch exceptions with LIPS specific try..catch..finally:
 
@@ -781,10 +781,10 @@ LIPS also define R<sup>7</sup>RS guard `procedure` that is just a macro that use
 ;; ==> Error: error
 ```
 
-### JavaScript Generars and interators
+### JavaScript Generars and iterators
 Right now there is no way to define JavaScript generators inside LIPS. You can create iterator using
 [iteration prorocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols),
-But to have yeild keyword you need [continuations](/docs/scheme-intro/continuations), they are part of the
+But to have yield keyword you need [continuations](/docs/scheme-intro/continuations), they are part of the
 LIPS Roadmap.
 
 Here is example of creating iterator in LIPS:
@@ -806,8 +806,8 @@ Here is example of creating iterator in LIPS:
 ;; ==> #(1 1/2 1/3 1/4 1/5)
 ```
 
-`Array.from` can't be used for every possible case becase it will unbox the values (and convert
-rational to float), here it doesn't happen becase LIPS don't treat JavaScript iterators in any
+`Array.from` can't be used for every possible case because it will unbox the values (and convert
+rational to float), here it doesn't happen because LIPS don't treat JavaScript iterators in any
 special way (it may change in the future). But `Array.from` will convert the array of rationals to
 float if used on normal vector:
 
@@ -816,10 +816,10 @@ float if used on normal vector:
 ;; ==> #(0.5 0.3333333333333333 0.25 0.2)
 ```
 
-**NOTE**: be carful when using iterator protocol becase any function side Scheme can return a promise. If you would change
-quoted object literal `` `&() `` with longhand `object` you will get an error becasue `object` is async.
+**NOTE**: be careful when using iterator protocol because any function side Scheme can return a promise. If you would change
+quoted object literal `` `&() `` with longhand `object` you will get an error because `object` is async.
 
-You can abstract the use of iteration protocol with a macro, but to have real `yeild` keyword like
+You can abstract the use of iteration protocol with a macro, but to have real `yield` keyword like
 syntax you need `call/cc`.
 
 You can also define generators inside JavaScript using `self.eval` (JavaScript global `eval`):
@@ -885,7 +885,7 @@ You can also manipulate JavaScript prototypes directly:
 ;; ==> #<Person (Jack)>
 ```
 
-By default toString is not used for represention of objects, but you add representation if you want.
+By default toString is not used for representation of objects, but you add representation if you want.
 See [Homoiconic data types](/docs/lips/extension#new-homoiconic-data-types).
 
 ### Node.js
@@ -905,7 +905,7 @@ In above code, you can see example of [automagic async/await](#automagic-asyncaw
 If you have to use callback based API in Node, use
 [promisify function](https://nodejs.org/api/util.html#utilpromisifyoriginal) from Module util.
 
-You can also use the `Promise` contructor yourself:
+You can also use the `Promise` constructor yourself:
 
 ```scheme
 (define fs (require "fs"))
@@ -932,9 +932,9 @@ abstracted away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
 ## Binary compiler
 
 LIPS Scheme have dumb binary compiler. The compiler is a way to compress the LIPS Scheme code and
-create binary file that is faster to load. Compiler is use to make bootstraping faster. The binary
+create binary file that is faster to load. Compiler is use to make bootstrapping faster. The binary
 file use [CBOR](https://en.wikipedia.org/wiki/CBOR) serialization format that is then compressed
-with [LZJB](https://en.wikipedia.org/wiki/LZJB) alorithm that is pretty fast. And it can still be
+with [LZJB](https://en.wikipedia.org/wiki/LZJB) algorithm that is pretty fast. And it can still be
 compress further with gzip by the HTTP server.
 
 To compile/compress a file you can use `-c` flag when executing `lips` executable.

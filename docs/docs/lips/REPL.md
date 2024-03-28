@@ -20,7 +20,7 @@ Web REPL you can access from [Home page](/) or as a [bookmarklet](/#bookmark) us
 
 ## Node.js REPL
 
-Node.js version of the REPL, also supports syntax hightlighting and auto indentation. It also
+Node.js version of the REPL, also supports syntax highlighting and auto indentation. It also
 supports [paste bracket mode from Node.js](https://github.com/nodejs/node/pull/47150) (added by
 [Jakub T. Jankiewicz](https://jcubic.pl/me) and released in
 [v20.6.0](https://nodejs.org/en/blog/release/v20.6.0)), to properly handle copy-paste of Scheme
@@ -40,7 +40,7 @@ There are few procedures useful in the REPL:
 * `env` - function returns list of symbols which is everything that is inside an environment,
 * `dir` - function return all properties from an object including those in prototype chain (a class).
 * `repr` - function return representation of the object as a string, it's inspired by Python. The
-  `repr` function accepts two argumnets the second one is a boolean that indicate if it should work
+  `repr` function accepts two arguments the second one is a boolean that indicate if it should work
   like write or like display. Write will write string with quotes. So if you wnat the strings inside
   the string to be quoted use `(repr obj #t)`
 

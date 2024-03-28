@@ -83,7 +83,7 @@ With Preact it will just this:
 (define h preact.h)
 ```
 
-Becasue default `pragma->sxml` is `h`.
+Because default `pragma->sxml` is `h`.
 
 ```scheme
 (pragma->sxml h)
