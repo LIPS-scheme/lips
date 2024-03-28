@@ -10258,7 +10258,7 @@ var global_env = new Environment({
          Higher-order function that creates a new function that applies all functions
          from right to left and returns the last value. Reverse of pipe.
          e.g.:
-         ((compose (curry + 2) (curry * 3)) 10) --> (+ 2 (* 3 10)) --> 32`),
+         ((compose (curry + 2) (curry * 3)) 10) ==> (+ 2 (* 3 10)) ==> 32`),
     pipe: doc(
         pipe,
         `(pipe . fns)
@@ -10266,7 +10266,7 @@ var global_env = new Environment({
          Higher-order function that creates a new function that applies all functions
          from left to right and returns the last value. Reverse of compose.
          e.g.:
-         ((pipe (curry + 2) (curry * 3)) 10) --> (* 3 (+ 2 10)) --> 36`),
+         ((pipe (curry + 2) (curry * 3)) 10) ==> (* 3 (+ 2 10)) ==> 36`),
     curry: doc(
         curry,
         `(curry fn . args)
