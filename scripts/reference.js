@@ -21,6 +21,6 @@ function get_docs_strings() {
     return docs;
 }
 
-exec('(let-env lips.env.__parent__ (load "../dist/std.xcb"))').then(() => {
+await exec('(let-env lips.env.__parent__ (load "./dist/std.xcb"))').then(() => {
     console.log(JSON.stringify(get_docs_strings()));
 });
