@@ -32,7 +32,7 @@ export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={siteConfig.title}
+      title={'Powerful Scheme interpreter in JavaScript'}
       description={siteConfig.tagline}>
       <HomepageHeader />
       <main>
