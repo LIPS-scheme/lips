@@ -54,6 +54,11 @@
 
 .search input {
   flex-grow: 1;
+  font-size: 1.2em;
+  padding: 0.2em 0.4em;
+}
+.search h2, .search input {
+  font-family: monospace;
 }
 
 .search  ul {
