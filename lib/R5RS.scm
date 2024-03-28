@@ -41,10 +41,10 @@
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
 
-   Creates special symbol macros for evaluator similar to built-in , or `.
-   It's like an alias for a real macro. Similar to CL reader macros but it receives already
-   parsed code like normal macros. Type can be SPLICE or LITERAL symbols (see set-special!).
-   ALL default symbol macros are literal."
+   Creates syntax extensions for evaluator similar to built-in , or `.
+   It's like an alias for a real macro. Similar to CL reader macros
+   but it receives already parsed code like normal macros. Type can be SPLICE
+   or LITERAL symbols (see set-special!). ALL default symbol macros are literal."
   (let* ((name (car spec))
          (symbol (cadr spec))
          (args (cddr spec)))
@@ -55,12 +55,9 @@
         (define-macro (,name ,@args) ,@rest))))
 
 ;; -----------------------------------------------------------------------------
-;; Vector literals syntax using parser symbol macros
+;; Vector literals syntax using parser syntax extensions
 ;; -----------------------------------------------------------------------------
-(set-special! "#" 'vector-literal lips.specials.SPLICE)
-
-;; -----------------------------------------------------------------------------
-(define-macro (vector-literal . args)
+(define-symbol-macro SPLICE (vector-literal "#" . args)
   (if (not (or (pair? args) (eq? args '())))
       (throw (new Error (concat "Parse Error: vector require pair got "
                                 (type args) " in " (repr args))))
@@ -82,7 +79,7 @@
            (lambda (arr q)
              ;; Array.from is used to convert empty to undefined
              ;; but we can't use the value because Array.from calls
-             ;; valueOf on its arguments
+             ;; valueOf on its arguments (unbox the LIPS data types)
              (let ((result (--> (Array.from arr)
                                 (map (lambda (x i)
                                        (if (not (in i arr))
@@ -1423,8 +1420,8 @@
   "(call-with-output-file filename proc)
 
    Procedure open file for writing, call user defined procedure with port
-   and then close the port. It return value that was returned by user proc and it close the port
-   even if user proc throw exception."
+   and then close the port. It return value that was returned by user proc
+   and it close the port even if user proc throw exception."
   (let ((p (open-output-file filename)))
     (try (proc p)
          (finally

@@ -144,8 +144,8 @@
 (define-macro (globalize expr . rest)
   "(globalize expr)
 
-    Macro will get the value of the expression and add each method as function to global
-    scope."
+    Macro will get the value of the expression and add each method as function
+    to global scope."
   (let* ((env (current-environment))
          (obj (eval expr env))
          (name (gensym "name"))
@@ -276,8 +276,9 @@
 (define (pair-map fn seq-list)
   "(pair-map fn list)
 
-   Function that calls fn argument for pairs in a list and returns a combined list with
-   values returned from function fn. It works likes map but take two items from the list each time."
+   Function that calls fn argument for pairs in a list and returns a combined list
+   with values returned from function fn. It works likes map but take two items
+   from the list each time."
   (let iter ((seq-list seq-list) (result '()))
     (if (null? seq-list)
         result
@@ -475,7 +476,8 @@
 (define-macro (define-formatter-rule . patterns)
   "(rule-pattern pattern)
 
-   Anaphoric macro for defining patterns for the formatter. With Ahead, Pattern and * defined values."
+   Anaphoric macro for defining patterns for the formatter.
+   With Ahead, Pattern and * defined values."
   (let ((rules (gensym "rules")))
     `(let ((,rules lips.Formatter.rules)
            (Ahead (lambda (pattern)
@@ -692,11 +694,13 @@
 (define (set-repr! type fn)
   "(add-repr! type fn)
 
-   Function that adds the string representation to the type, which should be a constructor function.
+   Function that adds the string representation to the type, which should be
+   a constructor function.
 
-   Function fn should have args (obj q) and it should return a string. obj is the value that
-   need to be converted to a string. If the object is nested and you need to use `repr` recursively,
-   it should pass the second parameter q to repr, so string will be quoted when it's true.
+   Function fn should have args (obj q) and it should return a string. obj
+   is the value that need to be converted to a string. If the object is nested
+   and you need to use `repr` recursively, it should pass the second parameter q
+   to repr, so string will be quoted when it's true.
 
    e.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))"
   (typecheck "add-repr!" type "function")
@@ -732,8 +736,8 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function that check if the variable is defined in the given environment, or interaction-environment
-   if not specified."
+   Function that check if the variable is defined in the given environment,
+   or interaction-environment if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
            (--> env (get x))
@@ -771,8 +775,8 @@
 (define (sort list . rest)
   "(sort list [predicate])
 
-   Sorts the list using optional predicate function. If no comparison function is given
-   it will use <= and sort in increasing order."
+   Sorts the list using optional predicate function. If no comparison function
+   is given it will use <= and sort in increasing order."
   (let ((predicate (if (null? rest) <= (car rest))))
     (typecheck "sort" list "pair")
     (typecheck "sort" predicate "function")
@@ -1061,7 +1065,8 @@
                    (id \"foo\"))
                 (span \"hello\")
                 (span \"world\")))
-     ;; ==> <div data-foo=\"hello\" id=\"foo\"><span>hello</span><span>world</span></div>"
+     ;; ==> <div data-foo=\"hello\" id=\"foo\"><span>hello</span>
+     ;; ==> <span>world</span></div>"
      (%sxml ',pragma expr)))
 
 ;; -----------------------------------------------------------------------------
@@ -1079,16 +1084,18 @@
                           (:a (:onclick (lambda (e) (alert \"close\")))
                               \"close\"))))
 
-   Above expression can be passed to function that renders JSX (like render in React, Preact)
-   To get the string from the macro you can use vhtml library from npm."
+   Above expression can be passed to function that renders JSX (like render
+   in React, Preact) To get the string from the macro you can use vhtml
+   library from npm."
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
 (define (get-resource url)
   "(get-resource url)
 
-   Load JavaScript or CSS file in browser by adding script/link tag to head of the current document.
-   When called from Node it allow it allows to load JavaScript files only."
+   Load JavaScript or CSS file in browser by adding script/link tag to head
+   of the current document. When called from Node it allow it allows to load
+   JavaScript files only."
   (typecheck "get-resource" url "string")
   (if (not (bound? 'document))
       (if (eq? self global)
@@ -1222,12 +1229,13 @@
 (define-macro (do-iterator spec cond . body)
   "(do-iterator (var expr) (test result) body ...)
 
-   Iterates over iterators (e.g. creates with JavaScript generator function)
-   that works with normal and async iterators. You can loop over infinite iterators
-   and break the loop if you want, using expression like in do macro. Long synchronous iterators
-   will block the main thread (you can't print 1000 numbers from infinite iterators,
-   because it will freeze the browser), but if you use async iterators you can process
-   the values as they are generated."
+   Iterates over iterators (e.g. created with JavaScript generator function)
+   that works with normal and async iterators. You can loop over an infinite
+   iterators and break the loop if you want, using expression like in do macro.
+   Long synchronous iterators will block the main thread (you can't print
+   1000 numbers from infinite iterators, because it will freeze the browser),
+   but if you use async iterators you can process the values as they are
+   generated."
   (let ((gen (gensym "name"))
         (name (car spec))
         (async (gensym "async"))
@@ -1340,7 +1348,8 @@
 (define-macro (list* . args)
   "(list* arg1 ...)
 
-   Parallel asynchronous version of list. Like begin* except all values are returned in a list."
+   Parallel asynchronous version of list. Like begin* except all values
+   are returned in a list."
   (let ((result (gensym "result")))
      `(let ((,result (vector)))
         ,@(map (lambda (arg)
@@ -1554,9 +1563,9 @@
 (define (complement fn)
   "(complement fn)
 
-   Higher order function that returns the Boolean complement of the given function. If the function fn
-   for a given arguments return true the result function will return false, if it would
-   return false, the result function will return true."
+   Higher order function that returns the Boolean complement of the given function.
+   If the function fn for a given arguments return true the result function
+   will return false, if it would return false, the result function will return true."
   (typecheck "complement" fn "function")
   (lambda args
     (not (apply fn args))))
@@ -1587,7 +1596,8 @@
 (define (flip fn)
   "(flip fn)
 
-   Higher-order function that returns a new function where the first two arguments are swapped.
+   Higher-order function that returns a new function where the first two arguments
+   are swapped.
 
    Example:
 
