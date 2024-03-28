@@ -1574,7 +1574,8 @@
 (define (always constant)
   "(always constant)
 
-   Higher-order function that returns a new thunk that always returns the given constant when called."
+   Higher-order function that returns a new thunk that always returns
+   the given constant when called."
   (lambda ()
     constant))
 
