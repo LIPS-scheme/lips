@@ -77,7 +77,7 @@ It also implements:
 
 ### Gensyms
 With lisp macros you can use [gensyms](/docs/scheme-intro/macros#gensyms), they are special Scheme
-symbols that use JavaScript symbols behind the sceen, so they are proven to be unique. Additionally
+symbols that use JavaScript symbols behind the scene, so they are proven to be unique. Additionally
 you can use named gensym if you pass string as first argument:
 
 ```scheme
@@ -760,7 +760,7 @@ You can also have finally expression:
 ;; ==> nothing happened
 ```
 
-You can also define finaly with `catch`:
+You can also define `finally` without `catch`:
 
 ```scheme
 (try
@@ -952,5 +952,5 @@ $ lips -c file.xcb
 Will create `file.xcb` in same directory. For smaller files it make not have a difference when
 loading `.xcb` or `.scm` files.
 
-**NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are threated
+**NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are treated
 as comments, so you can't compile the code that have those directives.

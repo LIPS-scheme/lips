@@ -359,7 +359,7 @@ and use part of the pattern in output macro.
 
 the first element of the pattern is often `_` it matches against the name of the macro.
 
-### Elipsis
+### Ellipsis
 
 In lisp macros if you wanted to define a list of any values (including no values) you use
 [improper list](/docs/scheme-intro/data-types#improper-list) (list with dot). In syntax-rules
@@ -517,7 +517,7 @@ recursve case.
       (cons (cons x y) (alist z ...)))))
 ```
 
-Here is example of recusive macro that expand into series of `cons`. You can use this macro like this:
+Here is example of recursive macro that expand into series of `cons`. You can use this macro like this:
 
 ```scheme
 (alist 'foo 10 'bar 20 'baz 30)
@@ -531,7 +531,7 @@ expact into series of `cons`:
 (macroexpand '(alist 'foo 10 'bar 20 'baz 30))
 ;; ==> (#:cons (#:cons (quote foo) 10) (#:cons (#:cons (quote bar) 20) (#:cons (#:cons (quote baz) 30) ())))
 ```
-The output may be different depening on implementation.
+The output may be different depending on implementation.
 
 ### Anaphoric Hygienic Macros
 By default Scheme `syntax-rules` macros don't allow creating anaphoric macros like lisp macro do.

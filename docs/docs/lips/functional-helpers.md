@@ -155,7 +155,7 @@ Another thing you can do is curry the take procedure to get only two elements fr
 ```
 
 ## Unary, binary, and n-ary
-With LIPS you can change the arrity of the function by forcing only specific number of arguments.
+With LIPS you can change the arity of the function by forcing only specific number of arguments.
 
 This is a classic error:
 
@@ -249,7 +249,7 @@ all elemebts (`every`).
 
 ## pipe
 
-Pipe is higher ordder procedure that accept functions and aguments and return a new function that apply those function in order:
+Pipe is higher ordder procedure that accept functions as arguments and return a new function that apply those function in order:
 
 ```scheme
 (define non-zero (curry filter (complement zero?)))

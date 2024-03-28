@@ -82,7 +82,7 @@ broken test case.
 
 LIPS Scheme define those extensions to syntax-rules macros:
 
-* [SRFI-46](https://srfi.schemers.org/srfi-46/srfi-46.html) (chaning ellipsis symbol: see
+* [SRFI-46](https://srfi.schemers.org/srfi-46/srfi-46.html) (changing ellipsis symbol: see
   [Nested Hygienic Macros](/docs/scheme-intro/macros#nested-hygienic-macros)
 * [SRFI-139](https://srfi.schemers.org/srfi-139/srfi-139.html) see
   [Syntax Parameters](/docs/scheme-intro/macros#anaphoric-hygienic-macros)

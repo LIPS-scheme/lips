@@ -112,7 +112,7 @@ source code of the procedure that you can modify:
      (set-cdr! r (list (+ (cadr r) 1)))))
 ```
 
-This procedure modify its source code. Each tiem you execute this function it will run one more
+This procedure modify its source code. Each time you execute this function it will run one more
 times.
 
 ```scheme

@@ -56,7 +56,7 @@ You can save continuation inside a variable and call it later like a procedure.
 ```
 
 Here when you call a continuation `k` with value 10 it restores the state in `(+ 1 <slot>)` and
-execute tht expression again with a value `10`.
+execute that expression again with a value `10`.
 
 The continuation act like a procedure and return `#t` with `procedure?` predicate:
 

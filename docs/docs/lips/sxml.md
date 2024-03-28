@@ -68,7 +68,7 @@ Remember to use `list->array` (or `list->vector`) if you process lists.
 
 ## Using SXML with React and Preact
 
-To use SXML with React you need to specificy the main function that is used to create tags in JSX.
+To use SXML with React you need to specify the main function that is used to create tags in JSX.
 In Preact is `preact.h` and in React it's `React.createElement`. Here is a required setup for the
 
 ```scheme

@@ -41,7 +41,7 @@ There are few procedures useful in the REPL:
 * `dir` - function return all properties from an object including those in prototype chain (a class).
 * `repr` - function return representation of the object as a string, it's inspired by Python. The
   `repr` function accepts two arguments the second one is a boolean that indicate if it should work
-  like write or like display. Write will write string with quotes. So if you wnat the strings inside
+  like write or like display. Write will write string with quotes. So if you want the strings inside
   the string to be quoted use `(repr obj #t)`
 
 To read more about introspection of LIPS Scheme in REPL, see [documentation about Reflection](/docs/lips/reflection).
