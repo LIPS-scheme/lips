@@ -1,9 +1,0 @@
-*~
-node_modules
-coverage
-npm-debug.log
-\#*
-.\#*
-.DEV
-.[0-9]*
-www

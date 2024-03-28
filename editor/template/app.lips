@@ -1,4 +1,0 @@
-(let ((div (--> document (createElement "div")))
-      (message "Hello, World!"))
-  (set-obj! div 'innerHTML message)
-  (--> (. document 'body) (appendChild div)))

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>LIPS Scheme blog</title>
+        <link>https://lips.js.org/blog</link>
+        <description>LIPS Scheme blog RSS Feed</description>
+        <lastBuildDate>Sat, 09 Mar 2024 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
+        <copyright>Copyright © 2024 Jakub T. Jankiewicz</copyright>
+        <item>
+            <title><![CDATA[Scheme Regex literals in Emacs]]></title>
+            <link>https://lips.js.org/blog/emacs-scheme-regex</link>
+            <guid>https://lips.js.org/blog/emacs-scheme-regex</guid>
+            <pubDate>Sat, 09 Mar 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[LIPS Scheme support regular expression literals, but it's not the only one implementation that]]></description>
+            <content:encoded><![CDATA[<p>LIPS Scheme support regular expression literals, but it&#39;s not the only one implementation that
+support those.  Other implementation includes <a href="https://practical-scheme.net/gauche/">Gauche</a> and
+<a href="https://www.gnu.org/software/kawa/index.html">Kawa</a>.</p>
+<p>Unfortunetlly, you can&#39;t easily use those regular expressions in <a href="https://en.wikipedia.org/wiki/GNU_Emacs">GNU
+Emacs</a>, my main editor of choice.</p>
+<br/><a href="/blog/emacs-scheme-regex">see the rest of the article</a>]]></content:encoded>
+            <category>scheme</category>
+            <category>emacs</category>
+        </item>
+        <item>
+            <title><![CDATA[LIPS History]]></title>
+            <link>https://lips.js.org/blog/lips-history</link>
+            <guid>https://lips.js.org/blog/lips-history</guid>
+            <pubDate>Sun, 03 Mar 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[This is the first article on LIPS blog. In this article I will write about the history of LIPS]]></description>
+            <content:encoded><![CDATA[<p>This is the first article on LIPS blog. In this article I will write about the history of LIPS
+Scheme interpreter.</p>
+<br/><a href="/blog/lips-history">see the rest of the article</a>]]></content:encoded>
+            <category>lips</category>
+            <category>scheme</category>
+            <category>history</category>
+        </item>
+    </channel>
+</rss>
