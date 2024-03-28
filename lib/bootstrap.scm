@@ -12,6 +12,10 @@
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
+;; -----------------------------------------------------------------------------
+(define true #t)
+(define false #f)
+(define NaN +nan.0)
 
 ;; -----------------------------------------------------------------------------
 (define (%doc string fn)
@@ -99,9 +103,13 @@
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
                 (let* ((value (gensym "value"))
-                       (name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                   ((pair? code) (symbol->string (car code)))
-                                   (true code)))
+                       (name (if (quoted-symbol? code)
+                                 (symbol->string (cadr code))
+                                 (if (symbol? code)
+                                     (symbol->string code)
+                                     (if (pair? code)
+                                         (symbol->string (car code))
+                                         code))))
                        (accessor (if (string? name)
                                      `(. ,obj ,@(split "." name))
                                      `(. ,obj ,name)))
@@ -136,8 +144,8 @@
 (define-macro (globalize expr . rest)
   "(globalize expr)
 
-    Macro will get the value of the expression and add each method as function to global
-    scope."
+    Macro will get the value of the expression and add each method as function
+    to global scope."
   (let* ((env (current-environment))
          (obj (eval expr env))
          (name (gensym "name"))
@@ -215,9 +223,11 @@
    Function that converts a LIPS symbol to a string."
   (typecheck "symbol->string" s "symbol")
   (let ((name s.__name__))
-    (if (string? name)
-        name
-        (name.toString))))
+    (let ((str (if (string? name)
+                   name
+                   (name.toString))))
+      (str.freeze)
+      str)))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
@@ -225,7 +235,8 @@
 
    Function that converts a string to a LIPS symbol."
   (typecheck "string->symbol" string "string")
-  (%as.data (new lips.LSymbol string)))
+  (let ((symbol (new lips.LSymbol string)))
+    (%as.data symbol)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
@@ -234,7 +245,7 @@
    Function that converts alist pairs to a JavaScript object."
   (if (pair? alist)
       (alist.to_object)
-      (alist->object (new lips.Pair undefined nil))))
+      (alist->object (new lips.Pair #void '()))))
 
 ;; -----------------------------------------------------------------------------
 (define (object->alist object)
@@ -265,8 +276,9 @@
 (define (pair-map fn seq-list)
   "(pair-map fn list)
 
-   Function that calls fn argument for pairs in a list and returns a combined list with
-   values returned from function fn. It works likes map but take two items from the list each time."
+   Function that calls fn argument for pairs in a list and returns a combined list
+   with values returned from function fn. It works likes map but take two items
+   from the list each time."
   (let iter ((seq-list seq-list) (result '()))
     (if (null? seq-list)
         result
@@ -280,9 +292,9 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander readonly expr . rest)
-  "(object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
-   (object-expander readonly '(:foo :bar))
+(define (%object-expander readonly expr . rest)
+  "(%object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
+   (%object-expander readonly '(:foo :bar))
 
    Recursive function helper for defining LIPS code to create objects
    using key like syntax. If no values are used it will create a JavaScript
@@ -294,12 +306,12 @@
         `(alist->object ())
         `(let ((,name ,(Object.fromEntries (new Array)))
                (,r-only ,(Object.fromEntries (new Array (new Array "writable" false)))))
-           ,@(let loop ((lst expr) (result nil))
+           ,@(let loop ((lst expr) (result '()))
                (if (null? lst)
                    (reverse result)
                    (let* ((first (car lst))
                           (no-second (null? (cdr lst)))
-                          (second (if no-second nil (cadr lst))))
+                          (second (if no-second '() (cadr lst))))
                      (if (not (key? first))
                          (let ((msg (string-append (type first)
                                                    " "
@@ -308,13 +320,13 @@
                            (throw msg))
                          (let ((prop (key->string first)))
                            (if (or (key? second) no-second)
-                               (let ((code `(set-obj! ,name ,prop undefined)))
+                               (let ((code `(set-obj! ,name ,prop #void)))
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if readonly
                                                (if (and (pair? second) (key? (car second)))
                                                    `(set-obj! ,name
                                                               ,prop
-                                                              ,(object-expander readonly second quot)
+                                                              ,(%object-expander readonly second quot)
                                                               ,r-only)
                                                    (if quot
                                                        `(set-obj! ,name ,prop ',second ,r-only)
@@ -322,7 +334,7 @@
                                                (if (and (pair? second) (key? (car second)))
                                                    `(set-obj! ,name
                                                               ,prop
-                                                              ,(object-expander readonly second))
+                                                              ,(%object-expander readonly second))
                                                    (if quot
                                                        `(set-obj! ,name ,prop ',second)
                                                        `(set-obj! ,name ,prop ,second))))))
@@ -337,7 +349,7 @@
 
    Creates a JavaScript object using key like syntax."
   (try
-    (object-expander false expr)
+    (%object-expander false expr)
     (catch (e)
       (try
        (error e.message)
@@ -351,7 +363,7 @@
    Creates a JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used by the & object literal."
   (try
-    (object-expander true expr true)
+    (%object-expander true expr true)
     (catch (e)
       (try
         (error e.message)
@@ -420,7 +432,7 @@
 
    Returns all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
-      nil
+      '()
       (let ((proto (if (null? rest) false (car rest)))
             (names (Object.getOwnPropertyNames obj)))
         (if (not proto)
@@ -453,9 +465,9 @@
 (define (value obj)
   "(value obj)
 
-   Function that unwraps LNumbers and converts nil to undefined."
-  (if (eq? obj nil)
-      undefined
+   Function that unwraps LNumbers and converts '() to #void."
+  (if (eq? obj '())
+      #void
       (if (number? obj)
           ((. obj "valueOf"))
           obj)))
@@ -464,7 +476,8 @@
 (define-macro (define-formatter-rule . patterns)
   "(rule-pattern pattern)
 
-   Anaphoric macro for defining patterns for the formatter. With Ahead, Pattern and * defined values."
+   Anaphoric macro for defining patterns for the formatter.
+   With Ahead, Pattern and * defined values."
   (let ((rules (gensym "rules")))
     `(let ((,rules lips.Formatter.rules)
            (Ahead (lambda (pattern)
@@ -473,7 +486,7 @@
            (* (Symbol.for "*"))
            (Pattern (lambda (pattern flag)
                       (new lips.Formatter.Pattern (list->array pattern)
-                           (if (null? flag) undefined flag)))))
+                           (if (null? flag) #void flag)))))
        ,@(map (lambda (pattern)
                 `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
               patterns))))
@@ -487,7 +500,7 @@
 ;;       unit tests run from 1min to 6min.
 ;; TODO: test this when syntax macros are compiled before evaluation
 ;; -----------------------------------------------------------------------------
-(define-syntax cond
+#;(define-syntax cond
   (syntax-rules (=> else)
 
     ((cond (else else1 else2 ...))
@@ -526,7 +539,7 @@
    Macro for condition checks. For usage instead of nested ifs.")
 
 ;; -----------------------------------------------------------------------------
-(define-syntax cond/maybe-more
+#;(define-syntax cond/maybe-more
   (syntax-rules ()
     ((cond/maybe-more test consequent)
      (if test
@@ -567,28 +580,32 @@
                     `(begin
                        ,@expression))
                ,(if (and (pair? rest)
-                         (or (eq? (caar rest) true)
-                             (eq? (caar rest) 'else)))
+                         (let ((x (caar rest)))
+                           (or (eq? x true)
+                               (and (symbol? x)
+                                    (or (eq? x 'else)
+                                        (eq? (--> (new lips.LString (x.literal)) (cmp "else")) 0))))))
                     `(begin
                        ,@(cdar rest))
                     (if (not (null? rest))
                         `(cond ,@rest))))))
-      nil))
+      '()))
 
 ;; -----------------------------------------------------------------------------
-(define (%r re . rest)
-  "(%r re)
+(define (regex re . rest)
+  "(regex re)
 
    Creates a new regular expression from string, to not break Emacs formatting."
-   (if (null? rest)
-     (new RegExp re)
-     (new RegExp re (car rest))))
+  (typecheck "regex" re "string")
+  (if (null? rest)
+      (new RegExp re)
+      (new RegExp re (car rest))))
 
 ;; -----------------------------------------------------------------------------
 ;; replaced by more general formatter in JS, this is left as example of usage
 ;; -----------------------------------------------------------------------------
 #;(define-formatter-rule ((list (list "("
-                                    (%r "(?:#:)?cond")
+                                    (regex "(?:#:)?cond")
                                     (Pattern (list "(" * ")") "+"))
                                1
                                (Ahead "[^)]"))))
@@ -647,6 +664,26 @@
     (--> port (flush))))
 
 ;; -----------------------------------------------------------------------------
+(define (read-all . rest)
+  "(read-all)
+   (read-all port)
+
+   Read all S-Expressions from port and return them as a list"
+  (let ((port (if (null? rest) (current-input-port) (car rest))))
+    (let loop ((result '()) (expr (read port)))
+      (if (eof-object? expr)
+          (reverse result)
+          (loop (cons expr result) (read port))))))
+
+;; -----------------------------------------------------------------------------
+(define (with-input-from-string string thunk)
+  "(with-input-from-string string thunk)
+
+   Reads string and execute the thunk with current input port set to
+   port created from opening the string."
+  (with-input-from-port (open-input-string string) thunk))
+
+;; -----------------------------------------------------------------------------
 (define (regex? x)
   "(regex? x)
 
@@ -657,11 +694,13 @@
 (define (set-repr! type fn)
   "(add-repr! type fn)
 
-   Function that adds the string representation to the type, which should be a constructor function.
+   Function that adds the string representation to the type, which should be
+   a constructor function.
 
-   Function fn should have args (obj q) and it should return a string. obj is the value that
-   need to be converted to a string. If the object is nested and you need to use `repr` recursively,
-   it should pass the second parameter q to repr, so string will be quoted when it's true.
+   Function fn should have args (obj q) and it should return a string. obj
+   is the value that need to be converted to a string. If the object is nested
+   and you need to use `repr` recursively, it should pass the second parameter q
+   to repr, so string will be quoted when it's true.
 
    e.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))"
   (typecheck "add-repr!" type "function")
@@ -697,8 +736,8 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function that check if the variable is defined in the given environment, or interaction-environment
-   if not specified."
+   Function that check if the variable is defined in the given environment,
+   or interaction-environment if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
            (--> env (get x))
@@ -724,7 +763,7 @@
    Sorts the list using the quick sort algorithm according to predicate."
   (if (or (null? e) (<= (length e) 1))
       e
-      (let loop ((left nil) (right nil)
+      (let loop ((left '()) (right '())
                  (pivot (car e)) (rest (cdr e)))
         (if (null? rest)
             (append (append (qsort left predicate) (list pivot)) (qsort right predicate))
@@ -736,8 +775,8 @@
 (define (sort list . rest)
   "(sort list [predicate])
 
-   Sorts the list using optional predicate function. If no comparison function is given
-   it will use <= and sort in increasing order."
+   Sorts the list using optional predicate function. If no comparison function
+   is given it will use <= and sort in increasing order."
   (let ((predicate (if (null? rest) <= (car rest))))
     (typecheck "sort" list "pair")
     (typecheck "sort" predicate "function")
@@ -817,17 +856,39 @@
 
    Returns a new function that limits the number of arguments to n."
   (lambda args
-    (apply fn (take n args))))
+    (apply fn (take args n))))
 
 ;; -----------------------------------------------------------------------------
-(define (take n lst)
-  "(take n list)
+(define (take lst n)
+  "(take list n)
 
    Returns n first values of the list."
-  (let iter ((result '()) (i n) (lst lst))
+  (let loop ((result '()) (i n) (lst lst))
     (if (or (null? lst) (<= i 0))
         (reverse result)
-        (iter (cons (car lst) result) (- i 1) (cdr lst)))))
+        (loop (cons (car lst) result) (- i 1) (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
+(define (drop lst n)
+  "(take list n)
+
+   Returns a list where first n elements are removed."
+  (let loop ((i n) (lst lst))
+    (if (or (null? lst) (<= i 0))
+        lst
+        (loop (- i 1) (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
+(define (zip . lists)
+  "(zip list1 list2 ...)
+
+   Return list where elements are taken from each list.
+   e.g.:
+   (zip '(1 2 3) '(2 3 4))
+   ;; ==> '((1 2) (2 3) (3 4))"
+  (if (or (null? lists) (some null? lists))
+      '()
+      (cons (map car lists) (apply zip (map cdr lists)))))
 
 ;; -----------------------------------------------------------------------------
 (define unary (%doc "(unary fn)
@@ -950,7 +1011,7 @@
                           (eq? (caadr expr) '@)))
          (attrs (if have-attrs
                     (cdadr expr)
-                    nil))
+                    '()))
          (rest (if have-attrs
                    (cddr expr)
                    (cdr expr))))
@@ -964,7 +1025,7 @@
                                                     (list 'unquote (cadr pair))))
                                             attrs)))
          ,@(if (null? rest)
-              nil
+              '()
               (let ((first (car rest)))
                 (if (pair? first)
                     (cond ((symbol=? 'sxml-unquote (car first))
@@ -1004,7 +1065,8 @@
                    (id \"foo\"))
                 (span \"hello\")
                 (span \"world\")))
-     ;; ==> <div data-foo=\"hello\" id=\"foo\"><span>hello</span><span>world</span></div>"
+     ;; ==> <div data-foo=\"hello\" id=\"foo\"><span>hello</span>
+     ;; ==> <span>world</span></div>"
      (%sxml ',pragma expr)))
 
 ;; -----------------------------------------------------------------------------
@@ -1022,16 +1084,18 @@
                           (:a (:onclick (lambda (e) (alert \"close\")))
                               \"close\"))))
 
-   Above expression can be passed to function that renders JSX (like render in React, Preact)
-   To get the string from the macro you can use vhtml library from npm."
+   Above expression can be passed to function that renders JSX (like render
+   in React, Preact) To get the string from the macro you can use vhtml
+   library from npm."
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
 (define (get-resource url)
   "(get-resource url)
 
-   Load JavaScript or CSS file in browser by adding script/link tag to head of the current document.
-   When called from Node it allow it allows to load JavaScript files only."
+   Load JavaScript or CSS file in browser by adding script/link tag to head
+   of the current document. When called from Node it allow it allows to load
+   JavaScript files only."
   (typecheck "get-resource" url "string")
   (if (not (bound? 'document))
       (if (eq? self global)
@@ -1078,17 +1142,6 @@
 
    Convert radians to degrees."
   (* x (/ 180 Math.PI)))
-
-;; -----------------------------------------------------------------------------
-(define-syntax while
-  (syntax-rules ()
-    ((_ predicate body ...)
-     (do ()
-       ((not predicate))
-       body ...)))
-  "(while cond . body)
-
-   Creates a loop, it executes cond and body until cond expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax ++
@@ -1140,7 +1193,7 @@
 (define (make-list n . rest)
   (if (or (not (integer? n)) (<= n 0))
       (throw (new Error "make-list: first argument need to be integer larger then 0"))
-      (let ((fill (if (null? rest) undefined (car rest))))
+      (let ((fill (if (null? rest) #void (car rest))))
         (array->list (--> (new Array n) (fill fill))))))
 
 ;; -----------------------------------------------------------------------------
@@ -1174,20 +1227,22 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (do-iterator spec cond . body)
-  "(do-iterator (var expr) (test) body ...)
+  "(do-iterator (var expr) (test result) body ...)
 
-   Iterates over iterators (e.g. creates with JavaScript generator function)
-   that works with normal and async iterators. You can loop over infinite iterators
-   and break the loop if you want, using expression like in do macro. Long synchronous iterators
-   will block the main thread (you can't print 1000 numbers from infinite iterators,
-   because it will freeze the browser), but if you use async iterators you can process
-   the values as they are generated."
+   Iterates over iterators (e.g. created with JavaScript generator function)
+   that works with normal and async iterators. You can loop over an infinite
+   iterators and break the loop if you want, using expression like in do macro.
+   Long synchronous iterators will block the main thread (you can't print
+   1000 numbers from infinite iterators, because it will freeze the browser),
+   but if you use async iterators you can process the values as they are
+   generated."
   (let ((gen (gensym "name"))
         (name (car spec))
         (async (gensym "async"))
         (sync (gensym "sync"))
         (iterator (gensym "iterator"))
         (test (if (null? cond) #f (car cond)))
+        (result (if (null? cond) #void (cadr cond)))
         (next (gensym "next"))
         (stop (gensym "stop"))
         (item (gensym "item")))
@@ -1209,7 +1264,21 @@
                          (begin
                            ,@body))
                       (set! ,item (,next))
-                      (set! ,name (. ,item "value")))))))))
+                      (set! ,name (. ,item "value"))))
+                   ,result)))))
+
+;; -----------------------------------------------------------------------------
+(define (iterator->array object)
+  "(iterator->array object)
+
+   Return array from JavaScript iterator object."
+  (let ((result (vector))
+        (i 0))
+    (do-iterator
+     (item object)
+     (#f result)
+     (set-obj! result i item)
+     (set! i (+ i 1)))))
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Set (lambda () "#<Set>"))
@@ -1279,7 +1348,8 @@
 (define-macro (list* . args)
   "(list* arg1 ...)
 
-   Parallel asynchronous version of list. Like begin* except all values are returned in a list."
+   Parallel asynchronous version of list. Like begin* except all values
+   are returned in a list."
   (let ((result (gensym "result")))
      `(let ((,result (vector)))
         ,@(map (lambda (arg)
@@ -1313,7 +1383,7 @@
         (new lips.Environment (object
                                :interaction-environment interaction-environment
                                :**interaction-environment** **interaction-environment**)
-             null "root")
+             #null "root")
         ,name))
 
 ;; -----------------------------------------------------------------------------
@@ -1493,9 +1563,9 @@
 (define (complement fn)
   "(complement fn)
 
-   Higher order function that returns the Boolean complement of the given function. If the function fn
-   for a given arguments return true the result function will return false, if it would
-   return false, the result function will return true."
+   Higher order function that returns the Boolean complement of the given function.
+   If the function fn for a given arguments return true the result function
+   will return false, if it would return false, the result function will return true."
   (typecheck "complement" fn "function")
   (lambda args
     (not (apply fn args))))
@@ -1504,7 +1574,8 @@
 (define (always constant)
   "(always constant)
 
-   Higher-order function that returns a new thunk that always returns the given constant when called."
+   Higher-order function that returns a new thunk that always returns
+   the given constant when called."
   (lambda ()
     constant))
 
@@ -1518,7 +1589,7 @@
   (typecheck "once" fn "function")
   (let ((result))
     (lambda args
-      (if (string=? (type result) "undefined")
+      (if (string=? (type result) "void")
           (set! result (apply fn args)))
       result)))
 
@@ -1526,7 +1597,8 @@
 (define (flip fn)
   "(flip fn)
 
-   Higher-order function that returns a new function where the first two arguments are swapped.
+   Higher-order function that returns a new function where the first two arguments
+   are swapped.
 
    Example:
 
@@ -1553,6 +1625,30 @@
 ;; -----------------------------------------------------------------------------
 (define string-join join)
 (define string-split split)
+
+;; -----------------------------------------------------------------------------
+(define (%nth-pair msg l k)
+  "(%nth-pair msg list n)
+
+   Returns nth pair of a list with given message on error."
+  (typecheck msg l '("pair" "nil"))
+  (typecheck-number msg k '("integer" "bigint"))
+  (if (< k 0)
+      (throw (new Error (string-append msg ": index out of range")))
+      (let ((l l) (k k))
+        (while (> k 0)
+          (if (or (null? (cdr l)) (null? l))
+              (throw (new Error (string-append msg ": not enough elements in the list"))))
+          (set! l (cdr l))
+          (set! k (- k 1)))
+        l)))
+
+;; -----------------------------------------------------------------------------
+(define (nth-pair l k)
+  "(nth-pair list n)
+
+   Returns nth pair of a list."
+  (%nth-pair "nth-pair" l k))
 
 ;; -----------------------------------------------------------------------------
 (define (symbol-append . rest)

@@ -65,3 +65,21 @@
                          (stak-aux))))
                       (stak 18 12 6)))
          7)))
+
+(test "dynamic: close?"
+      (lambda (t)
+        (t.is (exec (begin
+
+                       (define (small? delta)
+                         (close? delta 0))
+
+                       (define delta 10e-10)
+
+                       (define (dist x y)
+                         (sqrt (+ (expt x 2) (expt y 2))))
+
+                       (define (close? x y)
+                         (<= (dist x y) delta))
+
+                       (small? 1000000)))
+               #t)))

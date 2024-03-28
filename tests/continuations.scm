@@ -1,13 +1,21 @@
-(test.failing "continuations: base"
+(test.failing "continuations: don't call after call continuation"
       (lambda (t)
-        (define x 0)
+        (let ((x #f))
+          (let ((val (call/cc (lambda (cont)
+                                (cont 5)
+                                (set! x #t)))))
+            (t.is val 5)
+            (t.is x #f)))))
 
-        (t.is (+ 2 (call/cc (lambda (cc)
-                              (set! x cc)
-                              3)))
-              5)
+(test.failing "continuations: calling continuation"
+      (lambda (t)
+        (t.plan 1)
+        (let ((x #f))
+          (let ((value (call/cc identity)))
+            (if (procedure? value)
+                (value #t)
+                (t.is value #t))))))
 
-        (t.is (x 4) 6)))
 
 (test.failing "continuations: make-range"
               (lambda (t)
@@ -73,3 +81,36 @@
                                      (k (string-append "Hello <" (number->string n) ">"))))))))
 
           (t.is result '("Hello <0>")))))
+
+(test.failing "continuations: coroutine generator"
+      (lambda (t)
+        (define (make-coroutine-generator proc)
+          (define return #f)
+          (define resume #f)
+          (define yield (lambda (v)
+                          (call/cc (lambda (r)
+                                     (set! resume r)
+                                     (return v)))))
+          (lambda ()
+            (call/cc (lambda (cc)
+                       (set! return cc)
+                       (if resume
+                           (resume (if #f #f))  ; void? or yield again?
+                           (begin (proc yield)
+                                  (set! resume (lambda (v)
+                                                 (return (eof-object))))
+                                  (return (eof-object))))))))
+
+
+        (define counter (make-coroutine-generator
+                         (lambda (yield)
+                           (do ((i 0 (+ i 1)))
+                             ((<= 3 i))
+                             (yield i)))))
+
+        (t.is (let iter ((i (counter))
+                          (result '()))
+                 (if (eof-object? i)
+                     (reverse result)
+                     (iter (counter) (cons i result))))
+              '(0 1 2))))

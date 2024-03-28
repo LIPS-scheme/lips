@@ -13,3 +13,5 @@ www
 */_*
 .nyc_output
 dist/version.js
+dist/banner.js
+dist/base.js

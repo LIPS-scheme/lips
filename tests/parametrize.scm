@@ -1,4 +1,4 @@
-;; parametrize tests taken on https://docs.racket-lang.org/guide/parameterize.html
+;; parametrize tests based on https://docs.racket-lang.org/guide/parameterize.html
 (test "parameterize: lexical"
       (lambda (t)
         (define location (make-parameter "here"))
@@ -44,6 +44,16 @@
                                      (location))))
                       '("on a train" "in a boat"))))
 
+
+(test "parametrize: force/delay"
+      (lambda (t)
+        ;; example taked from SRFI-155
+        (t.is (let ()
+                (define x (make-parameter 1))
+                (define p (delay (x)))
+                (define (g p) (parameterize ((x 2)) (force p)))
+                (+ (force p) (g p)))
+              2)))
 
 ;; TODO
 ;; throw error when parameterize got no pair

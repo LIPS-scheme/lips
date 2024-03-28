@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <meta name="Description" content=""/>
+    <link rel="shortcut icon" href=""/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--
+    <link href="css/style.css" rel="stylesheet"/>
+    -->
+    <style>
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/browserfs@1.x.x/dist/browserfs.min.js"></script>
+    <script src="./dist/lips.js"></script>
+<script type="text/x-scheme" bootstrap="./dist/std.min.scm">
+(let ((fname "data.scm"))
+  (if (not (file-exists? fname))
+      (call-with-output-file fname
+        (lambda (port)
+           (write '(+ 1 2 3 4) port))))
+
+  (call-with-input-file "data.scm"
+    (lambda (port)
+       (print (read port)))))
+
+(set-special! "#:" 'frob lips.specials.LITERAL)
+
+(define (frob filename)
+  (call-with-input-file filename
+    (lambda (port)
+      (read port))))
+
+(print '(define x #:"data.scm"))
+
+</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+</body>
+</html>

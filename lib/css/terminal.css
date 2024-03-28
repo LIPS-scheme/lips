@@ -2,6 +2,9 @@
     --background: #000;
     --color: #ccc;
 }
+.terminal .token::before, .terminal .token::after {
+    display: none;
+}
 .terminal .token.__doc__::before {
     color: var(--base-background, #000);
 }
@@ -20,8 +23,8 @@
     top: clac(var(--top) * 1px);
     left: calc(var(--left, 0) * 1px);
     z-index: 999999;
-    background: var(--color, #ccc);
-    color: var(--background, #000);
+    background: var(--background, #000);
+    color: var(--color, #ccc);
     white-space: pre;
     padding: 5px;
     pointer-events:none;
@@ -47,6 +50,10 @@
     left: 0;
     right: 0;
     height: 150px;
+}
+/* reverse the colors on Wikipedia with Dark Mode */
+html.client-dark-mode .shell-container {
+    filter: invert(1) hue-rotate(180deg);
 }
 .shell-wrapper nav {
     cursor: row-resize; color:#ccc;

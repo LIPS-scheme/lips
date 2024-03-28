@@ -50,29 +50,73 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let-values
-  (syntax-rules ()
-    ((_ ()) nil)
-    ((_ () body ...) (begin body ...))
-    ((_ (((x ...) values) ...) body ...)
-     (apply (lambda (x ... ...)
-              body ...)
-            (vector->list (apply vector-append (map (lambda (arg) ((. arg "valueOf")))
-                                                     (list values ...)))))))
-  "(let-values binding body ...)
+  (syntax-rules (bind mktmp)
+    ((let-values (binding ...) body0 body1 ...)
+     (let-values bind
+       (binding ...) () (begin body0 body1 ...)))
+    ((let-values bind () tmps body)
+     (let tmps body))
+    ((let-values bind ((b0 e0) binding ...) tmps body)
+     (let-values mktmp b0 e0 () (binding ...) tmps body))
+    ((let-values mktmp () e0 args bindings tmps body)
+     (call-with-values
+         (lambda () e0)
+       (lambda args
+         (let-values bind
+           bindings tmps body))))
+    ((let-values mktmp (a . b) e0 (arg ...) bindings (tmp ...) body)
+     (let-values mktmp b e0 (arg ... x) bindings (tmp ... (a x)) body))
+    ((let-values mktmp a e0 (arg ...) bindings (tmp ...) body)
+     (call-with-values
+         (lambda () e0)
+       (lambda (arg ... . x)
+         (let-values bind bindings (tmp ... (a x)) body)))))
+  "(let-values (binding ...) body ...)
 
    The macro work similar to let but variable is list of values and value
    need to evaluate to result of calling values.")
 
 ;; -----------------------------------------------------------------------------
-(define (vector-append . args)
-  "(vector-append v1 v2 ...)
+(define (vector-copy vector . rest)
+  "(vector-copy vector)
+   (vector-copy vector start)
+   (vector-copy vector start end)
 
-   Returns new vector by combining it's arguments that should be vectors."
-  (if (null? args)
-      (vector)
-      (begin
-        (typecheck "vector-append" (car args) "array")
-        (--> (car args) (concat (apply vector-append (cdr args)))))))
+   Returns a new vecotor that is a copy of given vector. If start
+   is not provided it starts at 0, if end it's not provided it copy
+   til the end of the given vector."
+  (typecheck "vector-copy" vector "array")
+  (let ((start (if (null? rest) 0 (car rest)))
+        (end (if (or (null? rest) (null? (cdr rest))) vector.length (cadr rest))))
+    (typecheck-number "vector-copy" start '("integer" "bigint"))
+    (typecheck-number "vector-copy" end '("integer" "bigint"))
+    (vector.slice start end)))
+
+;; -----------------------------------------------------------------------------
+(define (vector-copy! to at from . rest)
+  "(vector-copy to at from)
+   (vector-copy to at from start)
+   (vector-copy to at from start end)
+
+   Copies the elements of vector from between start and end into
+   vector to starting at `at`. If start is missing it start at 0 and if end
+   is missing it copy til the end of the vector from. It throws an error
+   if vector from don't fit into the destination `to`."
+  (typecheck "vector-copy!" to "array")
+  (typecheck "vector-copy!" from "array")
+  (typecheck-number "vector-copy!" at '("integer" "bigint"))
+  (let* ((start (if (null? rest) 0 (car rest)))
+         (end (if (or (null? rest)
+                      (null? (cdr rest)))
+                  from.length
+                  (cadr rest))))
+    (typecheck-number "vector-copy!" start '("integer" "bigint"))
+    (typecheck-number "vector-copy!" end '("integer" "bigint"))
+    (let ((len (- end start)))
+      (if (< (- to.length at) len)
+          (error "vector-copy!: Invalid index at"))
+      (let ((source (from.slice start end)))
+        (apply to.splice at len (vector->list source))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%range-function spec . body)
@@ -155,17 +199,20 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values
-  (syntax-rules ()
-    ((_ ()) nil)
+  (syntax-rules (multi single)
+    ((_ ()) '())
     ((_ () body ...) (begin body ...))
-    ((_ ((bind values) rest ...) . body)
+    ((_ ((bind obj) rest ...) . body)
      (apply (lambda bind
               (let*-values (rest ...) . body))
-            (vector->list ((. values "valueOf"))))))
+            (if (instanceof lips.Values obj)
+                (vector->list (obj.valueOf))
+                (list obj)))))
   "(let*-values binding body ...)
 
    The macro work similar to let* but variable is list of values and value
    need to evaluate to result of calling values.")
+
 ;; -----------------------------------------------------------------------------
 ;; R7RS division operators (Gauche Scheme) BSD license
 ;; Copyright (c) 2000-2020  Shiro Kawai  <shiro@acm.org>
@@ -189,6 +236,31 @@
 (define (truncate-quotient x y)  (quotient x y))
 (define (truncate-remainder x y) (remainder x y))
 
+(define (log z . rest)
+  "(log z)
+   (log z1 z2)
+
+   Function that calculates natural logarithm (base e) of z. Where the argument
+   can be any number (including complex negative and rational). If the value is 0
+   it returns NaN. It two arguments are provided it will calculate logarithm
+   of z1 with given base z2."
+  (if (not (null? rest))
+      (let ((base (car rest)))
+        (/ (log z) (log base)))
+      (cond ((real? z)
+             (cond ((zero? z) NaN)
+                   ((> z 0) (Math.log z))
+                   (else
+                    (+ (Math.log (abs z))
+                       (* Math.PI +i)))))
+            ((complex? z)
+             (let ((arg (Math.atan2 (imag-part z)
+                                    (real-part z))))
+               (+ (Math.log (z.modulus))
+                  (* +i arg))))
+            ((rational? z)
+             (log (exact->inexact z))))))
+
 ;; -----------------------------------------------------------------------------
 (define-syntax case-lambda
   (syntax-rules ()
@@ -197,22 +269,22 @@
        (let ((len (length args)))
          (letrec-syntax
              ((cl (syntax-rules ::: ()
-                                ((cl)
-                                 (error "no matching clause"))
-                                ((cl ((p :::) . body) . rest)
-                                 (if (= len (length '(p :::)))
-                                     (apply (lambda (p :::)
-                                              . body)
-                                            args)
-                                     (cl . rest)))
-                                ((cl ((p ::: . tail) . body)
-                                     . rest)
-                                 (if (>= len (length '(p :::)))
-                                     (apply
-                                      (lambda (p ::: . tail)
-                                        . body)
-                                      args)
-                                     (cl . rest))))))
+                    ((cl)
+                     (error "no matching clause"))
+                    ((cl ((p :::) . body) . rest)
+                     (if (= len (length '(p :::)))
+                         (apply (lambda (p :::)
+                                  . body)
+                                args)
+                         (cl . rest)))
+                    ((cl ((p ::: . tail) . body)
+                         . rest)
+                     (if (>= len (length '(p :::)))
+                         (apply
+                          (lambda (p ::: . tail)
+                            . body)
+                          args)
+                         (cl . rest))))))
            (cl (params body0 ...) ...))))))
   "(case-lambda expr ...)
 
@@ -231,7 +303,7 @@
        (sum 1 2)
        (sum 1 2 3)
 
-   More arguments will give error.")
+   More arguments will give an error.")
 
 ;; -----------------------------------------------------------------------------
 (define (boolean=? . args)
@@ -307,21 +379,66 @@
                    (value (apply fn args)))
               (--> result (push value)))))))
 
+
+;; -----------------------------------------------------------------------------
+(define (vector-for-each fn . rest)
+  "(vector-for-each fn vector1 vector2 ...)
+
+   Invokes every Returns new vector from applying function fn to each element
+   of the vectors, similar to map for lists."
+  (typecheck "vector-for-each" fn "function" 1)
+  (if (or (= (length rest) 0) (not (every vector? rest)))
+      (error "vector-for-each: function require at least 1 vector")
+      (let ((len (apply min (map vector-length rest)))
+            (result (vector)))
+        (do ((i 0 (+ i 1)))
+            ((= i len) #void)
+            (let* ((args (map (lambda (v) (vector-ref v i)) rest)))
+              (apply fn args))))))
+
 ;; -----------------------------------------------------------------------------
 (define (string-map fn . rest)
   "(string-map fn string1 stringr2 ...)
 
    Returns new string from applying function fn to each element
    of the strings, similar to map for lists."
+  (typecheck "string-map" fn "function" 1)
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-map: function require at least 1 string")
       (vector->string (apply vector-map fn (map string->vector rest)))))
 
 ;; -----------------------------------------------------------------------------
+(define (string-for-each fn . rest)
+  "(string-for-each fn string1 stringr2 ...)
+
+   Applies a function fn to each element of the strings, similar string-map.
+   But the return value is #void."
+  (typecheck "string-for-each" fn "function" 1)
+  (if (or (= (length rest) 0) (not (every string? rest)))
+      (error "string-for-each: function require at least 1 string")
+      (apply vector-for-each fn (map string->vector rest))))
+
+;; -----------------------------------------------------------------------------
+(define (string-downcase string)
+  "(string-downcase string)
+
+   Function convert a string passed as argument to lower case."
+  (typecheck "string-downcase" string "string")
+  (string.lower))
+
+;; -----------------------------------------------------------------------------
+(define (string-upcase string)
+  "(string-downcase string)
+
+   Function convert a string passed as argument to upper case."
+  (typecheck "string-downcase" string "string")
+  (string.upper))
+
+;; -----------------------------------------------------------------------------
 (define (dynamic-wind before thunk after)
   "(dynamic-wind before thunk after)
 
-   Accepts 3 procedures/lambdas and executes before, then thunk, and 
+   Accepts 3 procedures/lambdas and executes before, then thunk, and
    always after even if an error occurs in thunk."
   (before)
   (let ((result (try (thunk)
@@ -374,10 +491,10 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define warn
-             (let ((v (cdr var0)))
-               (set! var0 (car var0))
-               v))))
+       (define warn
+         (let ((v (cdr var0)))
+           (set! var0 (car var0))
+           v))))
     ((define-values var expr)
      (define var
        (call-with-values (lambda () expr)
@@ -385,7 +502,7 @@
   "(define-values (a b ...) expr)
 
    Evaluates expression expr and if it evaluates to result of values
-   then it will defined each value as variable like with define.")
+   then it will define each value as a variable like with define.")
 
 ;; -----------------------------------------------------------------------------
 (define-macro (include . files)
@@ -420,8 +537,6 @@
               ,@(vector->list result))))))
 
 ;; -----------------------------------------------------------------------------
-;; create scope for JavaScript value for macro
-;; -----------------------------------------------------------------------------
 (define-syntax syntax-error
   (syntax-rules ()
     ((_ "step" arg ...)
@@ -434,8 +549,10 @@
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
   (syntax-rules (and or not else r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10
-                     srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode
-                     ieee-float ratios exact-complex full-numeric-tower)
+                     srfi-22 srfi-23 srfi-28 srfi-46 srfi-69 srfi-98 srfi-111
+                     srfi-139 srfi-147 srfi-156 srfi-176 srfi-193 srfi-195 srfi-210
+                     srfi-236 lips r7rs complex full-unicode ieee-float ratios
+                     exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
     ((cond-expand (else body ...))
      (begin body ...))
@@ -463,7 +580,7 @@
        (req
          (cond-expand more-clauses ...))
        (else body ...)))
-    ((cond-expand (r7rs  body ...) more-clauses ...)
+    ((cond-expand (r7rs body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-0  body ...) more-clauses ...)
        (begin body ...))
@@ -479,11 +596,33 @@
        (begin body ...))
     ((cond-expand (srfi-23  body ...) more-clauses ...)
        (begin body ...))
+    ((cond-expand (srfi-28  body ...) more-clauses ...)
+       (begin body ...))
     ((cond-expand (srfi-46  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-69  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-98  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-111  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-139  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-147  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-156  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-176  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (lips  body ...) more-clauses ...)
+    ((cond-expand (srfi-193  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-195  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-210  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-236  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (lips body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (complex body ...) more-clauses ...)
        (begin body ...))
@@ -496,15 +635,25 @@
     ((cond-expand (exact-complex body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (full-numeric-tower body ...) more-clauses ...)
-       (begin body ...))))
+       (begin body ...))
+    ((cond-expand (feature-id body ...) more-clauses ...)
+     (cond-expand more-clauses ...)))
+  "(cond-expand (cond body ...)
+
+   Conditionally execute code based on a features by Scheme implementation.")
 
 ;; -----------------------------------------------------------------------------
 (define (features)
-  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
-         complex full-unicode ieee-float ratios exact-complex full-numeric-tower))
+  "(features)
+
+   Function returns implemented features as a list."
+  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-28 srfi-46 srfi-69
+         srfi-98 srfi-111 srfi-139 srfi-147 srfi-156 srfi-176 srfi-193 srfi-195
+         srfi-210 srfi-236 lips complex full-unicode ieee-float ratios exact-complex
+         full-numeric-tower))
 
 ;; -----------------------------------------------------------------------------
-;; the numerals can be generated using `make unicode` to get latest version
+;; the numerals can be generated using scripts/numerals.scm to get latest version
 ;; of the file use `make zero`
 ;; -----------------------------------------------------------------------------
 (define *zero-number-chars* #(48 1632 1776 1984 2406 2534 2662 2790 2918 3046 3174 3302
@@ -514,6 +663,22 @@
                               70864 71248 71360 71472 71904 72016 72784 73040 73120 92768
                               93008 120782 120792 120802 120812 120822 123200 123632 125264
                               130032))
+
+;; -----------------------------------------------------------------------------
+(define (char-foldcase char)
+  "(char-foldcase char)
+
+   Returns lowercase character using the Unicode simple case-folding algorithm."
+  (typecheck "char-foldcase" char "character")
+  (new LCharacter (%foldcase-string char.__char__)))
+
+;; -----------------------------------------------------------------------------
+(define (string-foldcase string)
+  "(string-foldcase string)
+
+   Returns lowercase string using the Unicode simple case-folding algorithm."
+  (typecheck "string-foldcase" string "string")
+  (%foldcase-string string))
 
 ;; -----------------------------------------------------------------------------
 (define (digit-value chr)
@@ -535,6 +700,235 @@
                  (set! result diff)
                  (set! found #t))))))
     #f))
+
+;; -----------------------------------------------------------------------------
+(define (%char-vector-cmp name vals)
+  "(%char-vector-cmp name vector)
+
+   Function iterate over a vector and compares each pair of two characters
+   and return 0 if they are equal, -1 second is smaller and 1 if is larger.
+   The function compare the codepoints of the character."
+  (let* ((len (vector-length vals))
+         (max (- len 1))
+         (result (vector))
+         (i 0))
+    (while (< i max)
+      (let* ((chr1 (vector-ref vals i))
+             (j (+ i 1))
+             (chr2 (vector-ref vals j)))
+        (typecheck name chr1 "character" i)
+        (typecheck name chr2 "character" j)
+        (let ((a (char->integer chr1))
+              (b (char->integer chr2)))
+          (result.push (cond ((= a b) 0)
+                             ((< a b) -1)
+                             (else 1)))))
+      (set! i (+ i 1)))
+    result))
+
+;; -----------------------------------------------------------------------------
+(define (char=? . chars)
+  "(char=? chr1 chr2 ...)
+
+   Checks if all characters are equal."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (char<? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically increasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char>? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically decreasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char<=? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-decreasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char>=? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-increasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%char-ci-vector-cmp name chars)
+  "(%char-cmp name chars)
+
+   Function that compares each pair of a vector of characters and return a vector
+   of numbers, where 0 if they are equal, -1 second is smaller and 1 if is larger.
+   The function compare the codepoints of the character."
+  (%char-vector-cmp name (--> chars (map char-downcase))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci=? . chars)
+  "(char-ci=? chr1 chr2 ...)
+
+   Checks if all characters are equal, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci=?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<? . chars)
+  "(char-ci<? chr1 chr2)
+
+   Returns true if characters are monotonically increasing case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically decreasing case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<=? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-decreasing, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>=? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-increasing, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%string-vector-cmp name strings)
+  "(%string-cmp name chars)
+
+   Function that compares each pair of strings from vector chars and a vector
+   of numbers. 0 if they are equal, -1 if it is smaller and 1 if is larger.
+   The function compares the codepoints of the character."
+  (let* ((len (vector-length strings))
+         (max (- len 1))
+         (result (vector))
+         (i 0))
+    (while (< i max)
+      (let* ((str1 (vector-ref strings i))
+             (j (+ i 1))
+             (str2 (vector-ref strings j)))
+        (typecheck name str1 "string" i)
+        (typecheck name str2 "string" j)
+        (result.push (--> str1 (cmp str2))))
+      (set! i (+ i 1)))
+    result))
+
+;; -----------------------------------------------------------------------------
+(define (string=? . strings)
+  "(string=? string1 string2 ...)
+
+   Checks if all strings are equal."
+  (--> (%string-vector-cmp "string=?" (list->vector strings))
+       (every (lambda (a)
+                (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (string<? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically increasing."
+  (--> (%string-vector-cmp "string<?" (list->vector strings))
+       (every (lambda (a)
+                (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string>? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically decreasing."
+  (--> (%string-vector-cmp "string>?" (list->vector strings))
+       (every (lambda (a)
+                (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string<=? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically non-decreasing."
+  (--> (%string-vector-cmp "string<=?" (list->vector strings))
+       (every (lambda (a)
+                (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string>=? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically non-increasing."
+  (--> (%string-vector-cmp "string>=?" (list->vector strings))
+       (every (lambda (a)
+                (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%string-ci-vector-cmp name strings)
+  "(%string-ci-cmp name strings)
+
+   Function that compares each pair from vector of strings ignoring case and
+   returns array of numbers 0 if they are equal, -1 if it is smaller and 1 if is larger.
+   The function compares the codepoints of the character."
+  (%string-vector-cmp name (--> strings (map string-downcase))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci=? . strings)
+  "(string-ci=? string1 string2 ...)
+
+   Checks if all strings are equal, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci=?" (list->vector strings))
+       (every (lambda (a)
+                (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<? . strings)
+  "(string-ci<? string1 string2 ...)
+
+   Returns true if strings are monotonically increasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<?" (list->vector strings))
+       (every (lambda (a)
+                (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>? . strings)
+  "(string-ci>? string1 string2 ...)
+
+   Returns true if strings are monotonically decreasing, ignoring the case"
+  (--> (%string-ci-vector-cmp "string-ci>?" (list->vector strings))
+       (every (lambda (a)
+                (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<=? . strings)
+  "(string-ci<=? string1 string2 ...)
+
+   Returns true if strings are monotonically non-decreasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<=?" (list->vector strings))
+       (every (lambda (a)
+                (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>=? . strings)
+  "(string-ci>=? string1 string2 ...)
+
+   Returns true if strings are monotonically non-increasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<=?" (list->vector strings))
+       (every (lambda (a)
+                (> a -1)))))
 
 ;; -----------------------------------------------------------------------------
 (define make-bytevector make-u8vector)
@@ -978,6 +1372,13 @@
       (obj.clone false)))
 
 ;; -----------------------------------------------------------------------------
+(define (list-set! l k obj)
+  "(list-set! list n)
+
+   Returns n-th element of a list."
+  (set-car! (%nth-pair "list-set!" l k) obj))
+
+;; -----------------------------------------------------------------------------
 (define-macro (define-record-type name constructor pred . fields)
   "(define-record-type name constructor pred . fields)
 
@@ -1029,7 +1430,7 @@
                 (let ((prop-name (car field))
                       (get (cadr field))
                       (set (if (null? (cddr field))
-                               nil
+                               '()
                                (caddr field))))
                   `(begin
                      (define (,get ,obj-name)
@@ -1315,19 +1716,20 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Returns all process environment variables as an alist. This function throws exception
-   when called in browser."
+   Returns all process environment variables as an alist. This function returns
+   an empty list when called in the browser."
   (if (eq? self window)
-      (throw "get-environment-variables: Node.js only function")
+      '()
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Returns given environment variable. This function throws exception
-   when called in browser."
-  (. process.env name))
+   Returns given environment variable. This function returns #void
+   when called in the browser."
+  (if (not (eq? self window))
+      (. process.env name)))
 
 ;; -----------------------------------------------------------------------------
 (define (current-second)

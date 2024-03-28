@@ -12,6 +12,10 @@
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
+;; -----------------------------------------------------------------------------
+(define true #t)
+(define false #f)
+(define NaN +nan.0)
 
 ;; -----------------------------------------------------------------------------
 (define (%doc string fn)
@@ -99,9 +103,13 @@
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
                 (let* ((value (gensym "value"))
-                       (name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                   ((pair? code) (symbol->string (car code)))
-                                   (true code)))
+                       (name (if (quoted-symbol? code)
+                                 (symbol->string (cadr code))
+                                 (if (symbol? code)
+                                     (symbol->string code)
+                                     (if (pair? code)
+                                         (symbol->string (car code))
+                                         code))))
                        (accessor (if (string? name)
                                      `(. ,obj ,@(split "." name))
                                      `(. ,obj ,name)))
@@ -136,8 +144,8 @@
 (define-macro (globalize expr . rest)
   "(globalize expr)
 
-    Macro will get the value of the expression and add each method as function to global
-    scope."
+    Macro will get the value of the expression and add each method as function
+    to global scope."
   (let* ((env (current-environment))
          (obj (eval expr env))
          (name (gensym "name"))
@@ -215,9 +223,11 @@
    Function that converts a LIPS symbol to a string."
   (typecheck "symbol->string" s "symbol")
   (let ((name s.__name__))
-    (if (string? name)
-        name
-        (name.toString))))
+    (let ((str (if (string? name)
+                   name
+                   (name.toString))))
+      (str.freeze)
+      str)))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
@@ -225,7 +235,8 @@
 
    Function that converts a string to a LIPS symbol."
   (typecheck "string->symbol" string "string")
-  (%as.data (new lips.LSymbol string)))
+  (let ((symbol (new lips.LSymbol string)))
+    (%as.data symbol)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
@@ -234,7 +245,7 @@
    Function that converts alist pairs to a JavaScript object."
   (if (pair? alist)
       (alist.to_object)
-      (alist->object (new lips.Pair undefined nil))))
+      (alist->object (new lips.Pair #void '()))))
 
 ;; -----------------------------------------------------------------------------
 (define (object->alist object)
@@ -265,8 +276,9 @@
 (define (pair-map fn seq-list)
   "(pair-map fn list)
 
-   Function that calls fn argument for pairs in a list and returns a combined list with
-   values returned from function fn. It works likes map but take two items from the list each time."
+   Function that calls fn argument for pairs in a list and returns a combined list
+   with values returned from function fn. It works likes map but take two items
+   from the list each time."
   (let iter ((seq-list seq-list) (result '()))
     (if (null? seq-list)
         result
@@ -280,9 +292,9 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander readonly expr . rest)
-  "(object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
-   (object-expander readonly '(:foo :bar))
+(define (%object-expander readonly expr . rest)
+  "(%object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
+   (%object-expander readonly '(:foo :bar))
 
    Recursive function helper for defining LIPS code to create objects
    using key like syntax. If no values are used it will create a JavaScript
@@ -294,12 +306,12 @@
         `(alist->object ())
         `(let ((,name ,(Object.fromEntries (new Array)))
                (,r-only ,(Object.fromEntries (new Array (new Array "writable" false)))))
-           ,@(let loop ((lst expr) (result nil))
+           ,@(let loop ((lst expr) (result '()))
                (if (null? lst)
                    (reverse result)
                    (let* ((first (car lst))
                           (no-second (null? (cdr lst)))
-                          (second (if no-second nil (cadr lst))))
+                          (second (if no-second '() (cadr lst))))
                      (if (not (key? first))
                          (let ((msg (string-append (type first)
                                                    " "
@@ -308,13 +320,13 @@
                            (throw msg))
                          (let ((prop (key->string first)))
                            (if (or (key? second) no-second)
-                               (let ((code `(set-obj! ,name ,prop undefined)))
+                               (let ((code `(set-obj! ,name ,prop #void)))
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if readonly
                                                (if (and (pair? second) (key? (car second)))
                                                    `(set-obj! ,name
                                                               ,prop
-                                                              ,(object-expander readonly second quot)
+                                                              ,(%object-expander readonly second quot)
                                                               ,r-only)
                                                    (if quot
                                                        `(set-obj! ,name ,prop ',second ,r-only)
@@ -322,7 +334,7 @@
                                                (if (and (pair? second) (key? (car second)))
                                                    `(set-obj! ,name
                                                               ,prop
-                                                              ,(object-expander readonly second))
+                                                              ,(%object-expander readonly second))
                                                    (if quot
                                                        `(set-obj! ,name ,prop ',second)
                                                        `(set-obj! ,name ,prop ,second))))))
@@ -337,7 +349,7 @@
 
    Creates a JavaScript object using key like syntax."
   (try
-    (object-expander false expr)
+    (%object-expander false expr)
     (catch (e)
       (try
        (error e.message)
@@ -351,7 +363,7 @@
    Creates a JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used by the & object literal."
   (try
-    (object-expander true expr true)
+    (%object-expander true expr true)
     (catch (e)
       (try
         (error e.message)
@@ -420,7 +432,7 @@
 
    Returns all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
-      nil
+      '()
       (let ((proto (if (null? rest) false (car rest)))
             (names (Object.getOwnPropertyNames obj)))
         (if (not proto)
@@ -453,9 +465,9 @@
 (define (value obj)
   "(value obj)
 
-   Function that unwraps LNumbers and converts nil to undefined."
-  (if (eq? obj nil)
-      undefined
+   Function that unwraps LNumbers and converts '() to #void."
+  (if (eq? obj '())
+      #void
       (if (number? obj)
           ((. obj "valueOf"))
           obj)))
@@ -464,7 +476,8 @@
 (define-macro (define-formatter-rule . patterns)
   "(rule-pattern pattern)
 
-   Anaphoric macro for defining patterns for the formatter. With Ahead, Pattern and * defined values."
+   Anaphoric macro for defining patterns for the formatter.
+   With Ahead, Pattern and * defined values."
   (let ((rules (gensym "rules")))
     `(let ((,rules lips.Formatter.rules)
            (Ahead (lambda (pattern)
@@ -473,7 +486,7 @@
            (* (Symbol.for "*"))
            (Pattern (lambda (pattern flag)
                       (new lips.Formatter.Pattern (list->array pattern)
-                           (if (null? flag) undefined flag)))))
+                           (if (null? flag) #void flag)))))
        ,@(map (lambda (pattern)
                 `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
               patterns))))
@@ -487,7 +500,7 @@
 ;;       unit tests run from 1min to 6min.
 ;; TODO: test this when syntax macros are compiled before evaluation
 ;; -----------------------------------------------------------------------------
-(define-syntax cond
+#;(define-syntax cond
   (syntax-rules (=> else)
 
     ((cond (else else1 else2 ...))
@@ -526,7 +539,7 @@
    Macro for condition checks. For usage instead of nested ifs.")
 
 ;; -----------------------------------------------------------------------------
-(define-syntax cond/maybe-more
+#;(define-syntax cond/maybe-more
   (syntax-rules ()
     ((cond/maybe-more test consequent)
      (if test
@@ -567,28 +580,32 @@
                     `(begin
                        ,@expression))
                ,(if (and (pair? rest)
-                         (or (eq? (caar rest) true)
-                             (eq? (caar rest) 'else)))
+                         (let ((x (caar rest)))
+                           (or (eq? x true)
+                               (and (symbol? x)
+                                    (or (eq? x 'else)
+                                        (eq? (--> (new lips.LString (x.literal)) (cmp "else")) 0))))))
                     `(begin
                        ,@(cdar rest))
                     (if (not (null? rest))
                         `(cond ,@rest))))))
-      nil))
+      '()))
 
 ;; -----------------------------------------------------------------------------
-(define (%r re . rest)
-  "(%r re)
+(define (regex re . rest)
+  "(regex re)
 
    Creates a new regular expression from string, to not break Emacs formatting."
-   (if (null? rest)
-     (new RegExp re)
-     (new RegExp re (car rest))))
+  (typecheck "regex" re "string")
+  (if (null? rest)
+      (new RegExp re)
+      (new RegExp re (car rest))))
 
 ;; -----------------------------------------------------------------------------
 ;; replaced by more general formatter in JS, this is left as example of usage
 ;; -----------------------------------------------------------------------------
 #;(define-formatter-rule ((list (list "("
-                                    (%r "(?:#:)?cond")
+                                    (regex "(?:#:)?cond")
                                     (Pattern (list "(" * ")") "+"))
                                1
                                (Ahead "[^)]"))))
@@ -647,6 +664,26 @@
     (--> port (flush))))
 
 ;; -----------------------------------------------------------------------------
+(define (read-all . rest)
+  "(read-all)
+   (read-all port)
+
+   Read all S-Expressions from port and return them as a list"
+  (let ((port (if (null? rest) (current-input-port) (car rest))))
+    (let loop ((result '()) (expr (read port)))
+      (if (eof-object? expr)
+          (reverse result)
+          (loop (cons expr result) (read port))))))
+
+;; -----------------------------------------------------------------------------
+(define (with-input-from-string string thunk)
+  "(with-input-from-string string thunk)
+
+   Reads string and execute the thunk with current input port set to
+   port created from opening the string."
+  (with-input-from-port (open-input-string string) thunk))
+
+;; -----------------------------------------------------------------------------
 (define (regex? x)
   "(regex? x)
 
@@ -657,11 +694,13 @@
 (define (set-repr! type fn)
   "(add-repr! type fn)
 
-   Function that adds the string representation to the type, which should be a constructor function.
+   Function that adds the string representation to the type, which should be
+   a constructor function.
 
-   Function fn should have args (obj q) and it should return a string. obj is the value that
-   need to be converted to a string. If the object is nested and you need to use `repr` recursively,
-   it should pass the second parameter q to repr, so string will be quoted when it's true.
+   Function fn should have args (obj q) and it should return a string. obj
+   is the value that need to be converted to a string. If the object is nested
+   and you need to use `repr` recursively, it should pass the second parameter q
+   to repr, so string will be quoted when it's true.
 
    e.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))"
   (typecheck "add-repr!" type "function")
@@ -697,8 +736,8 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function that check if the variable is defined in the given environment, or interaction-environment
-   if not specified."
+   Function that check if the variable is defined in the given environment,
+   or interaction-environment if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
            (--> env (get x))
@@ -724,7 +763,7 @@
    Sorts the list using the quick sort algorithm according to predicate."
   (if (or (null? e) (<= (length e) 1))
       e
-      (let loop ((left nil) (right nil)
+      (let loop ((left '()) (right '())
                  (pivot (car e)) (rest (cdr e)))
         (if (null? rest)
             (append (append (qsort left predicate) (list pivot)) (qsort right predicate))
@@ -736,8 +775,8 @@
 (define (sort list . rest)
   "(sort list [predicate])
 
-   Sorts the list using optional predicate function. If no comparison function is given
-   it will use <= and sort in increasing order."
+   Sorts the list using optional predicate function. If no comparison function
+   is given it will use <= and sort in increasing order."
   (let ((predicate (if (null? rest) <= (car rest))))
     (typecheck "sort" list "pair")
     (typecheck "sort" predicate "function")
@@ -817,17 +856,39 @@
 
    Returns a new function that limits the number of arguments to n."
   (lambda args
-    (apply fn (take n args))))
+    (apply fn (take args n))))
 
 ;; -----------------------------------------------------------------------------
-(define (take n lst)
-  "(take n list)
+(define (take lst n)
+  "(take list n)
 
    Returns n first values of the list."
-  (let iter ((result '()) (i n) (lst lst))
+  (let loop ((result '()) (i n) (lst lst))
     (if (or (null? lst) (<= i 0))
         (reverse result)
-        (iter (cons (car lst) result) (- i 1) (cdr lst)))))
+        (loop (cons (car lst) result) (- i 1) (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
+(define (drop lst n)
+  "(take list n)
+
+   Returns a list where first n elements are removed."
+  (let loop ((i n) (lst lst))
+    (if (or (null? lst) (<= i 0))
+        lst
+        (loop (- i 1) (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
+(define (zip . lists)
+  "(zip list1 list2 ...)
+
+   Return list where elements are taken from each list.
+   e.g.:
+   (zip '(1 2 3) '(2 3 4))
+   ;; ==> '((1 2) (2 3) (3 4))"
+  (if (or (null? lists) (some null? lists))
+      '()
+      (cons (map car lists) (apply zip (map cdr lists)))))
 
 ;; -----------------------------------------------------------------------------
 (define unary (%doc "(unary fn)
@@ -950,7 +1011,7 @@
                           (eq? (caadr expr) '@)))
          (attrs (if have-attrs
                     (cdadr expr)
-                    nil))
+                    '()))
          (rest (if have-attrs
                    (cddr expr)
                    (cdr expr))))
@@ -964,7 +1025,7 @@
                                                     (list 'unquote (cadr pair))))
                                             attrs)))
          ,@(if (null? rest)
-              nil
+              '()
               (let ((first (car rest)))
                 (if (pair? first)
                     (cond ((symbol=? 'sxml-unquote (car first))
@@ -1004,7 +1065,8 @@
                    (id \"foo\"))
                 (span \"hello\")
                 (span \"world\")))
-     ;; ==> <div data-foo=\"hello\" id=\"foo\"><span>hello</span><span>world</span></div>"
+     ;; ==> <div data-foo=\"hello\" id=\"foo\"><span>hello</span>
+     ;; ==> <span>world</span></div>"
      (%sxml ',pragma expr)))
 
 ;; -----------------------------------------------------------------------------
@@ -1022,16 +1084,18 @@
                           (:a (:onclick (lambda (e) (alert \"close\")))
                               \"close\"))))
 
-   Above expression can be passed to function that renders JSX (like render in React, Preact)
-   To get the string from the macro you can use vhtml library from npm."
+   Above expression can be passed to function that renders JSX (like render
+   in React, Preact) To get the string from the macro you can use vhtml
+   library from npm."
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
 (define (get-resource url)
   "(get-resource url)
 
-   Load JavaScript or CSS file in browser by adding script/link tag to head of the current document.
-   When called from Node it allow it allows to load JavaScript files only."
+   Load JavaScript or CSS file in browser by adding script/link tag to head
+   of the current document. When called from Node it allow it allows to load
+   JavaScript files only."
   (typecheck "get-resource" url "string")
   (if (not (bound? 'document))
       (if (eq? self global)
@@ -1078,17 +1142,6 @@
 
    Convert radians to degrees."
   (* x (/ 180 Math.PI)))
-
-;; -----------------------------------------------------------------------------
-(define-syntax while
-  (syntax-rules ()
-    ((_ predicate body ...)
-     (do ()
-       ((not predicate))
-       body ...)))
-  "(while cond . body)
-
-   Creates a loop, it executes cond and body until cond expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax ++
@@ -1140,7 +1193,7 @@
 (define (make-list n . rest)
   (if (or (not (integer? n)) (<= n 0))
       (throw (new Error "make-list: first argument need to be integer larger then 0"))
-      (let ((fill (if (null? rest) undefined (car rest))))
+      (let ((fill (if (null? rest) #void (car rest))))
         (array->list (--> (new Array n) (fill fill))))))
 
 ;; -----------------------------------------------------------------------------
@@ -1174,20 +1227,22 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (do-iterator spec cond . body)
-  "(do-iterator (var expr) (test) body ...)
+  "(do-iterator (var expr) (test result) body ...)
 
-   Iterates over iterators (e.g. creates with JavaScript generator function)
-   that works with normal and async iterators. You can loop over infinite iterators
-   and break the loop if you want, using expression like in do macro. Long synchronous iterators
-   will block the main thread (you can't print 1000 numbers from infinite iterators,
-   because it will freeze the browser), but if you use async iterators you can process
-   the values as they are generated."
+   Iterates over iterators (e.g. created with JavaScript generator function)
+   that works with normal and async iterators. You can loop over an infinite
+   iterators and break the loop if you want, using expression like in do macro.
+   Long synchronous iterators will block the main thread (you can't print
+   1000 numbers from infinite iterators, because it will freeze the browser),
+   but if you use async iterators you can process the values as they are
+   generated."
   (let ((gen (gensym "name"))
         (name (car spec))
         (async (gensym "async"))
         (sync (gensym "sync"))
         (iterator (gensym "iterator"))
         (test (if (null? cond) #f (car cond)))
+        (result (if (null? cond) #void (cadr cond)))
         (next (gensym "next"))
         (stop (gensym "stop"))
         (item (gensym "item")))
@@ -1209,7 +1264,21 @@
                          (begin
                            ,@body))
                       (set! ,item (,next))
-                      (set! ,name (. ,item "value")))))))))
+                      (set! ,name (. ,item "value"))))
+                   ,result)))))
+
+;; -----------------------------------------------------------------------------
+(define (iterator->array object)
+  "(iterator->array object)
+
+   Return array from JavaScript iterator object."
+  (let ((result (vector))
+        (i 0))
+    (do-iterator
+     (item object)
+     (#f result)
+     (set-obj! result i item)
+     (set! i (+ i 1)))))
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Set (lambda () "#<Set>"))
@@ -1279,7 +1348,8 @@
 (define-macro (list* . args)
   "(list* arg1 ...)
 
-   Parallel asynchronous version of list. Like begin* except all values are returned in a list."
+   Parallel asynchronous version of list. Like begin* except all values
+   are returned in a list."
   (let ((result (gensym "result")))
      `(let ((,result (vector)))
         ,@(map (lambda (arg)
@@ -1313,7 +1383,7 @@
         (new lips.Environment (object
                                :interaction-environment interaction-environment
                                :**interaction-environment** **interaction-environment**)
-             null "root")
+             #null "root")
         ,name))
 
 ;; -----------------------------------------------------------------------------
@@ -1493,9 +1563,9 @@
 (define (complement fn)
   "(complement fn)
 
-   Higher order function that returns the Boolean complement of the given function. If the function fn
-   for a given arguments return true the result function will return false, if it would
-   return false, the result function will return true."
+   Higher order function that returns the Boolean complement of the given function.
+   If the function fn for a given arguments return true the result function
+   will return false, if it would return false, the result function will return true."
   (typecheck "complement" fn "function")
   (lambda args
     (not (apply fn args))))
@@ -1504,7 +1574,8 @@
 (define (always constant)
   "(always constant)
 
-   Higher-order function that returns a new thunk that always returns the given constant when called."
+   Higher-order function that returns a new thunk that always returns
+   the given constant when called."
   (lambda ()
     constant))
 
@@ -1518,7 +1589,7 @@
   (typecheck "once" fn "function")
   (let ((result))
     (lambda args
-      (if (string=? (type result) "undefined")
+      (if (string=? (type result) "void")
           (set! result (apply fn args)))
       result)))
 
@@ -1526,7 +1597,8 @@
 (define (flip fn)
   "(flip fn)
 
-   Higher-order function that returns a new function where the first two arguments are swapped.
+   Higher-order function that returns a new function where the first two arguments
+   are swapped.
 
    Example:
 
@@ -1553,6 +1625,30 @@
 ;; -----------------------------------------------------------------------------
 (define string-join join)
 (define string-split split)
+
+;; -----------------------------------------------------------------------------
+(define (%nth-pair msg l k)
+  "(%nth-pair msg list n)
+
+   Returns nth pair of a list with given message on error."
+  (typecheck msg l '("pair" "nil"))
+  (typecheck-number msg k '("integer" "bigint"))
+  (if (< k 0)
+      (throw (new Error (string-append msg ": index out of range")))
+      (let ((l l) (k k))
+        (while (> k 0)
+          (if (or (null? (cdr l)) (null? l))
+              (throw (new Error (string-append msg ": not enough elements in the list"))))
+          (set! l (cdr l))
+          (set! k (- k 1)))
+        l)))
+
+;; -----------------------------------------------------------------------------
+(define (nth-pair l k)
+  "(nth-pair list n)
+
+   Returns nth pair of a list."
+  (%nth-pair "nth-pair" l k))
 
 ;; -----------------------------------------------------------------------------
 (define (symbol-append . rest)
@@ -1599,21 +1695,27 @@
 (define string-append concat)
 (define = ==)
 (define remainder %)
-(define -inf.0 Number.NEGATIVE_INFINITY)
-(define +inf.0 Number.POSITIVE_INFINITY)
 (define procedure? function?)
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
 (define call-with-current-continuation call/cc)
+
+;; -----------------------------------------------------------------------------
+(define (procedure? obj)
+  "(procedure? expression)
+
+   Predicate that tests if value is a callable function or continuation."
+  (or (function? obj) (continuation? obj)))
+
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
 
-   Creates special symbol macros for evaluator similar to built-in , or `.
-   It's like an alias for a real macro. Similar to CL reader macros but it receives already
-   parsed code like normal macros. Type can be SPLICE or LITERAL symbols (see set-special!).
-   ALL default symbol macros are literal."
+   Creates syntax extensions for evaluator similar to built-in , or `.
+   It's like an alias for a real macro. Similar to CL reader macros
+   but it receives already parsed code like normal macros. Type can be SPLICE
+   or LITERAL symbols (see set-special!). ALL default symbol macros are literal."
   (let* ((name (car spec))
          (symbol (cadr spec))
          (args (cddr spec)))
@@ -1624,13 +1726,10 @@
         (define-macro (,name ,@args) ,@rest))))
 
 ;; -----------------------------------------------------------------------------
-;; Vector literals syntax using parser symbol macros
+;; Vector literals syntax using parser syntax extensions
 ;; -----------------------------------------------------------------------------
-(set-special! "#" 'vector-literal lips.specials.SPLICE)
-
-;; -----------------------------------------------------------------------------
-(define-macro (vector-literal . args)
-  (if (not (or (pair? args) (eq? args nil)))
+(define-symbol-macro SPLICE (vector-literal "#" . args)
+  (if (not (or (pair? args) (eq? args '())))
       (throw (new Error (concat "Parse Error: vector require pair got "
                                 (type args) " in " (repr args))))
       (let ((v (list->array args)))
@@ -1638,21 +1737,20 @@
         v)))
 
 ;; -----------------------------------------------------------------------------
-(define-syntax vector
-  (syntax-rules ()
-    ((_ arg ...) (list->array (list arg ...))))
+(define (vector . rest)
   "(vector 1 2 3 (+ 3 1)) or #(1 2 3 4)
 
    Macro for defining vectors (Javascript Arrays). Vector literals are
    automatically quoted, so you can't use expressions inside them, only other
-   literals, like other vectors or objects.")
+   literals, like other vectors or objects."
+  (list->array rest))
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
            (lambda (arr q)
              ;; Array.from is used to convert empty to undefined
              ;; but we can't use the value because Array.from calls
-             ;; valueOf on its arguments
+             ;; valueOf on its arguments (unbox the LIPS data types)
              (let ((result (--> (Array.from arr)
                                 (map (lambda (x i)
                                        (if (not (in i arr))
@@ -1702,7 +1800,8 @@
   "(equal? a b)
 
    The function checks if values are equal. If both are a pair or an array
-   it compares their elements recursively."
+   it compares their elements recursively. If pairs have cycles it compares
+   them with eq?"
   (cond ((and (pair? a))
          (and (pair? b)
               (equal? (car a) (car b))
@@ -1935,14 +2034,14 @@
        (or (%number-type "rational" x) (integer? x))))
 
 ;; -----------------------------------------------------------------------------
-(define (typecheck-args _type name _list)
-  "(typecheck-args args type)
+(define (typecheck-args _type label _list)
+  "(typecheck-args type label lst)
 
-   Function that makes sure that all items in the array are of same type."
+   Function that makes sure that all items in list are of same type."
   (let iter ((n 1) (_list _list))
     (if (pair? _list)
         (begin
-          (typecheck name (car _list) _type n)
+          (typecheck label (car _list) _type n)
           (iter (+ n 1) (cdr _list))))))
 
 ;; -----------------------------------------------------------------------------
@@ -2035,7 +2134,7 @@
 
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "asin" "acos"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
@@ -2102,6 +2201,33 @@
       (Math.tan n)))
 
 ;; -----------------------------------------------------------------------------
+(define (atan z . rest)
+  "(atan z)
+   (atan x y)
+
+   Function calculates arcus tangent of a complex number.
+   If two arguments are passed and they are not complex numbers
+   it calculate Math.atan2 on those arguments."
+  (if (and (null? rest) (complex? z))
+      (cond ((nan? z) +nan.0)
+            ((infinite? z)
+             (let ((atan (/ Math.PI 2)))
+               (if (< z 0)
+                   (- atan)
+                   atan)))
+            (else
+             ;; ref: https://youtu.be/d93AarE0lKg
+             (let ((iz (* +i z)))
+               (* (/ 1 +2i)
+                  (log (/ (+ 1 iz)
+                          (- 1 iz)))))))
+      (let ((x z) (y (car rest)))
+        (if (and (zero? (imag-part x))
+                 (zero? (imag-part y)))
+            (Math.atan2 x y)
+            (error "atan: can't call with two complex numbers")))))
+
+;; -----------------------------------------------------------------------------
 (define (exp n)
   "(exp n)
 
@@ -2153,18 +2279,10 @@
   "(list-ref list n)
 
    Returns n-th element of a list."
-  (typecheck "list-ref" l '("pair" "nil"))
-  (if (< k 0)
-      (throw (new Error "list-ref: index out of range"))
-      (let ((l l) (k k))
-        (while (> k 0)
-          (if (or (null? (cdr l)) (null? l))
-              (throw (new Error "list-ref: not enough elements in the list")))
-          (set! l (cdr l))
-          (set! k (- k 1)))
-        (if (null? l)
-            l
-            (car l)))))
+  (let ((l (%nth-pair "list-ref" l k)))
+    (if (null? l)
+        l
+        (car l))))
 
 ;; -----------------------------------------------------------------------------
 (define (not x)
@@ -2311,7 +2429,7 @@
    Function that destructively fills the string with given character."
   (typecheck "string-fill!" string "string" 1)
   (typecheck "string-fill!" char "character" 2)
-  (--> string (fill char)))
+  (string.fill char))
 
 ;; -----------------------------------------------------------------------------
 (define (identity n)
@@ -2351,29 +2469,27 @@
                            (lips.LCharacter x))))))
 
 ;; -----------------------------------------------------------------------------
-;; (let ((x "hello")) (string-set! x 0 #\H) x)
 (define-macro (string-set! object index char)
-  "(string-set! object index char)
+  "(string-set! string index char)
 
-   Replaces character in string in given index. It create new JavaScript
-   string and replaces the old value. Object needs to be symbol that points to the variable
-   that holds the string."
-  (typecheck "string-set!" object "symbol")
-  (let ((chars (gensym "chars")))
+   Replaces character in string at a given index."
+  (let ((input (gensym "input")))
     `(begin
-       (typecheck "string-set!" ,object "string")
-       (typecheck "string-set!" ,index "number")
-       (typecheck "string-set!" ,char "character")
-       (let ((,chars (list->vector (string->list ,object))))
-          (set-obj! ,chars ,index ,char)
-          (set! ,object (list->string (vector->list ,chars)))))))
+       (let ((,input ,object))
+         (typecheck "string-set!" ,input "string")
+         (typecheck "string-set!" ,index "number")
+         (typecheck "string-set!" ,char "character")
+         (try
+          (--> ,input (set ,index  ,char))
+          (catch (e)
+                 (error "string-set!: attempt to change an immutable string")))))))
 
 ;; -----------------------------------------------------------------------------
 (define (string-length string)
   "(string-length string)
 
    Returns the length of the string."
-  (typecheck "string-ref" string "string")
+  (typecheck "string-length" string "string")
   (. string 'length))
 
 ;; -----------------------------------------------------------------------------
@@ -2383,7 +2499,7 @@
    Returns character inside string at given zero-based index."
   (typecheck "string-ref" string "string" 1)
   (typecheck "string-ref" k "number" 2)
-  (lips.LCharacter (--> string (get k))))
+  (lips.LCharacter (string.get k)))
 
 (define (%string-cmp name string1 string2)
   "(%string-cmp name a b)
@@ -2867,6 +2983,7 @@
   "(angle x)
 
    Returns angle of the complex number in polar coordinate system."
+  ;; TODO: replace %number-type with typechecking
   (if (not (%number-type "complex" x))
       (error "angle: number need to be complex")
       (Math.atan2 x.__im__ x.__re__)))
@@ -2974,8 +3091,8 @@
   "(call-with-output-file filename proc)
 
    Procedure open file for writing, call user defined procedure with port
-   and then close the port. It return value that was returned by user proc and it close the port
-   even if user proc throw exception."
+   and then close the port. It return value that was returned by user proc
+   and it close the port even if user proc throw exception."
   (let ((p (open-output-file filename)))
     (try (proc p)
          (finally
@@ -3190,7 +3307,8 @@
        (define (,make-vector k . fill)
          ,(format "(~a k fill)
 
-                   Allocate new ~a of length k, with optional initial values."
+                   Allocate new ~a of length k,
+                   with optional initial values."
                   make-vector
                   help)
          (let ((v (new ,type k)))
@@ -3201,7 +3319,8 @@
        (define (,vector? x)
          ,(format "(~a x)
 
-                   Returns #t of argument is ~a otherwise it return #f."
+                   Returns #t of argument is ~a,
+                   otherwise it return #f."
                   vector?
                   help)
          (and (object? x) (equal? (. x 'constructor) ,type)))
@@ -3220,7 +3339,8 @@
        (define (,vector-ref vector k)
          ,(format "(~a vector k)
 
-                  Returns value from vector at index k. If index is out of range it throw exception."
+                  Returns value from vector at index k.
+                  If index is out of range it throw exception."
                   vector-ref
                   help)
          (typecheck ,(symbol->string vector-ref) vector ,l-type)
@@ -3236,7 +3356,8 @@
        (define (,vector-set! vector k v)
          ,(format "(~a vector k)
 
-                   Function set value of ~a at index k. If index is out of range it throw exception."
+                   Function set value of ~a at index k.
+                   If index is out of range it throw exception."
                   vector-set!
                   help)
          (typecheck ,(symbol->string vector-set!) vector ,l-type)
@@ -3323,29 +3444,73 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let-values
-  (syntax-rules ()
-    ((_ ()) nil)
-    ((_ () body ...) (begin body ...))
-    ((_ (((x ...) values) ...) body ...)
-     (apply (lambda (x ... ...)
-              body ...)
-            (vector->list (apply vector-append (map (lambda (arg) ((. arg "valueOf")))
-                                                     (list values ...)))))))
-  "(let-values binding body ...)
+  (syntax-rules (bind mktmp)
+    ((let-values (binding ...) body0 body1 ...)
+     (let-values bind
+       (binding ...) () (begin body0 body1 ...)))
+    ((let-values bind () tmps body)
+     (let tmps body))
+    ((let-values bind ((b0 e0) binding ...) tmps body)
+     (let-values mktmp b0 e0 () (binding ...) tmps body))
+    ((let-values mktmp () e0 args bindings tmps body)
+     (call-with-values
+         (lambda () e0)
+       (lambda args
+         (let-values bind
+           bindings tmps body))))
+    ((let-values mktmp (a . b) e0 (arg ...) bindings (tmp ...) body)
+     (let-values mktmp b e0 (arg ... x) bindings (tmp ... (a x)) body))
+    ((let-values mktmp a e0 (arg ...) bindings (tmp ...) body)
+     (call-with-values
+         (lambda () e0)
+       (lambda (arg ... . x)
+         (let-values bind bindings (tmp ... (a x)) body)))))
+  "(let-values (binding ...) body ...)
 
    The macro work similar to let but variable is list of values and value
    need to evaluate to result of calling values.")
 
 ;; -----------------------------------------------------------------------------
-(define (vector-append . args)
-  "(vector-append v1 v2 ...)
+(define (vector-copy vector . rest)
+  "(vector-copy vector)
+   (vector-copy vector start)
+   (vector-copy vector start end)
 
-   Returns new vector by combining it's arguments that should be vectors."
-  (if (null? args)
-      (vector)
-      (begin
-        (typecheck "vector-append" (car args) "array")
-        (--> (car args) (concat (apply vector-append (cdr args)))))))
+   Returns a new vecotor that is a copy of given vector. If start
+   is not provided it starts at 0, if end it's not provided it copy
+   til the end of the given vector."
+  (typecheck "vector-copy" vector "array")
+  (let ((start (if (null? rest) 0 (car rest)))
+        (end (if (or (null? rest) (null? (cdr rest))) vector.length (cadr rest))))
+    (typecheck-number "vector-copy" start '("integer" "bigint"))
+    (typecheck-number "vector-copy" end '("integer" "bigint"))
+    (vector.slice start end)))
+
+;; -----------------------------------------------------------------------------
+(define (vector-copy! to at from . rest)
+  "(vector-copy to at from)
+   (vector-copy to at from start)
+   (vector-copy to at from start end)
+
+   Copies the elements of vector from between start and end into
+   vector to starting at `at`. If start is missing it start at 0 and if end
+   is missing it copy til the end of the vector from. It throws an error
+   if vector from don't fit into the destination `to`."
+  (typecheck "vector-copy!" to "array")
+  (typecheck "vector-copy!" from "array")
+  (typecheck-number "vector-copy!" at '("integer" "bigint"))
+  (let* ((start (if (null? rest) 0 (car rest)))
+         (end (if (or (null? rest)
+                      (null? (cdr rest)))
+                  from.length
+                  (cadr rest))))
+    (typecheck-number "vector-copy!" start '("integer" "bigint"))
+    (typecheck-number "vector-copy!" end '("integer" "bigint"))
+    (let ((len (- end start)))
+      (if (< (- to.length at) len)
+          (error "vector-copy!: Invalid index at"))
+      (let ((source (from.slice start end)))
+        (apply to.splice at len (vector->list source))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%range-function spec . body)
@@ -3428,17 +3593,20 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values
-  (syntax-rules ()
-    ((_ ()) nil)
+  (syntax-rules (multi single)
+    ((_ ()) '())
     ((_ () body ...) (begin body ...))
-    ((_ ((bind values) rest ...) . body)
+    ((_ ((bind obj) rest ...) . body)
      (apply (lambda bind
               (let*-values (rest ...) . body))
-            (vector->list ((. values "valueOf"))))))
+            (if (instanceof lips.Values obj)
+                (vector->list (obj.valueOf))
+                (list obj)))))
   "(let*-values binding body ...)
 
    The macro work similar to let* but variable is list of values and value
    need to evaluate to result of calling values.")
+
 ;; -----------------------------------------------------------------------------
 ;; R7RS division operators (Gauche Scheme) BSD license
 ;; Copyright (c) 2000-2020  Shiro Kawai  <shiro@acm.org>
@@ -3462,6 +3630,31 @@
 (define (truncate-quotient x y)  (quotient x y))
 (define (truncate-remainder x y) (remainder x y))
 
+(define (log z . rest)
+  "(log z)
+   (log z1 z2)
+
+   Function that calculates natural logarithm (base e) of z. Where the argument
+   can be any number (including complex negative and rational). If the value is 0
+   it returns NaN. It two arguments are provided it will calculate logarithm
+   of z1 with given base z2."
+  (if (not (null? rest))
+      (let ((base (car rest)))
+        (/ (log z) (log base)))
+      (cond ((real? z)
+             (cond ((zero? z) NaN)
+                   ((> z 0) (Math.log z))
+                   (else
+                    (+ (Math.log (abs z))
+                       (* Math.PI +i)))))
+            ((complex? z)
+             (let ((arg (Math.atan2 (imag-part z)
+                                    (real-part z))))
+               (+ (Math.log (z.modulus))
+                  (* +i arg))))
+            ((rational? z)
+             (log (exact->inexact z))))))
+
 ;; -----------------------------------------------------------------------------
 (define-syntax case-lambda
   (syntax-rules ()
@@ -3470,22 +3663,22 @@
        (let ((len (length args)))
          (letrec-syntax
              ((cl (syntax-rules ::: ()
-                                ((cl)
-                                 (error "no matching clause"))
-                                ((cl ((p :::) . body) . rest)
-                                 (if (= len (length '(p :::)))
-                                     (apply (lambda (p :::)
-                                              . body)
-                                            args)
-                                     (cl . rest)))
-                                ((cl ((p ::: . tail) . body)
-                                     . rest)
-                                 (if (>= len (length '(p :::)))
-                                     (apply
-                                      (lambda (p ::: . tail)
-                                        . body)
-                                      args)
-                                     (cl . rest))))))
+                    ((cl)
+                     (error "no matching clause"))
+                    ((cl ((p :::) . body) . rest)
+                     (if (= len (length '(p :::)))
+                         (apply (lambda (p :::)
+                                  . body)
+                                args)
+                         (cl . rest)))
+                    ((cl ((p ::: . tail) . body)
+                         . rest)
+                     (if (>= len (length '(p :::)))
+                         (apply
+                          (lambda (p ::: . tail)
+                            . body)
+                          args)
+                         (cl . rest))))))
            (cl (params body0 ...) ...))))))
   "(case-lambda expr ...)
 
@@ -3504,7 +3697,7 @@
        (sum 1 2)
        (sum 1 2 3)
 
-   More arguments will give error.")
+   More arguments will give an error.")
 
 ;; -----------------------------------------------------------------------------
 (define (boolean=? . args)
@@ -3580,21 +3773,66 @@
                    (value (apply fn args)))
               (--> result (push value)))))))
 
+
+;; -----------------------------------------------------------------------------
+(define (vector-for-each fn . rest)
+  "(vector-for-each fn vector1 vector2 ...)
+
+   Invokes every Returns new vector from applying function fn to each element
+   of the vectors, similar to map for lists."
+  (typecheck "vector-for-each" fn "function" 1)
+  (if (or (= (length rest) 0) (not (every vector? rest)))
+      (error "vector-for-each: function require at least 1 vector")
+      (let ((len (apply min (map vector-length rest)))
+            (result (vector)))
+        (do ((i 0 (+ i 1)))
+            ((= i len) #void)
+            (let* ((args (map (lambda (v) (vector-ref v i)) rest)))
+              (apply fn args))))))
+
 ;; -----------------------------------------------------------------------------
 (define (string-map fn . rest)
   "(string-map fn string1 stringr2 ...)
 
    Returns new string from applying function fn to each element
    of the strings, similar to map for lists."
+  (typecheck "string-map" fn "function" 1)
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-map: function require at least 1 string")
       (vector->string (apply vector-map fn (map string->vector rest)))))
 
 ;; -----------------------------------------------------------------------------
+(define (string-for-each fn . rest)
+  "(string-for-each fn string1 stringr2 ...)
+
+   Applies a function fn to each element of the strings, similar string-map.
+   But the return value is #void."
+  (typecheck "string-for-each" fn "function" 1)
+  (if (or (= (length rest) 0) (not (every string? rest)))
+      (error "string-for-each: function require at least 1 string")
+      (apply vector-for-each fn (map string->vector rest))))
+
+;; -----------------------------------------------------------------------------
+(define (string-downcase string)
+  "(string-downcase string)
+
+   Function convert a string passed as argument to lower case."
+  (typecheck "string-downcase" string "string")
+  (string.lower))
+
+;; -----------------------------------------------------------------------------
+(define (string-upcase string)
+  "(string-downcase string)
+
+   Function convert a string passed as argument to upper case."
+  (typecheck "string-downcase" string "string")
+  (string.upper))
+
+;; -----------------------------------------------------------------------------
 (define (dynamic-wind before thunk after)
   "(dynamic-wind before thunk after)
 
-   Accepts 3 procedures/lambdas and executes before, then thunk, and 
+   Accepts 3 procedures/lambdas and executes before, then thunk, and
    always after even if an error occurs in thunk."
   (before)
   (let ((result (try (thunk)
@@ -3647,10 +3885,10 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define warn
-             (let ((v (cdr var0)))
-               (set! var0 (car var0))
-               v))))
+       (define warn
+         (let ((v (cdr var0)))
+           (set! var0 (car var0))
+           v))))
     ((define-values var expr)
      (define var
        (call-with-values (lambda () expr)
@@ -3658,7 +3896,7 @@
   "(define-values (a b ...) expr)
 
    Evaluates expression expr and if it evaluates to result of values
-   then it will defined each value as variable like with define.")
+   then it will define each value as a variable like with define.")
 
 ;; -----------------------------------------------------------------------------
 (define-macro (include . files)
@@ -3693,8 +3931,6 @@
               ,@(vector->list result))))))
 
 ;; -----------------------------------------------------------------------------
-;; create scope for JavaScript value for macro
-;; -----------------------------------------------------------------------------
 (define-syntax syntax-error
   (syntax-rules ()
     ((_ "step" arg ...)
@@ -3707,8 +3943,10 @@
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
   (syntax-rules (and or not else r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10
-                     srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode
-                     ieee-float ratios exact-complex full-numeric-tower)
+                     srfi-22 srfi-23 srfi-28 srfi-46 srfi-69 srfi-98 srfi-111
+                     srfi-139 srfi-147 srfi-156 srfi-176 srfi-193 srfi-195 srfi-210
+                     srfi-236 lips r7rs complex full-unicode ieee-float ratios
+                     exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
     ((cond-expand (else body ...))
      (begin body ...))
@@ -3736,7 +3974,7 @@
        (req
          (cond-expand more-clauses ...))
        (else body ...)))
-    ((cond-expand (r7rs  body ...) more-clauses ...)
+    ((cond-expand (r7rs body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-0  body ...) more-clauses ...)
        (begin body ...))
@@ -3752,11 +3990,33 @@
        (begin body ...))
     ((cond-expand (srfi-23  body ...) more-clauses ...)
        (begin body ...))
+    ((cond-expand (srfi-28  body ...) more-clauses ...)
+       (begin body ...))
     ((cond-expand (srfi-46  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-69  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-98  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-111  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-139  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-147  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-156  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-176  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (lips  body ...) more-clauses ...)
+    ((cond-expand (srfi-193  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-195  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-210  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-236  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (lips body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (complex body ...) more-clauses ...)
        (begin body ...))
@@ -3769,15 +4029,25 @@
     ((cond-expand (exact-complex body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (full-numeric-tower body ...) more-clauses ...)
-       (begin body ...))))
+       (begin body ...))
+    ((cond-expand (feature-id body ...) more-clauses ...)
+     (cond-expand more-clauses ...)))
+  "(cond-expand (cond body ...)
+
+   Conditionally execute code based on a features by Scheme implementation.")
 
 ;; -----------------------------------------------------------------------------
 (define (features)
-  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
-         complex full-unicode ieee-float ratios exact-complex full-numeric-tower))
+  "(features)
+
+   Function returns implemented features as a list."
+  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-28 srfi-46 srfi-69
+         srfi-98 srfi-111 srfi-139 srfi-147 srfi-156 srfi-176 srfi-193 srfi-195
+         srfi-210 srfi-236 lips complex full-unicode ieee-float ratios exact-complex
+         full-numeric-tower))
 
 ;; -----------------------------------------------------------------------------
-;; the numerals can be generated using `make unicode` to get latest version
+;; the numerals can be generated using scripts/numerals.scm to get latest version
 ;; of the file use `make zero`
 ;; -----------------------------------------------------------------------------
 (define *zero-number-chars* #(48 1632 1776 1984 2406 2534 2662 2790 2918 3046 3174 3302
@@ -3787,6 +4057,22 @@
                               70864 71248 71360 71472 71904 72016 72784 73040 73120 92768
                               93008 120782 120792 120802 120812 120822 123200 123632 125264
                               130032))
+
+;; -----------------------------------------------------------------------------
+(define (char-foldcase char)
+  "(char-foldcase char)
+
+   Returns lowercase character using the Unicode simple case-folding algorithm."
+  (typecheck "char-foldcase" char "character")
+  (new LCharacter (%foldcase-string char.__char__)))
+
+;; -----------------------------------------------------------------------------
+(define (string-foldcase string)
+  "(string-foldcase string)
+
+   Returns lowercase string using the Unicode simple case-folding algorithm."
+  (typecheck "string-foldcase" string "string")
+  (%foldcase-string string))
 
 ;; -----------------------------------------------------------------------------
 (define (digit-value chr)
@@ -3808,6 +4094,235 @@
                  (set! result diff)
                  (set! found #t))))))
     #f))
+
+;; -----------------------------------------------------------------------------
+(define (%char-vector-cmp name vals)
+  "(%char-vector-cmp name vector)
+
+   Function iterate over a vector and compares each pair of two characters
+   and return 0 if they are equal, -1 second is smaller and 1 if is larger.
+   The function compare the codepoints of the character."
+  (let* ((len (vector-length vals))
+         (max (- len 1))
+         (result (vector))
+         (i 0))
+    (while (< i max)
+      (let* ((chr1 (vector-ref vals i))
+             (j (+ i 1))
+             (chr2 (vector-ref vals j)))
+        (typecheck name chr1 "character" i)
+        (typecheck name chr2 "character" j)
+        (let ((a (char->integer chr1))
+              (b (char->integer chr2)))
+          (result.push (cond ((= a b) 0)
+                             ((< a b) -1)
+                             (else 1)))))
+      (set! i (+ i 1)))
+    result))
+
+;; -----------------------------------------------------------------------------
+(define (char=? . chars)
+  "(char=? chr1 chr2 ...)
+
+   Checks if all characters are equal."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (char<? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically increasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char>? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically decreasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char<=? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-decreasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char>=? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-increasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%char-ci-vector-cmp name chars)
+  "(%char-cmp name chars)
+
+   Function that compares each pair of a vector of characters and return a vector
+   of numbers, where 0 if they are equal, -1 second is smaller and 1 if is larger.
+   The function compare the codepoints of the character."
+  (%char-vector-cmp name (--> chars (map char-downcase))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci=? . chars)
+  "(char-ci=? chr1 chr2 ...)
+
+   Checks if all characters are equal, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci=?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<? . chars)
+  "(char-ci<? chr1 chr2)
+
+   Returns true if characters are monotonically increasing case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically decreasing case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<=? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-decreasing, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>=? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-increasing, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%string-vector-cmp name strings)
+  "(%string-cmp name chars)
+
+   Function that compares each pair of strings from vector chars and a vector
+   of numbers. 0 if they are equal, -1 if it is smaller and 1 if is larger.
+   The function compares the codepoints of the character."
+  (let* ((len (vector-length strings))
+         (max (- len 1))
+         (result (vector))
+         (i 0))
+    (while (< i max)
+      (let* ((str1 (vector-ref strings i))
+             (j (+ i 1))
+             (str2 (vector-ref strings j)))
+        (typecheck name str1 "string" i)
+        (typecheck name str2 "string" j)
+        (result.push (--> str1 (cmp str2))))
+      (set! i (+ i 1)))
+    result))
+
+;; -----------------------------------------------------------------------------
+(define (string=? . strings)
+  "(string=? string1 string2 ...)
+
+   Checks if all strings are equal."
+  (--> (%string-vector-cmp "string=?" (list->vector strings))
+       (every (lambda (a)
+                (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (string<? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically increasing."
+  (--> (%string-vector-cmp "string<?" (list->vector strings))
+       (every (lambda (a)
+                (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string>? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically decreasing."
+  (--> (%string-vector-cmp "string>?" (list->vector strings))
+       (every (lambda (a)
+                (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string<=? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically non-decreasing."
+  (--> (%string-vector-cmp "string<=?" (list->vector strings))
+       (every (lambda (a)
+                (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string>=? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically non-increasing."
+  (--> (%string-vector-cmp "string>=?" (list->vector strings))
+       (every (lambda (a)
+                (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%string-ci-vector-cmp name strings)
+  "(%string-ci-cmp name strings)
+
+   Function that compares each pair from vector of strings ignoring case and
+   returns array of numbers 0 if they are equal, -1 if it is smaller and 1 if is larger.
+   The function compares the codepoints of the character."
+  (%string-vector-cmp name (--> strings (map string-downcase))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci=? . strings)
+  "(string-ci=? string1 string2 ...)
+
+   Checks if all strings are equal, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci=?" (list->vector strings))
+       (every (lambda (a)
+                (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<? . strings)
+  "(string-ci<? string1 string2 ...)
+
+   Returns true if strings are monotonically increasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<?" (list->vector strings))
+       (every (lambda (a)
+                (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>? . strings)
+  "(string-ci>? string1 string2 ...)
+
+   Returns true if strings are monotonically decreasing, ignoring the case"
+  (--> (%string-ci-vector-cmp "string-ci>?" (list->vector strings))
+       (every (lambda (a)
+                (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<=? . strings)
+  "(string-ci<=? string1 string2 ...)
+
+   Returns true if strings are monotonically non-decreasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<=?" (list->vector strings))
+       (every (lambda (a)
+                (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>=? . strings)
+  "(string-ci>=? string1 string2 ...)
+
+   Returns true if strings are monotonically non-increasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<=?" (list->vector strings))
+       (every (lambda (a)
+                (> a -1)))))
 
 ;; -----------------------------------------------------------------------------
 (define make-bytevector make-u8vector)
@@ -4251,6 +4766,13 @@
       (obj.clone false)))
 
 ;; -----------------------------------------------------------------------------
+(define (list-set! l k obj)
+  "(list-set! list n)
+
+   Returns n-th element of a list."
+  (set-car! (%nth-pair "list-set!" l k) obj))
+
+;; -----------------------------------------------------------------------------
 (define-macro (define-record-type name constructor pred . fields)
   "(define-record-type name constructor pred . fields)
 
@@ -4302,7 +4824,7 @@
                 (let ((prop-name (car field))
                       (get (cadr field))
                       (set (if (null? (cddr field))
-                               nil
+                               '()
                                (caddr field))))
                   `(begin
                      (define (,get ,obj-name)
@@ -4588,19 +5110,20 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Returns all process environment variables as an alist. This function throws exception
-   when called in browser."
+   Returns all process environment variables as an alist. This function returns
+   an empty list when called in the browser."
   (if (eq? self window)
-      (throw "get-environment-variables: Node.js only function")
+      '()
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Returns given environment variable. This function throws exception
-   when called in browser."
-  (. process.env name))
+   Returns given environment variable. This function returns #void
+   when called in the browser."
+  (if (not (eq? self window))
+      (. process.env name)))
 
 ;; -----------------------------------------------------------------------------
 (define (current-second)
@@ -4645,7 +5168,7 @@
                  ((not (indexed-db?))
                   (console.warn (string-append "No FS found and IndexedDB "
                                                "is not available"))
-                  nil))))
+                  '()))))
   (let ((internal (lips.env.get '**internal-env**)))
     (if (not (null? fs))
         (lips.set_fs fs))))

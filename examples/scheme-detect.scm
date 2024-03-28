@@ -1,5 +1,3 @@
-#!/usr/bin/env -S lips -t
-
 ;; Source
 ;; http://www.willdonnelly.net/blog/runtime-scheme-detection/
 
@@ -77,9 +75,7 @@
     (let test ((siglist detect:known-signatures))
       (if (equal? '() siglist)
           ;; Return 'UNKNOWN if we're stumped
-          (begin
-            (print signature)
-            'unknown)
+          'unknown
           (let ((testsig (car siglist)))
             (if (equal? (cadr testsig) signature)
                 (car testsig)

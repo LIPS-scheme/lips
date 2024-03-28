@@ -1,7 +1,7 @@
-.PHONY: publish test coveralls lint zero coverage
+.PHONY: publish test coveralls lint zero coverage codespell
 
 VERSION=1.0.0-beta.18.1
-VERSION_DASH=`echo -n "1.0.0-beta.18" | sed "s/-/%E2%80%93/"`
+VERSION_DASH=`echo -n "1.0.0-beta.18.1" | sed "s/-/%E2%80%93/"`
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
@@ -9,7 +9,8 @@ DATE_SHORT=`date +%Y-%m-%d`
 TESTS_CHECKSUM=`cat tests/test.js tests/*.scm | md5sum | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
-UNICODE=https://unicode.org/Public/UNIDATA/UnicodeData.txt
+UNICODE_ALL=https://unicode.org/Public/UNIDATA/UnicodeData.txt
+UNICODE_FOLD=https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
 
 MAKE=make
 GIT=git
@@ -22,6 +23,7 @@ CAT=cat
 NPM=npm
 NODE=node
 WGET=wget
+CODESPELL=codespell
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
@@ -36,7 +38,7 @@ define ver_date
 	-e "s/{{YEAR}}/${YEAR}/" $(1) || $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" $(1)
 endef
 
-ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/base.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb
+ALL: Makefile package.json .$(VERSION) assets/classDiagram.svg dist/base.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb docs/reference.json
 
 dist/banner.js: src/banner.js src/lips.js .$(VERSION)
 	$(CP) src/banner.js dist/banner.js
@@ -60,6 +62,9 @@ dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm l
 
 dist/std.xcb: dist/std.scm
 	$(LIPS) -t --bootstrap dist/std.scm -c -q dist/std.scm
+
+docs/reference.json: dist/std.xcb src/lips.js
+	$(NODE) ./scripts/reference.js > docs/reference.json
 
 dist/std.min.scm: dist/std.scm
 	$(LIPS) -t --bootstrap dist/std.scm ./scripts/minify.scm ./dist/std.scm > dist/std.min.scm
@@ -98,20 +103,20 @@ publish:
 jest-test: dist/lips.js
 	@$(JEST) --coverage spec/*.spec.js
 
-test: dist/lips.js dist/std.min.scm
+test: dist/lips.js dist/std.xcb
 	@$(NPM) run test
 
-test-file: dist/lips.js dist/std.min.scm
+test-file: dist/lips.js dist/std.xcb
 	@$(NPM) run test -- -- -f $(FILE)
 
 test-update: dist/lips.js dist/std.scm
 	@$(NPM) run test-update
 
-zero:
-	@$(WGET) $(UNICODE) -O ./assets/UnicodeData.txt
+fold:
+	@$(WGET) $(UNICODE_FOLD) -O ./assets/CaseFolding.txt
 
-unicode: assets/UnicodeData.txt
-	@$(NODE) ./scripts/numerals.js
+zero:
+	@$(WGET) $(UNICODE_ALL) -O ./assets/UnicodeData.txt
 
 watch-test:
 	@inotifywait -m -e close_write src/lips.js tests/*.scm | while read even; do $(MAKE) --no-print-directory test; done
@@ -124,6 +129,9 @@ watch-make:
 
 coverage:
 	$(NPM) run coverage
+
+codespell:
+	$(CODESPELL) -S 'package-lock.json,node_modules,build,coverage'
 
 lint:
 	$(ESLINT) src/lips.js lib/js/bookmark.js

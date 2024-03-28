@@ -5,8 +5,8 @@
   (display (car x) q)
   (display (cdr x) q)
   (get-output-string q))
-      
-(let ((p (open-input-string "(a . (b . (c . nil))) 34")))
+
+(let ((p (open-input-string "(a . (b . (c . ()))) 34")))
   (display (read p))
   (display (read p))
   (display (eof-object? (peek-char p))))
@@ -17,6 +17,3 @@
   (display " " buff)
   (display "world" buff)
   (display (get-output-string buff) stdout))
-  
-  
-

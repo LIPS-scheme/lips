@@ -1,4 +1,3 @@
-
 <h1 align="center">
   <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
@@ -22,7 +21,7 @@
 
 [LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
 It is based on the Scheme dialect of lisp and the R5RS/R7RS specifications. It has extensions to make it easier
-to interact with JavaScript and extend the language. It work both in the browser and with Node.js.
+to interact with JavaScript and extend the language. It works both in the browser and with Node.js.
 
 The aim of the project is to support full R7RS specification and be compatible with [Scheme programming language](https://www.scheme.org/).
 
@@ -81,12 +80,12 @@ You can also run the REPL on any page while you learn Scheme using the bookmarkl
 https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
-Create any link in your bookmarks, edit it and copy paste the content of that file.
+Create any link in your bookmarks, edit it and copy-paste the content of that file.
 After you click on the link it will create the REPL at the bottom of the page.
 (NOTE: It may not work on every page because of content security policy;
 e.g. google.com or gihub.com)
 
-If you have trouble with creating the bookmarklet you can open
+If you have trouble with creating the bookmarklet, you can open
 [LISP Scheme home page](https://lips.js.org/#bookmark) where you can
 find a link that you can drag to your bookmarks.
 
@@ -112,7 +111,7 @@ or use the `src` attribute:
 
 Big part of LIPS is written in LIPS itself, but to use full power of LIPS you need
 to load those additional Scheme files. The easiest way is to add `bootstrap` attribute
-on first script tag with `text/x-scheme` type. By default it will use CDN from
+on first script tag with `text/x-scheme` type. By default, it will use CDN from
 [jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
 (that will fetch the file using AJAX and evaluate it).
 
@@ -205,7 +204,9 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 [![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
-Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
+
+### Performance
+Because LIPS is tree walking interpreter, sometimes it may be slow. Especially if you want to
 process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
@@ -229,10 +230,17 @@ Another example of slow performance is using LIPS with React, the more code you 
 the slower the app will become.
 
 Examples:
-* [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires to use debounce.
+* [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires using debounce.
 * [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnings in dev tools.
 
 The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
+
+### JavaScript callbacks
+
+Another limitation is when using JavaScript libraries that require normal values but get a Promise instead.
+This can happen with React/Preact and when the component returns a Promise. Some macros can be async
+(return a Promise), which will break the React app when used in components. An example of a macro that is async is
+`do` macro. So when using React/Preact and when you need to use a promise, use promise quotation and `useEffect`.
 
 ## Supported SRFI
 
@@ -243,10 +251,15 @@ The issue with performance is tracked in [#197](https://github.com/jcubic/lips/i
 | Feature-based conditional expansion construct | [SRFI-0](https://srfi.schemers.org/srfi-0/) |
 | Homogeneous numeric vector datatypes | [SRFI-4](https://srfi.schemers.org/srfi-4/) |
 | Basic String Ports | [SRFI-6](https://srfi.schemers.org/srfi-6/) |
-| Running Scheme Scripts on Unix  | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
+| Running Scheme Scripts on Unix | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
 | Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
+| Basic Format Strings | [SRFI-28](https://srfi.schemers.org/srfi-28/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
+| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
+| Syntax parameters | [SRFI-139](https://srfi.schemers.org/srfi-139/) |
+| Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
+| Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
 
 ### require `(load "./lib/srfi/<number>.scm")`
 
@@ -255,15 +268,22 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | description | spec |
 | :--- | ---: |
 | List Library | [SRFI-1](https://srfi.schemers.org/srfi-1/) |
-|  `AND-LET*`: an AND with local bindings, a guarded `LET*` special form | [SRFI-2](https://srfi.schemers.org/srfi-2/) |
+| `AND-LET*`: an AND with local bindings, a guarded `LET*` special form | [SRFI-2](https://srfi.schemers.org/srfi-2/) |
 | receive: Binding to multiple values | [SRFI-8](https://srfi.schemers.org/srfi-8/) |
 | `#,` external form | [SRFI-10](https://srfi.schemers.org/srfi-10/) |
 | Notation for Specializing Parameters without Currying | [SRFI-26](https://srfi.schemers.org/srfi-26/) |
 | Basic hash tables | [SRFI-69](https://srfi.schemers.org/srfi-69/) |
-| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
+| Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |
+| Procedures and Syntax for Multiple Values | [SRFI-210](https://srfi.schemers.org/srfi-210/) |
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
+
+in Web (e.g. in Web REPL) you can use URL:
+
+```scheme
+(load "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/srfi/<NUMBER>.scm")
+```
 
 ## Links
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
@@ -295,27 +315,27 @@ They should be loaded as R7RS libraries in final 1.0.0 version
   - [ ] Objects.
   - [ ] Vectors.
 
-### 1.1
-- [ ] Picture language (possibly inspired by P5.js).
+### Future Plans
+- [ ] Picture language (possibly inspired by P5.js, see [SRFI-203](https://srfi.schemers.org/srfi-203/srfi-203.html)).
 - [ ] Stepper/Debugger.
 - [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
-- [ ] Proper expansion time for both macro system.
+- [ ] Proper expansion time for both macro systems.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 - [ ] All recursive function in JS don't consume stack.
 
 ### WIP Side projects
-- [ ] [KISS](https://github.com/jcubic/kiss) (chrome extension REPL).
+- [ ] [KISS](https://github.com/jcubic/kiss) (Chrome extension REPL).
 - [ ] [SMILE](https://github.com/jcubic/smile) (Web IDE), need to start over.
 
 ## How you can help
 
-I'm working on version 1.0. If you find any bugs you can help by reporting them.
+I'm working on version 1.0. If you find any bugs, you can help by reporting them.
 If you have some Scheme code that doesn't work (note about the limitations)
 don't hesitate to [report an issue](https://github.com/jcubic/lips/issues/new).
 
 You can also propose a feature or improvement to the library, it doesn't always have to be defects.
 
-If you enjoy the library you can write about it in a blog post and share information about it or write on Social Media.
+If you enjoy the library, you can write about it on a blog post and share information about it or write on Social Media.
 Don't forget to link to the project website (it's
 [good for SEO](https://itnext.io/seo-for-open-source-projects-1a6b17ffeb8b)).
 
@@ -325,7 +345,7 @@ I would also love to see if you use the library, I may even share the links of p
 
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
-* Current Parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
+* Part of the current Parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
 * `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
 * Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
 * The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
@@ -337,9 +357,12 @@ I would also love to see if you use the library, I may even share the links of p
 * [StackOverlow](https://stackoverflow.com) code was used for functions:
   * [fworker](https://stackoverflow.com/a/10372280/387194),
   * [flatten](https://stackoverflow.com/a/27282907/387194),
-  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
+  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194),
+  * [async replace](https://stackoverflow.com/a/48032528/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
+
+Special thanks to [Lassi Kortela](https://github.com/lassik) for helping with Scheme code.
 
 ## License
 

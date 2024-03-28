@@ -1,6 +1,6 @@
-(test "quasiquote: it should splice nil"
+(test "quasiquote: it should splice an empty list"
       (lambda (t)
-        (t.is `(x ,@nil x) '(x x))))
+        (t.is `(x ,@() x) '(x x))))
 
 (test "quasiquote: it should splice nil as body in do macro"
       (lambda (t)
@@ -156,7 +156,7 @@
 
         (define (foo x) x)
 
-        (t.is (eval (cadr (bar))) '(list 1 2 3))))
+        (t.is (eval (cadr (bar)) (current-environment)) '(list 1 2 3))))
 
 (let ((fun (lambda (a b)
           (if (number? a)

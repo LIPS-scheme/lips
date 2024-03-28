@@ -2,6 +2,15 @@ name: Build and test
 
 on:
   push:
+    paths:
+      - "template/Makefile"
+      - "Makefile"
+      - "scripts/*"
+      - "tests/*"
+      - "bin/*"
+      - "lib/*"
+      - "src/*"
+      - ".github/workflows/build.yaml"
     branches:
       - master
       - devel
@@ -23,7 +32,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'
       - run: npm ci
       - run: make
       - run: make lint

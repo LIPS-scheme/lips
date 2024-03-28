@@ -84,13 +84,13 @@
 (test "core: it should create object literals without values"
       (lambda (t)
         (let ((x &(:foo :bar)))
-          (t.is x &(:foo undefined :bar undefined)))))
+          (t.is x &(:foo #void :bar #void)))))
 
 (test "core: it should create object with null value (#264)"
       (lambda (t)
-        (let ((x &(:foo null :bar null)))
-          (t.is (eq? x.foo null) #t)
-          (t.is (eq? x.bar null) #t))))
+        (let ((x &(:foo #null :bar #null)))
+          (t.is (eq? x.foo #null) #t)
+          (t.is (eq? x.bar #null) #t))))
 
 (test "core: it should allow change shorthand object literals"
       (lambda (t)
@@ -135,6 +135,11 @@
                 (lambda (a b) b)) 5)
         (t.is (call-with-values (lambda () (values 4 5)) +) 9)))
 
+(test "core: values without wrapping"
+      (lambda (t)
+        (t.is (values 1) 1)
+        (t.is #void (values))))
+
 (test "core: symbols"
       (lambda (t)
         (t.is '|foo\x20;bar| (string->symbol "foo bar"))
@@ -159,7 +164,8 @@
       (lambda (t)
         (t.is (if (newline) 1 2) 1)
         (t.is (if 0 1 2) 1)
-        (t.is (if null 1 2) 1)
+        (t.is (if #null 1 2) 2)
+        (t.is (if #void 1 2) 1)
         (t.is (if () 1 2) 1)
         (t.is (if #f 1 2) 2)))
 
@@ -167,19 +173,28 @@
       (lambda (t)
         (t.is (and) #t)
         (t.is (or) #f)
-        ;; undefined and null should be true values
-        ;; according to spec #f should be the only fasly value
-        (t.is (and 1 undefined) undefined)
-        (t.is (and 1 null) null)
-        (t.is (or (begin) 1) undefined)
-        (t.is (or null 1) null)))
+        ;; #void should be true values
+        ;; according to spec #f should be the only false value
+        ;; but Kawa use #!null constants that is also false
+        (t.is (and 1 #void) #void)
+        (t.is (and 1 #null) #null)
+        (t.is (or (begin) 1) #void)
+        (t.is (or #null 1) 1)))
 
 (test "core: do macro"
       (lambda (t)
         (t.is (do ((i 0) (j 10 (- j 1))) (i j)) 10)
-        (t.is (do ((i 0) (j 10 (- j 1))) (null j)) 10)
-        (t.is (do ((i 0) (j 10 (- j 1))) (undefined j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) (#t j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) (#void j)) 10)
         (t.is (do ((i 0) (j 10 (- j 1))) ((zero? j) 10)) 10)))
+
+(test "core: do macro scope (#325)"
+      (lambda (t)
+        (t.is ((do ((f (lambda () 0)
+                       (lambda () j))
+                    (j 2 (- j 1)))
+                 ((= j 0) f)))
+              1)))
 
 (test "core: eq?/eqv?"
       (lambda (t)
@@ -212,7 +227,6 @@
 (test "core: it should throw exception why applying function to improper list"
       (lambda (t)
         (t.is (to.throw (let ((x '(1 2 . 3))) (apply + x))) true)))
-
 
 (test "core: async for-each"
       (lambda (t)
@@ -341,6 +355,14 @@
                          (list x y)))
         (t.is (car result) "hello")
         (t.is (repr (cadr result)) "#<js-promise (pending)>")))
+
+(test "core: delay repr"
+      (lambda (t)
+        (t.is (repr (delay 10)) "#<promise - not forced>")
+        (define x (delay 10))
+        (t.is (repr x) "#<promise - not forced>")
+        (force x)
+        (t.is (repr x) "#<promise - forced with number>")))
 
 (test "core: regex"
       (lambda (t)
@@ -611,9 +633,119 @@
         (random 1000)
         (t.is (shuffle '(1 2 3 4)) '(2 4 3 1))
         (t.is (list? (shuffle '(1 2 3))) #t)
-        (t.is (shuffle nil) nil)
+        (t.is (shuffle '()) '())
         (random 1000)
         (t.is (shuffle #(1 2 3 4)) #(2 4 3 1))))
+
+(test "core: immutable strings"
+      (lambda (t)
+        (t.is (to.throw
+               (let* ((x "hello")
+                      (f (lambda () x)))
+                 (string-set! (f) 0 #\x)))
+              true)
+        (t.is (to.throw
+               (let* ((x (string-symbol 'immutable))
+                      (f (lambda () x)))
+                 (string-set! (f) 0 #\x)))
+              true)))
+
+(test "core: means"
+      (lambda (t)
+        ;; By Jussi Piitulainen <jpiitula@ling.helsinki.fi>
+        ;; and John Cowan <cowan@mercury.ccil.org>:
+        ;; http://lists.scheme-reports.org/pipermail/scheme-reports/2013-December/003876.html
+        (define (means ton)
+          (letrec*
+              ((mean
+                (lambda (f g)
+                  (f (/ (sum g ton) n))))
+               (sum
+                (lambda (g ton)
+                  (if (null? ton)
+                      (+)
+                      (if (number? ton)
+                          (g ton)
+                          (+ (sum g (car ton))
+                             (sum g (cdr ton)))))))
+               (n (sum (lambda (x) 1) ton)))
+            (values (mean values values)
+                    (mean exp log)
+                    (mean / /))))
+
+        (let*-values (((a b c) (means '(8 5 99 1 22))))
+          (t.is 27 a)
+          (t.is 9.728000255822641 b)
+          (t.is 1800/497 c))))
+
+(test "core: map + case"
+      (lambda (t)
+        (t.is (map (lambda (x)
+                     (case x
+                       ((a e i o u) => (lambda (w) (cons 'vowel w)))
+                       ((w y) (cons 'semivowel x))
+                       (else => (lambda (w) (cons 'other w)))))
+                   '(z y x w u))
+              '((other . z) (semivowel . y) (other . x)
+                (semivowel . w) (vowel . u)))))
+
+(test "core: and"
+      (lambda (t)
+        (t.is #t (and (= 2 2) (> 2 1)))
+        (t.is #f (and (= 2 2) (< 2 1)))
+        (t.is '(f g) (and 1 2 'c '(f g)))
+        (t.is #t (and))))
+
+(test "core: or"
+      (lambda (t)
+        (t.is #t (or (= 2 2) (> 2 1)))
+        (t.is #t (or (= 2 2) (< 2 1)))
+        (t.is #f (or #f #f #f))
+        (t.is '(b c) (or (memq 'b '(a b c))
+                         (/ 3 0)))))
+
+(test "core: iterator->array"
+      (lambda (t)
+        (t.is (iterator->array '(1 2 3 4)) #(1 2 3 4))
+        (t.is (iterator->array "hello") #(#\h #\e #\l #\l #\o))))
+
+(test "core: async iterator->array"
+      (lambda (t)
+        (define gen (self.eval "
+          (async function* gen(time, ...args) {
+              function delay(time) {
+                  return new Promise((resolve) => {
+                      setTimeout(resolve, time);
+                  });
+              }
+              for (let x of args) {
+                  await delay(time);
+                  yield x;
+              }
+          })"))
+
+        (t.is (iterator->array (gen 100 1 2 3 4 5))
+              #(1 2 3 4 5))))
+
+(test "core: append!"
+      (lambda (t)
+        (let ((x ()))
+          (set! x (append! x (list 10) () (list 20)))
+          (t.is x '(10 20)))
+        (let ((x '(1 2)))
+          (append! x () (list 3 4) ())
+          (t.is x '(1 2 3 4)))))
+
+(test "core: number->string"
+      (lambda (t)
+        (t.is (number->string 0.1 16) "0.1999999999999a")
+        (t.is (number->string 1.0e-27 16) "4.f3a68dbc8f04e-17")
+        (t.is (number->string 1.0e+27 16) "3.3b2e3c9fd0804e+16")
+        (t.is (number->string 1000000000000000000000000000 16) "33b2e3c9fd0803ce8000000")))
+
+(test "core: replace async"
+      (lambda (t)
+        (t.is (replace #/foo/ (lambda () (Promise.resolve "lips")) "foo bar") "lips bar")))
 
 ;; TODO
 ;; begin*

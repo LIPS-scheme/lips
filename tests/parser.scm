@@ -17,7 +17,7 @@
 
 (unset-special! "--")
 
-(define parser/t3 (read "(--)"))
+(define parser/t3 (. (lips.parse "(--)" (current-environment)) 0))
 
 (set-special! ":" 'keyword lips.specials.LITERAL)
 
@@ -44,16 +44,54 @@
          (* .x .x .x))))
 
 (define parser/t6 (let ((x 3)) ::x))
-(define parser/t7 (read "(let ((x 3)) ::x))"))
+(define parser/t7 (. (lips.parse "(let ((x 3)) ::x)" (current-environment)) 0))
 
 (unset-special! "::")
 
 (set-special! "#nil" 'nil-fn lips.specials.SYMBOL)
-(define (nil-fn) nil)
+(define (nil-fn) '())
 
 (define parser/t8 (list #nil #nil '#nil '#nil #nil))
 
 (unset-special! "#nil")
+
+(set-special! "$" 'raw-string lips.specials.SYMBOL)
+
+(define (raw-string)
+  (if (char=? (peek-char) #\")
+      (begin
+        (read-char)
+        (let loop ((result (vector)) (char (peek-char)))
+          (read-char)
+          (if (char=? char #\")
+              (apply string (vector->list result))
+              (loop (vector-append result (vector char)) (peek-char)))))))
+
+(define parser/t9 $"foo \ bar")
+
+(unset-special! "$")
+
+(set-special! "#:num" 'line-num lips.specials.SYMBOL)
+
+(define (line-num)
+  (let* ((lexer lips.__parser__.__lexer__)
+         (token lexer.__token__))
+    (+ token.col)))
+
+(define parser/t10 (list #:num #:num #:num #:num))
+
+(unset-special! "#:num")
+
+(test "parser: #!fold-case"
+      (lambda (t)
+        (define foo 10)
+        (t.is (to.throw FOO) #t)
+        #!fold-case
+        (t.is (to.throw FOO) #f)
+        (define BAR 20)
+        (t.is (* FOO Bar) 200)
+        #!no-fold-case
+        (t.is (to.throw FOO) #t)))
 
 (test "parser: syntax extension"
       (lambda (t)
@@ -64,11 +102,13 @@
         (t.is parser/t5 ':foo)
         (t.is parser/t6 27)
         (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))
-        (t.is parser/t8 '(nil nil nil nil nil))))
+        (t.is parser/t8 '(() () () () ()))
+        (t.is parser/t9 "foo \\ bar")
+        (t.snapshot parser/t10)))
 
 (test "parser: escape hex literals"
       (lambda (t)
-         (t.is (to.throw (read "\"\\x9\"")) #t)
+         (t.is (to.throw (. (lips.parse "\"\\x9\"") 0)) #t)
          (t.is "\uFFFF" "￿")
          (t.is "\x9;\x9;" "\t\t")
          (t.is (repr '|foo bar|) "foo bar")
@@ -212,45 +252,59 @@
                  ))
           (t.is (x.valueOf) "\n"))))
 
-
+(test "parser: should throw error on quote without expression"
+      (lambda (t)
+        (let ((specs '("(list ')" "(list '')")))
+          (for-each (lambda (code)
+                      (t.is (to.throw (lips.parse code)) #t))
+                    specs))))
 
 (test "parser: should throw an error on invalid dot sequennce #245"
       (lambda (t)
         (t.is (to.throw (lips.parse "(1 . 2 3)")) #t)))
 
-(test "tokenizer: should create tokens for simple list"
+(test "parser: should throw error on invalid hash token"
+      (lambda (t)
+        (t.is (to.throw (lips.parse "#f10")) #t)))
+
+(test "lexer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")
               #("(" "foo" "bar" "baz" ")"))))
 
-(test "tokenizer: should create tokens for numbers string and regexes"
+(test "lexer: should create tokens for numbers string and regexes"
       (lambda (t)
         (t.is (lips.tokenize "(foo #/( \\/)/g \"bar baz\" 10 1.1 10e2
                               10+10i +inf.0+inf.0i +nan.0+nan.0i 1/2+1/2i)")
               #("(" "foo" "#/( \\/)/g" "\"bar baz\"" "10" "1.1" "10e2"
                 "10+10i" "+inf.0+inf.0i" "+nan.0+nan.0i" "1/2+1/2i" ")"))))
 
-(test "tokenizer: should create token for alist"
+(test "lexer: should create token for alist"
       (lambda (t)
         (t.is (lips.tokenize "((foo . 10) (bar . 20) (baz . 30))")
               #("(" "(" "foo" "." "10" ")" "(" "bar" "." "20" ")" "("
                 "baz" "." "30" ")" ")"))))
 
-(test "tokenizer: should ignore comments"
+(test "lexer: should ignore comments"
       (lambda (t)
         (let ((code "(foo bar baz); (baz quux)"))
           (t.is (lips.tokenize code)
                 #("(" "foo" "bar" "baz" ")")))))
 
-(test "tokenizer: should handle semicolon in regexes and strings"
+(test "lexer: should handle semicolon in regexes and strings"
       (lambda (t)
         (let ((code "(\";()\" #/;;;/g baz); (baz quux)"))
           (t.is (lips.tokenize code)
                 #("(" "\";()\"" "#/;;;/g" "baz" ")")))))
 
-(test "tokenizer: with meta data"
+(test "lexer: with meta data"
       (lambda (t)
         (let* ((fs (require "fs"))
                (code (--> (fs.promises.readFile "./tests/stubs/macro.txt")
                           (toString))))
           (t.snapshot (lips.tokenize code true)))))
+
+(test "lexer: should throw error on unterminated string"
+      (lambda (t)
+        (let ((code "\"foo"))
+          (t.is (to.throw (lips.tokenize code)) #t))))

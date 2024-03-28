@@ -37,7 +37,7 @@
 
 (test "std: some"
       (lambda (t)
-        (t.is (some + nil) #f)
+        (t.is (some + '()) #f)
         (t.is (some odd? (list 1 2 3)) #t)
         (t.is (some odd? (list 2 4 6)) #f)))
 
@@ -52,16 +52,16 @@
         (let ((name (pluck "__name__")))
           (t.is (name 'foo) "foo"))
         (let ((none (pluck)))
-          (t.is (none 'foo) nil))
+          (t.is (none 'foo) '()))
         (let ((xy (pluck 'x 'y)))
           (t.is (xy &(:x 10 :y 20 :z 30)) &(:x 10 :y 20)))))
 
 (test "std: predicates"
       (lambda (t)
         (t.is (regex? #/foo/) #t)
-        (t.is (boolean? nil) #f)
-        (t.is (boolean? null) #f)
-        (t.is (boolean? undefined) #f)
+        (t.is (boolean? '()) #f)
+        (t.is (boolean? #null) #f)
+        (t.is (boolean? #void) #f)
         (t.is (boolean? #t) #t)
         (t.is (boolean? #f) #t)))
 
@@ -71,7 +71,7 @@
         (t.is (find #/^[0-9]+$/ (list "foo" "bar" "10")) "10")
         (t.is (to.throw (find "xxx" (list 1 2 3))) true)
         (t.is (find odd? (list 0 2 4 3)) 3)
-        (t.is (find odd? (list 0 2 4 6)) nil)))
+        (t.is (find odd? (list 0 2 4 6)) '())))
 
 (test "std: typecheck"
       (lambda (t)
@@ -92,6 +92,26 @@
           (let-values (((a b c) (values 1 2 3)) ((x y z) (values a b c)))
             (t.is (+ x y z) 60)
             (t.is (+ a b c) 6)))))
+
+(test "std: let-values as list"
+      (lambda (t)
+        (t.is (let-values ((x (values 3 4 5)) ((a b) (values 1 2)))
+                (cons a (cons b x)))
+              '(1 2 3 4 5))
+        (t.is (let-values (((x y z) (values 1 2 3)) (a (values 4 5)))
+                (cons x (cons y (cons z a))))
+              '(1 2 3 4 5))))
+
+(test "std: let*-values mixed values"
+      (lambda (t)
+        (define (div-mul x y)
+          (values (/ x y) (* x y)))
+
+        (t.is (let*-values (((x) 2)
+                            ((y) 10)
+                            ((div mul) (div-mul x y)))
+                (+ div mul))
+              101/5)))
 
 (test "std: should render SXML string"
       (lambda (t)
@@ -168,7 +188,7 @@
                  (closure (x.closure))
                  (v (closure)))
             (t.is v.x 10)
-            (t.is result #(true true 10))))))
+            (t.is result (vector true true 10))))))
 
 ;; bytevector tests from R7RS spec
 (test "std: bytevector-u8-ref"
@@ -223,7 +243,7 @@
         (t.is (atanh -2)
               -0.5493061443340548+1.5707963267948966i)))
 
-(test.failing "std: Petrofsky let"
+(test "std: Petrofsky let"
       (lambda (t)
         (t.is (let - ((n (- 1))) n) -1)))
 
@@ -287,3 +307,38 @@
           (y kdr set-kdr!))
 
         (t.is (kons 1 2) (kons 1 2))))
+
+(test.skip "std: equal? on same cycle"
+      (lambda (t)
+        (let ((x (cons 1 (cons 2 '()))))
+          (set-cdr! (cdr x) x)
+          (t.is (equal? x x) #t))))
+
+(test.skip "std: equal?  on identical cycles"
+      (lambda (t)
+        (let ((a (list 1 2))
+              (b (list 1 2)))
+          (set-cdr! (cdr a) a)
+          (set-cdr! (cdr b) b)
+          (t.is (equal? a b) #t))))
+
+(test "std: define-values with dot"
+      (lambda (t)
+        (define-values (a . b)
+          (values 1 2))
+        (t.is (cons a b) '(1 2))))
+
+(test "std: iterators"
+      (lambda (t)
+        (let ((obj (object))
+              (max 5))
+          (set-obj! obj Symbol.iterator
+                    (lambda ()
+                      (let ((i 0))
+                        (object :next (lambda ()
+                                        (set! i (+ i 1))
+                                        (if (> i max)
+                                            `&(:done #t)
+                                            `&(:done #f :value ,(/ 1 i))))))))
+          (t.is (iterator->array obj) #(1 1/2 1/3 1/4 1/5))
+          (t.is (Array.from (iterator->array obj)) #(1 0.5 0.3333333333333333 0.25 0.2)))))

@@ -17,7 +17,7 @@
        (if (not (. ,attempt 'passed))
            (--> (. ,attempt 'errors)
                 (forEach (lambda (e)
-                           (set-obj! e 'savedError undefined)))))
+                           (set-obj! e 'savedError #void)))))
        (--> ,attempt (commit)))))
 
 
@@ -27,10 +27,7 @@
    If code throw exception it will return true, otherwise
    it will return false."
   (let ((result (gensym)))
-    `(let ((,result (try (begin ,@body #f) (catch (e) #t))))
-       (if (not ,result)
-           (throw (new Error (concat "failed: " ',(repr body true)))))
-       ,result)))
+    `(try (begin ,@body #f) (catch (e) #t))))
 
 (define (%test-specs t specs)
   "(%test-specs t list)

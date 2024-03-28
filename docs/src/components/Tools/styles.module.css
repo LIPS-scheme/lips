@@ -1,0 +1,26 @@
+.svg {
+  height: 200px;
+  width: 200px;
+}
+.tools {
+    margin: 10px auto;
+    max-width: 1000px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
+}
+@media (max-width: 1000px) {
+    .tools {
+        margin: 10px 1em;
+    }
+}
+@media (max-width: 620px) {
+    .tools {
+        display: flex;
+        flex-direction: column;
+    }
+}
+.header {
+    font-size: 2em;
+    grid-area: 1 / 1 / 2 / 3;
+}
