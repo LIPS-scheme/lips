@@ -330,8 +330,8 @@ LIPS don't check the number of argumnents when calling a procedure:
               (print a b c))))
   (test 10))
 ;; ==> 10
-;; ==> #<undefined>
-;; ==> #<undefined>
+;; ==> #void
+;; ==> #void
 ```
 
 The same as with JavaScript if you don't pass an argument it will be undefined. But you still have full compatible with Scheme and use [arguments with variable artity](/docs/scheme-intro/core#variable-number-of-arguments):
