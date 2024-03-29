@@ -4062,13 +4062,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         if (is_atom(pattern) && !(pattern instanceof LSymbol)) {
             return same_atom(pattern, code);
         }
-        if (pattern instanceof LSymbol &&
-            symbols.includes(pattern.literal())) { // TODO: literal() may be SLOW
-            if (!LSymbol.is(code, pattern)) {
-                return false;
+        if (pattern instanceof LSymbol) {
+            const literal = pattern.literal(); // TODO: literal() may be SLOW
+            if (symbols.includes(literal)) {
+                if (!LSymbol.is(code, literal) && !LSymbol.is(pattern, code)) {
+                    return false;
+                }
+                const ref = expansion.ref(literal);
+                return !ref || ref === define || ref === global_env;
             }
-            const ref = expansion.ref(pattern);
-            return !ref || ref === define || ref === global_env;
         }
         if (Array.isArray(pattern) && Array.isArray(code)) {
             log('<<< a 1');
@@ -4300,6 +4302,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 pattern
             });
             if (is_nil(code.cdr)) {
+                log('>> 13 (a)');
                 // last item in in call using in recursive calls on
                 // last element of the list
                 // case of pattern (p . rest) and code (0)
@@ -4354,9 +4357,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 code
             });
             const car = traverse(pattern.car, code.car, pattern_names, ellipsis);
-            log({car, pattern: pattern.car, code: code.car});
             const cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
-            log({ car, cdr });
+            log({
+                $car_code: code.car,
+                $car_pattern: pattern.car,
+                car,
+                $cdr_code: code.cdr,
+                $cdr_pattern: pattern.cdr,
+                cdr
+            });
             if (car && cdr) {
                 return true;
             }
@@ -4633,6 +4642,7 @@ function transform_syntax(options = {}) {
             return expr;
         }
         if (is_pair(expr) || is_array) {
+            log('>> 0');
             const first = is_array ? expr[0] : expr.car;
             let second, rest_second;
             if (is_array) {
