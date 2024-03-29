@@ -61,7 +61,7 @@ snippet](https://lists.gnu.org/archive/html/emacs-devel/2024-03/msg00282.html).
 
 This solution worked great, until I've found that it don't properly handle Scheme expression
 comments `#;`, that are part of the solution. In the meantime on the mailing list there was discussion
-about this feature (probably becase it's part of GNU Kawa) to integrate with builtin `scheme.el`.
+about this feature (probably because it's part of GNU Kawa) to integrate with builtin `scheme.el`.
 So soon you may not need a hack like this when working with regular expressions.
 
 This is a proposed solution after I said that the code doesn't work for Scheme expression comments.
