@@ -8297,8 +8297,10 @@ var global_env = new Environment({
                 let cwd;
                 if (module_path) {
                     module_path = module_path.valueOf();
-                    file = path.join(module_path, file);
-                } else {
+                    if (!file.startsWith('/')) {
+                        file = path.join(module_path, file);
+                    }
+                } else if (!file.startsWith('/')) {
                     const cmd = g_env.get('command-line', { throwError: false });
                     let args;
                     if (cmd) {
