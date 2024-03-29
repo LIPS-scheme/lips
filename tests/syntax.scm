@@ -1579,3 +1579,18 @@
 
         (t.is (alist foo 10 bar 20 baz 30)
               '((foo . 10) (bar . 20) (baz . 30)))))
+
+(test "syntax: nested syntax rules (SRFI-239 case)"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((foo expr clauses ...)
+             (let-syntax ((clause
+                           (syntax-rules ::: (_ pair null doted matched)
+                             ((clause obj pair n d ((_ . _) body1 ::: body2) remaining :::)
+                              (if (pair? obj)
+                                  (begin body1 ::: body2))))))
+               (let ((obj expr))
+                 (clause obj pair null doted clauses ...))))))
+
+        (t.is (foo '(1 2) ((_ . _) 'pair)) 'pair)))

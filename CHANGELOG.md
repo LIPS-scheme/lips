@@ -1,3 +1,7 @@
+## 1.0.0-beta.20
+### Bugfix
+* fix duplicated identifers in syntax-rules (case of SRFI-239 example implementation)
+
 ## 1.0.0-beta.19
 ### Breaking
 * change `get-environment-variables` and `get-environment-variable` returns nil and undefined in the browser
