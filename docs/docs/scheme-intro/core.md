@@ -782,7 +782,7 @@ Another useful procedure is `alist-map`:
   (map (lambda (item) (fun (car item) (cdr item))) alist))
 ```
 
-You can use this procedure to map over values or keys inside an alist.
+You can use this procedure to map over values or keys inside an [alist](#alists).
 
 ```scheme
 (define alist (map cons '(a b c d) '(1 2 3 4)))
@@ -875,7 +875,7 @@ In Scheme you can have objects (data with behavior), the base code for objects u
 Notice that it's function which returns a function (`lambda`). You can send a message into that object,
 it will process it by returning a value from closure or mutating that value.
 
-In the same way you can use `alist`.
+In the same way you can use [alist](#alists).
 
 ### Records
 Anther way to create objects in Scheme, are R<sup>7</sup>RS records, they were first defined in
