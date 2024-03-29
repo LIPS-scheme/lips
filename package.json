@@ -6,8 +6,8 @@
   "main": "dist/lips.min.js",
   "module": "dist/lips.esm.min.js",
   "exports": {
-    "import": "dist/lips.esm.min.js",
-    "require": "dist/lips.cjs"
+    "import": "./dist/lips.esm.min.js",
+    "require": "./dist/lips.cjs"
   },
   "unpkg": "dist/lips.min.js",
   "scripts": {
