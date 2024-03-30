@@ -950,6 +950,18 @@ You can also use the `Promise` constructor yourself:
 In the above example, we import a regular callback based fs module and use the `Promise` constructor
 abstracted away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
 
+### Finding LIPS Scheme directory
+
+With help from `(require.resolve)` you can get the path of the root directory of LIPS Scheme:
+
+```scheme
+(--> (require.resolve "@jcubic/lips") (replace #/dist\/[^\/]+$/ ""))
+```
+
+Node.js REPL load lips from Common.jS file and `require.resolve` returns path to file
+`dist/lips.cjs`, by removing with with String::replace and regular expression you can the real path
+to the root of the LIPS Scheme.
+
 ## Binary compiler
 
 LIPS Scheme have dumb binary compiler. The compiler is a way to compress the LIPS Scheme code and
