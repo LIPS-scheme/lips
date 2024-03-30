@@ -620,6 +620,27 @@ Objects also have longhand form with `object` macro:
 But note that object macro is async (return a Promise) so it may be problematic when used it
 with native JavaScript code.
 
+Using long form `(object)` syntax you can use splicing with help of `eval`:
+
+```scheme
+(let ((args '(:foo "lorem" :bar "ipsum")))
+   (eval `(object ,@args)))
+;; ==> &(:foo "lorem" :bar "ipsum")
+```
+
+The same you can use macros that will return LIPS Scheme code:
+
+```scheme
+(define-macro (create-object . args)
+  `(object ,@args))
+
+(create-object :foo "lorem" :bar "ipsum")
+;; ==> &(:foo "lorem" :bar "ipsum")
+```
+
+**NOTE**: this example macro works the same `object` is it's not that useful, but you can create
+more complex code where you will be able to generate object literals with splicing.
+
 Object literal also have shorthad notation:
 
 ```scheme
