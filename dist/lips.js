@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 30 Mar 2024 01:27:58 +0000
+ * build: Sat, 30 Mar 2024 18:15:37 +0000
  */
 
 (function (global, factory) {
@@ -13627,6 +13627,7 @@
         }
       }
       var package_name = '@lips';
+      var has_package = file.startsWith(package_name);
       // TODO: move **module-path** to internal env
       var PATH = '**module-path**';
       var module_path = global_env.get(PATH, {
@@ -13686,46 +13687,41 @@
                   _path = nodeRequire('path');
                   _fs = nodeRequire('fs');
                   root_dir = get_root_dir();
-                  if (!file.startsWith(package_name)) {
-                    _context18.next = 10;
-                    break;
+                  if (has_package) {
+                    file = file.replace(package_name, root_dir);
                   }
-                  file = file.replace(package_name, root_dir);
-                  _context18.next = 22;
-                  break;
-                case 10:
                   if (!module_path) {
-                    _context18.next = 15;
+                    _context18.next = 12;
                     break;
                   }
                   module_path = module_path.valueOf();
                   if (!file.startsWith('/')) {
                     file = _path.join(module_path, file);
                   }
-                  _context18.next = 22;
+                  _context18.next = 19;
                   break;
-                case 15:
+                case 12:
                   if (file.startsWith('/')) {
-                    _context18.next = 22;
+                    _context18.next = 19;
                     break;
                   }
                   cmd = g_env.get('command-line', {
                     throwError: false
                   });
                   if (!cmd) {
-                    _context18.next = 21;
+                    _context18.next = 18;
                     break;
                   }
-                  _context18.next = 20;
+                  _context18.next = 17;
                   return cmd();
-                case 20:
+                case 17:
                   _args20 = _context18.sent;
-                case 21:
+                case 18:
                   if (_args20 && !is_nil(_args20)) {
                     process.cwd();
                     file = _path.join(_path.dirname(_args20.car.valueOf()), file);
                   }
-                case 22:
+                case 19:
                   global_env.set(PATH, _path.dirname(file));
                   _fs.readFile(file, function (err, data) {
                     if (err) {
@@ -13742,26 +13738,37 @@
                       }
                     }
                   });
-                  _context18.next = 29;
+                  _context18.next = 26;
                   break;
-                case 26:
-                  _context18.prev = 26;
+                case 23:
+                  _context18.prev = 23;
                   _context18.t0 = _context18["catch"](0);
                   console.error(_context18.t0);
-                case 29:
+                case 26:
                 case "end":
                   return _context18.stop();
               }
-            }, _callee18, null, [[0, 26]]);
+            }, _callee18, null, [[0, 23]]);
           }));
           return function (_x14, _x15) {
             return _ref31.apply(this, arguments);
           };
         }());
       }
+      if (has_package) {
+        var _global_env$get, _path3;
+        var _path2 = (_global_env$get = global_env.get('__dirname', {
+          throwError: false
+        })) !== null && _global_env$get !== void 0 ? _global_env$get : current_script;
+        (_path3 = _path2) !== null && _path3 !== void 0 ? _path3 : _path2 = current_script;
+        var _root = _path2.replace(/dist\/?[^\/]*$/, '');
+        file = file.replace(package_name, _root);
+      }
       if (module_path) {
         module_path = module_path.valueOf();
-        file = module_path + '/' + file.replace(/^\.?\/?/, '');
+        if (!file.startsWith('/')) {
+          file = module_path + '/' + file.replace(/^\.?\/?/, '');
+        }
       }
       return fetch(file).then(function (code) {
         global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
@@ -14857,7 +14864,7 @@
     }, "(clone list)\n\n        Function that returns a clone of the list, that does not share any pairs with the\n        original, so the clone can be safely mutated without affecting the original."),
     // ------------------------------------------------------------------
     append: doc('append', function append() {
-      var _global_env$get;
+      var _global_env$get2;
       for (var _len25 = arguments.length, items = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
         items[_key25] = arguments[_key25];
       }
@@ -14867,7 +14874,7 @@
         }
         return item;
       });
-      return (_global_env$get = global_env.get('append!')).call.apply(_global_env$get, [this].concat(_toConsumableArray(items)));
+      return (_global_env$get2 = global_env.get('append!')).call.apply(_global_env$get2, [this].concat(_toConsumableArray(items)));
     }, "(append item ...)\n\n        Function that creates a new list with each argument appended end-to-end.\n        It will always return a new list and not modify its arguments."),
     // ------------------------------------------------------------------
     'append!': doc('append!', function () {
@@ -15308,7 +15315,7 @@
     }, "(find fn list)\n        (find regex list)\n\n        Higher-order function that finds the first value for which fn return true.\n        If called with a regex it will create a matcher function."),
     // ------------------------------------------------------------------
     'for-each': doc('for-each', function (fn) {
-      var _global_env$get2;
+      var _global_env$get3;
       typecheck('for-each', fn, 'function');
       for (var _len32 = arguments.length, lists = new Array(_len32 > 1 ? _len32 - 1 : 0), _key32 = 1; _key32 < _len32; _key32++) {
         lists[_key32 - 1] = arguments[_key32];
@@ -15319,7 +15326,7 @@
       // we need to use call(this because babel transpile this code into:
       // var ret = map.apply(void 0, [fn].concat(lists));
       // it don't work with weakBind
-      var ret = (_global_env$get2 = global_env.get('map')).call.apply(_global_env$get2, [this, fn].concat(lists));
+      var ret = (_global_env$get3 = global_env.get('map')).call.apply(_global_env$get3, [this, fn].concat(lists));
       if (is_promise(ret)) {
         return ret.then(function () {});
       }
@@ -15847,8 +15854,8 @@
   function reversseFind(dir, fn) {
     var parts = dir.split(path.sep).filter(Boolean);
     for (var i = parts.length; i--;) {
-      var _path2;
-      var p = (_path2 = path).join.apply(_path2, ['/'].concat(_toConsumableArray(parts.slice(0, i + 1))));
+      var _path4;
+      var p = (_path4 = path).join.apply(_path4, ['/'].concat(_toConsumableArray(parts.slice(0, i + 1))));
       if (fn(p)) {
         return p;
       }
@@ -16875,6 +16882,7 @@
         url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/").concat(std);
       }
     }
+    global_env.set('__dirname', url.replace(/[^/]+$/, ''));
     var load = global_env.get('load');
     return load.call(user_env, url, global_env);
   }
@@ -17288,10 +17296,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 30 Mar 2024 01:27:58 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sat, 30 Mar 2024 18:15:37 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 30 Mar 2024 01:27:58 +0000').valueOf();
+    var date = LString('Sat, 30 Mar 2024 18:15:37 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17331,7 +17339,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sat, 30 Mar 2024 01:27:58 +0000';
+  var date = 'Sat, 30 Mar 2024 18:15:37 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

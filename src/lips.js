@@ -8255,6 +8255,7 @@ var global_env = new Environment({
             }
         }
         const package_name = '@lips';
+        const has_package = file.startsWith(package_name);
         // TODO: move **module-path** to internal env
         const PATH = '**module-path**';
         var module_path = global_env.get(PATH, { throwError: false });
@@ -8304,9 +8305,10 @@ var global_env = new Environment({
                     const fs = nodeRequire('fs');
                     let cwd;
                     const root_dir = get_root_dir();
-                    if (file.startsWith(package_name)) {
+                    if (has_package) {
                         file = file.replace(package_name, root_dir);
-                    } else if (module_path) {
+                    }
+                    if (module_path) {
                         module_path = module_path.valueOf();
                         if (!file.startsWith('/')) {
                             file = path.join(module_path, file);
@@ -8343,9 +8345,17 @@ var global_env = new Environment({
                 }
             });
         }
+        if (has_package) {
+            let path = global_env.get('__dirname', { throwError: false }) ?? current_script;
+            path ??= current_script;
+            const root = path.replace(/dist\/?[^\/]*$/, '');
+            file = file.replace(package_name, root);
+        }
         if (module_path) {
             module_path = module_path.valueOf();
-            file = module_path + '/' + file.replace(/^\.?\/?/, '');
+            if (!file.startsWith('/')) {
+                file = module_path + '/' + file.replace(/^\.?\/?/, '');
+            }
         }
         return fetch(file).then(code => {
             global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
@@ -11486,6 +11496,7 @@ function bootstrap(url = '') {
             url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/${std}`;
         }
     }
+    global_env.set('__dirname', url.replace(/[^/]+$/, ''));
     var load = global_env.get('load');
     return load.call(user_env, url, global_env);
 }
