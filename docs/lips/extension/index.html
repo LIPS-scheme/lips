@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.2.0">
 <title data-rh="true">Extending LIPS | LIPS Scheme</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" name="twitter:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" property="og:url" content="https://lips.js.org/docs/lips/extension"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Extending LIPS | LIPS Scheme"><meta data-rh="true" name="description" content="A way to extends LIPS syntax, not only with macros"><meta data-rh="true" property="og:description" content="A way to extends LIPS syntax, not only with macros"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://lips.js.org/docs/lips/extension"><link data-rh="true" rel="alternate" href="https://lips.js.org/docs/lips/extension" hreflang="en"><link data-rh="true" rel="alternate" href="https://lips.js.org/docs/lips/extension" hreflang="x-default"><link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="LIPS Scheme blog RSS Feed"><link rel="stylesheet" href="/assets/css/styles.818ad0c2.css">
-<script src="/assets/js/runtime~main.59481896.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.f121cbbb.js" defer="defer"></script>
 <script src="/assets/js/main.dda63d07.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -198,8 +198,8 @@ of the standard library.</p>
 </span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token comment" style="color:#999988;font-style:italic">;; ==&gt; &quot;x = 12&quot;</span>
 </span></code></pre><div class="buttonGroup_6DOT"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_FhaS" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_phi_"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_FfTR"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <p>The limitation of this solution is that you can&#x27;t use strings inside <code>${ ... }</code>. It will break the
-Lexer.  In the future there may be a way to define such syntax extensions (See <a href="https://github.com/jcubic/lips/issues/321" target="_blank" rel="noopener noreferrer">Add full string
-interpolation as syntax extension</a>).</p>
+Lexer. In order to have full string interpolation you need to read the parser stream (See <a href="#standard-input">Standard
+input</a> inside syntax extensions).</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="accessing-parser">Accessing parser<a href="#accessing-parser" class="hash-link" aria-label="Direct link to Accessing parser" title="Direct link to Accessing parser">​</a></h3>
 <p>In LIPS syntax extensions you can access the parser instance, so you can implement syntax
 extension that return line number:</p>
