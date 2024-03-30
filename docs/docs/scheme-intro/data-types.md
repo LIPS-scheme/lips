@@ -126,7 +126,7 @@ You can also put escaped characters in symbol, like in strings:
 There are 3 types of comments in Scheme:
 
 1. `;`semicolon create comments to the end of the line
-2. `#;` quote single S-Expression (list)
+2. `#;` quote single S-Expression (list/tree or atoms)
 3. `#|   |#` those are multiline comments that can wrap any text inside
 
 ## Empty list
