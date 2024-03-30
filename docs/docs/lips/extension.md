@@ -260,8 +260,8 @@ With syntax extensions you can create string interpolation that expand into a Sc
 ```
 
 The limitation of this solution is that you can't use strings inside `${ ... }`. It will break the
-Lexer.  In the future there may be a way to define such syntax extensions (See [Add full string
-interpolation as syntax extension](https://github.com/jcubic/lips/issues/321)).
+Lexer. In order to have full string interpolation you need to read the parser stream (See [Standard
+input](#standard-input) inside syntax extensions).
 
 ### Accessing parser
 In LIPS syntax extensions you can access the parser instance, so you can implement syntax
