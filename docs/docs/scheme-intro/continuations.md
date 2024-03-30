@@ -159,7 +159,10 @@ continuations.
                           (return (eof-object))))))))
 ```
 
-This procedure allow defining generators:
+The above example came from
+[SRFI 158 example implementation](https://github.com/scheme-requests-for-implementation/srfi-158/blob/master/srfi-158-impl.scm#L77-L87).
+
+The procedure `make-coroutine-generator` allows defining generators:
 
 ```scheme
 (define counter (make-coroutine-generator
@@ -168,12 +171,10 @@ This procedure allow defining generators:
                      ((<= 3 i))
                      (yield i)))))
 
-(let iter ((i (counter))
-           (result '()))
-  (if (eof-object? i)
-      (reverse result)
-      (iter (counter) (cons i result))))
-;; ==> (0 1 2)
+(counter) ;; ==> 0
+(counter) ;; ==> 1
+(counter) ;; ==> 2
+(counter) ;; ==> #<eof>
 ```
 
 With continuations, you can do a lot of cool new flow control structures.
