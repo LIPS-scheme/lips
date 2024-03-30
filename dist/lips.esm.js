@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 29 Mar 2024 23:42:26 +0000
+ * build: Sat, 30 Mar 2024 01:27:58 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -13619,6 +13619,7 @@ var global_env = new Environment({
         env = this.get('**interaction-environment**');
       }
     }
+    var package_name = '@lips';
     // TODO: move **module-path** to internal env
     var PATH = '**module-path**';
     var module_path = global_env.get(PATH, {
@@ -13660,48 +13661,66 @@ var global_env = new Environment({
         return code;
       });
     }
+    function get_root_dir() {
+      var __dirname = global_env.get('__dirname');
+      return __dirname.replace(/[^/]+$/, '');
+    }
     if (is_node()) {
       return new Promise( /*#__PURE__*/function () {
         var _ref31 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(resolve, reject) {
-          var path, cmd, _args20;
+          var _path, _fs, root_dir, cmd, _args20;
           return _regeneratorRuntime.wrap(function _callee18$(_context18) {
             while (1) switch (_context18.prev = _context18.next) {
               case 0:
-                path = nodeRequire('path');
+                _context18.prev = 0;
+                _context18.next = 3;
+                return node_ready;
+              case 3:
+                _path = nodeRequire('path');
+                _fs = nodeRequire('fs');
+                root_dir = get_root_dir();
+                if (!file.startsWith(package_name)) {
+                  _context18.next = 10;
+                  break;
+                }
+                file = file.replace(package_name, root_dir);
+                _context18.next = 22;
+                break;
+              case 10:
                 if (!module_path) {
-                  _context18.next = 6;
+                  _context18.next = 15;
                   break;
                 }
                 module_path = module_path.valueOf();
                 if (!file.startsWith('/')) {
-                  file = path.join(module_path, file);
+                  file = _path.join(module_path, file);
                 }
-                _context18.next = 13;
+                _context18.next = 22;
                 break;
-              case 6:
+              case 15:
                 if (file.startsWith('/')) {
-                  _context18.next = 13;
+                  _context18.next = 22;
                   break;
                 }
                 cmd = g_env.get('command-line', {
                   throwError: false
                 });
                 if (!cmd) {
-                  _context18.next = 12;
+                  _context18.next = 21;
                   break;
                 }
-                _context18.next = 11;
+                _context18.next = 20;
                 return cmd();
-              case 11:
+              case 20:
                 _args20 = _context18.sent;
-              case 12:
+              case 21:
                 if (_args20 && !is_nil(_args20)) {
                   process.cwd();
-                  file = path.join(path.dirname(_args20.car.valueOf()), file);
+                  file = _path.join(_path.dirname(_args20.car.valueOf()), file);
                 }
-              case 13:
-                global_env.set(PATH, path.dirname(file));
-                nodeRequire('fs').readFile(file, function (err, data) {
+              case 22:
+                global_env.set(PATH, _path.dirname(file));
+                _fs.readFile(file, function (err, data) {
                   if (err) {
                     reject(err);
                     global_env.set(PATH, module_path);
@@ -13716,11 +13735,17 @@ var global_env = new Environment({
                     }
                   }
                 });
-              case 15:
+                _context18.next = 29;
+                break;
+              case 26:
+                _context18.prev = 26;
+                _context18.t0 = _context18["catch"](0);
+                console.error(_context18.t0);
+              case 29:
               case "end":
                 return _context18.stop();
             }
-          }, _callee18);
+          }, _callee18, null, [[0, 26]]);
         }));
         return function (_x14, _x15) {
           return _ref31.apply(this, arguments);
@@ -15815,8 +15840,8 @@ combinations(['d', 'a'], 2, 5).forEach(function (spec) {
 function reversseFind(dir, fn) {
   var parts = dir.split(path.sep).filter(Boolean);
   for (var i = parts.length; i--;) {
-    var _path;
-    var p = (_path = path).join.apply(_path, ['/'].concat(_toConsumableArray(parts.slice(0, i + 1))));
+    var _path2;
+    var p = (_path2 = path).join.apply(_path2, ['/'].concat(_toConsumableArray(parts.slice(0, i + 1))));
     if (fn(p)) {
       return p;
     }
@@ -15840,7 +15865,7 @@ var noop = function noop() {};
 function node_specific() {
   return _node_specific.apply(this, arguments);
 } // -------------------------------------------------------------------------
-/* c8 ignore next 11 */
+/* c8 ignore next 15 */
 function _node_specific() {
   _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
     var _yield$import, createRequire, moduleURL, __dirname__, __filename__;
@@ -15914,16 +15939,20 @@ function _node_specific() {
   }));
   return _node_specific.apply(this, arguments);
 }
+var node_ready; // Scheme load function need to wait for node_specific
 if (is_node()) {
-  node_specific();
-} else if (typeof window !== 'undefined' && window === root) {
-  global_env.set('window', window);
-  global_env.set('global', undefined);
-  global_env.set('self', window);
-} else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
-  global_env.set('self', self);
-  global_env.set('window', undefined);
-  global_env.set('global', undefined);
+  node_ready = node_specific();
+} else {
+  node_ready = Promise.resolve();
+  if (typeof window !== 'undefined' && window === root) {
+    global_env.set('window', window);
+    global_env.set('global', undefined);
+    global_env.set('self', window);
+  } else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
+    global_env.set('self', self);
+    global_env.set('window', undefined);
+    global_env.set('global', undefined);
+  }
 }
 // -------------------------------------------------------------------------
 function typeErrorMessage(fn, got, expected) {
@@ -17252,10 +17281,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 29 Mar 2024 23:42:26 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 30 Mar 2024 01:27:58 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 29 Mar 2024 23:42:26 +0000').valueOf();
+  var date = LString('Sat, 30 Mar 2024 01:27:58 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17295,7 +17324,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 29 Mar 2024 23:42:26 +0000';
+var date = 'Sat, 30 Mar 2024 01:27:58 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

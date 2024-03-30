@@ -1,4 +1,6 @@
 ## 1.0.0-beta.19.1
+### Feature
+* allow to call `load` with `@lips` prefix [#354](https://github.com/jcubic/lips/issues/354)
 ### Bugfix
 * fix duplicated identifers in syntax-rules (case of SRFI-239 example implementation)
 * fix `load` of absolute path in Node

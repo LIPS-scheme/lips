@@ -8254,6 +8254,7 @@ var global_env = new Environment({
                 env = this.get('**interaction-environment**');
             }
         }
+        const package_name = '@lips';
         // TODO: move **module-path** to internal env
         const PATH = '**module-path**';
         var module_path = global_env.get(PATH, { throwError: false });
@@ -8291,42 +8292,55 @@ var global_env = new Environment({
                     return code;
                 });
         }
+        function get_root_dir() {
+            const __dirname = global_env.get('__dirname');
+            return __dirname.replace(/[^/]+$/, '');
+        }
         if (is_node()) {
             return new Promise(async (resolve, reject) => {
-                const path = nodeRequire('path');
-                let cwd;
-                if (module_path) {
-                    module_path = module_path.valueOf();
-                    if (!file.startsWith('/')) {
-                        file = path.join(module_path, file);
-                    }
-                } else if (!file.startsWith('/')) {
-                    const cmd = g_env.get('command-line', { throwError: false });
-                    let args;
-                    if (cmd) {
-                        args = await cmd();
-                    }
-                    if (args && !is_nil(args)) {
-                        cwd = process.cwd();
-                        file = path.join(path.dirname(args.car.valueOf()), file);
-                    }
-                }
-                global_env.set(PATH, path.dirname(file));
-                nodeRequire('fs').readFile(file, function(err, data) {
-                    if (err) {
-                        reject(err);
-                        global_env.set(PATH, module_path);
-                    } else {
-                        try {
-                            run(data).then(() => {
-                                resolve();
-                                global_env.set(PATH, module_path);
-                            }).catch(reject);
-                        } catch (e) {
-                            reject(e);
+                try {
+                    await node_ready;
+                    const path = nodeRequire('path');
+                    const fs = nodeRequire('fs');
+                    let cwd;
+                    const root_dir = get_root_dir();
+                    if (file.startsWith(package_name)) {
+                        file = file.replace(package_name, root_dir);
+                    } else if (module_path) {
+                        module_path = module_path.valueOf();
+                        if (!file.startsWith('/')) {
+                            file = path.join(module_path, file);
+                        }
+                    } else if (!file.startsWith('/')) {
+                        const cmd = g_env.get('command-line', { throwError: false });
+                        let args;
+                        if (cmd) {
+                            args = await cmd();
+                        }
+                        if (args && !is_nil(args)) {
+                            cwd = process.cwd();
+                            file = path.join(path.dirname(args.car.valueOf()), file);
                         }
                     }
-                });
+                    global_env.set(PATH, path.dirname(file));
+                    fs.readFile(file, function(err, data) {
+                        if (err) {
+                            reject(err);
+                            global_env.set(PATH, module_path);
+                        } else {
+                            try {
+                                run(data).then(() => {
+                                    resolve();
+                                    global_env.set(PATH, module_path);
+                                }).catch(reject);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    });
+                } catch(e) {
+                    console.error(e);
+                }
             });
         }
         if (module_path) {
@@ -10768,17 +10782,21 @@ async function node_specific() {
     });
 }
 // -------------------------------------------------------------------------
-/* c8 ignore next 11 */
+/* c8 ignore next 15 */
+let node_ready; // Scheme load function need to wait for node_specific
 if (is_node()) {
-    node_specific();
-} else if (typeof window !== 'undefined' && window === root) {
-    global_env.set('window', window);
-    global_env.set('global', undefined);
-    global_env.set('self', window);
-} else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
-    global_env.set('self', self);
-    global_env.set('window', undefined);
-    global_env.set('global', undefined);
+    node_ready = node_specific();
+} else {
+    node_ready = Promise.resolve();
+    if (typeof window !== 'undefined' && window === root) {
+        global_env.set('window', window);
+        global_env.set('global', undefined);
+        global_env.set('self', window);
+    } else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
+        global_env.set('self', self);
+        global_env.set('window', undefined);
+        global_env.set('global', undefined);
+    }
 }
 // -------------------------------------------------------------------------
 function typeErrorMessage(fn, got, expected, position = null) {
