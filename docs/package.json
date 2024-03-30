@@ -16,8 +16,8 @@
     "version": "node version.mjs"
   },
   "dependencies": {
-    "@docusaurus/core": "3.1.0",
-    "@docusaurus/preset-classic": "3.1.0",
+    "@docusaurus/core": "3.2.0",
+    "@docusaurus/preset-classic": "3.2.0",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "fuse.js": "^7.0.0",
