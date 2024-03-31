@@ -8034,6 +8034,16 @@ var global_env = new Environment({
         If there are missing inputs or other escape characters it
         will error.`),
     // ------------------------------------------------------------------
+    newline: doc('newline', function newline(port = null) {
+        const display = global_env.get('display');
+        const { use_dynamic } = this;
+        const env = global_env;
+        const dynamic_env = global_env;
+        call_function(display, ['\n', port], { env, dynamic_env, use_dynamic });
+    }, `(newline [port])
+
+        Write newline character to standard output or given port`),
+    // ------------------------------------------------------------------
     display: doc('display', function display(arg, port = null) {
         if (port === null) {
             port = internal(this, 'stdout');
@@ -11377,7 +11387,7 @@ function exec_collect(collect_callback) {
             dynamic_env = env === true ? user_env : env || user_env;
         }
         if (env === true) {
-        env = user_env;
+            env = user_env;
         } else {
             env = env || user_env;
         }
