@@ -1,6 +1,7 @@
-## 1.0.0-beta.19.1
+## 1.0.0-beta.20
 ### Feature
 * allow to call `load` with `@lips` prefix [#354](https://github.com/jcubic/lips/issues/354)
+* add default repr for R7RS records
 ### Bugfix
 * fix duplicated identifiers in syntax-rules (case of SRFI-239 example implementation)
 * fix `load` of absolute path in Node

@@ -1426,6 +1426,7 @@
          (new ,name ,@(cdr constructor)))
        (define (,pred obj)
          (instanceof ,name obj))
+       (set-repr! ,name (lambda () (string-append "#<record(" (symbol->string ',name) ")>")))
        ,@(map (lambda (field)
                 (let ((prop-name (car field))
                       (get (cadr field))
