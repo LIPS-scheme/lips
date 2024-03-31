@@ -264,7 +264,7 @@ This can happen with React/Preact and when the component returns a Promise. Some
 ### require manual loading
 
 You can load the SRFI with special syntax that start with `@lips`
-which points to root LIPS direcotry:
+which points to root LIPS directory:
 
 ```scheme
 (load "@lips/lib/srfi/<number>.scm")
