@@ -819,6 +819,18 @@ const gensym = (function() {
     };
 })();
 // ----------------------------------------------------------------------
+// :: helper function that make symbols in names array hygienic
+// ----------------------------------------------------------------------
+function hygienic_begin(envs, expr) {
+    const begin = global_env.get('begin');
+    const g_begin = gensym('begin');
+    envs.forEach(env => {
+        env.set(g_begin, begin);
+    });
+    return new Pair(g_begin, expr);
+}
+
+// ----------------------------------------------------------------------
 // Class used to escape promises: feature #54
 // ----------------------------------------------------------------------
 function QuotedPromise(promise) {
@@ -5319,7 +5331,7 @@ function let_macro(symbol) {
         }
         var i = 0;
         function exec() {
-            var output = new Pair(new LSymbol('begin'), code.cdr);
+            var output = hygienic_begin([env], code.cdr);
             return evaluate(output, {
                 env,
                 dynamic_env: env,
@@ -8710,8 +8722,10 @@ var global_env = new Environment({
             }
             env.set(name, parameter);
         }
-        const body = new Pair(new LSymbol('begin'), code.cdr);
-        return evaluate(body, { ...eval_args, env });
+        const expr = hygienic_begin([
+            env, eval_args.dynamic_env
+        ], code.cdr);
+        return evaluate(expr, { ...eval_args, env });
     }), `(syntax-parameterize (bindings) body)
 
          Macro work similar to let-syntax but the the bindnds will be exposed to the user.
@@ -8938,7 +8952,7 @@ var global_env = new Environment({
                 }
             }
             var rest = __doc__ ? code.cdr.cdr : code.cdr;
-            var output = new Pair(new LSymbol('begin'), rest);
+            var output = hygienic_begin([env, dynamic_env], rest);
             const eval_args = {
                 env,
                 dynamic_env,

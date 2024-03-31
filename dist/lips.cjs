@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 31 Mar 2024 13:11:06 +0000
+ * build: Sun, 31 Mar 2024 15:41:36 +0000
  */
 
 'use strict';
@@ -4224,6 +4224,18 @@ var gensym = function () {
     return with_props(count, Symbol("#:g".concat(count)));
   };
 }();
+// ----------------------------------------------------------------------
+// :: helper function that make symbols in names array hygienic
+// ----------------------------------------------------------------------
+function hygienic_begin(envs, expr) {
+  var begin = global_env.get('begin');
+  var g_begin = gensym('begin');
+  envs.forEach(function (env) {
+    env.set(g_begin, begin);
+  });
+  return new Pair(g_begin, expr);
+}
+
 // ----------------------------------------------------------------------
 // Class used to escape promises: feature #54
 // ----------------------------------------------------------------------
@@ -10360,7 +10372,7 @@ function let_macro(symbol) {
     }
     var i = 0;
     function exec() {
-      var output = new Pair(new LSymbol('begin'), code.cdr);
+      var output = hygienic_begin([env], code.cdr);
       return _evaluate(output, {
         env: env,
         dynamic_env: env,
@@ -14160,8 +14172,8 @@ var global_env = new Environment({
       }
       env.set(name, parameter);
     }
-    var body = new Pair(new LSymbol('begin'), code.cdr);
-    return _evaluate(body, _objectSpread(_objectSpread({}, eval_args), {}, {
+    var expr = hygienic_begin([env, eval_args.dynamic_env], code.cdr);
+    return _evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
       env: env
     }));
   }), "(syntax-parameterize (bindings) body)\n\n         Macro work similar to let-syntax but the the bindnds will be exposed to the user.\n         With syntax-parameterize you can define anaphoric macros."),
@@ -14357,7 +14369,7 @@ var global_env = new Environment({
         }
       }
       var rest = __doc__ ? code.cdr.cdr : code.cdr;
-      var output = new Pair(new LSymbol('begin'), rest);
+      var output = hygienic_begin([env, dynamic_env], rest);
       var eval_args = {
         env: env,
         dynamic_env: dynamic_env,
@@ -17321,10 +17333,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 31 Mar 2024 13:11:06 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 31 Mar 2024 15:41:36 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 31 Mar 2024 13:11:06 +0000').valueOf();
+  var date = LString('Sun, 31 Mar 2024 15:41:36 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17364,7 +17376,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 31 Mar 2024 13:11:06 +0000';
+var date = 'Sun, 31 Mar 2024 15:41:36 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

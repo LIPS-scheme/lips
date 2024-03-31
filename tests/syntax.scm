@@ -1606,3 +1606,23 @@
                      body ...))))))
 
         (t.snapshot (macroexpand (when (assoc 'bar alist) #void)))))
+
+(test "syntax: let and syntax-parameterize hygiene #356"
+      (lambda (t)
+        (define-syntax-parameter it (syntax-rules () ((_) (syntax-error "Use outside aif"))))
+
+        (define-syntax awhen
+          (syntax-rules ()
+            ((_ test body ...)
+             (let ((tmp test))
+               (syntax-parameterize
+                ((it (syntax-rules ()
+                       ((__) tmp))))
+                (if tmp
+                    (begin
+                      body ...)))))))
+
+        (t.is (let ((alist '((foo . "lorem") (bar . "ipsum") (baz . "dolor")))
+                    (begin (lambda () (throw 'ZONK))))
+                (awhen (assoc 'bar alist) "msg"))
+              "msg")))
