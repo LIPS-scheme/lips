@@ -261,7 +261,14 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 | Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
 
-### require `(load "./lib/srfi/<number>.scm")`
+### require manual loading
+
+You can load the SRFI with special syntax that start with `@lips`
+which points to root LIPS direcotry:
+
+```scheme
+(load "@lips/lib/srfi/<number>.scm")
+```
 
 They should be loaded as R7RS libraries in final 1.0.0 version
 
@@ -280,7 +287,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
 | Destructuring Lists | [SRFI 239](https://srfi.schemers.org/srfi-239/) |
 
-in Web (e.g. in Web REPL) you can use URL:
+in Web (e.g. in Web REPL) you can also use full URL:
 
 ```scheme
 (load "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/srfi/<NUMBER>.scm")
