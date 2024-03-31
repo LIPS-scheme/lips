@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 31 Mar 2024 11:02:22 +0000
+ * build: Sun, 31 Mar 2024 13:11:06 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -100,6 +100,10 @@ function _construct(t, e, r) {
   o.push.apply(o, e);
   var p = new (t.bind.apply(t, o))();
   return r && _setPrototypeOf(p, r.prototype), p;
+}
+
+function _readOnlyError(name) {
+  throw new TypeError("\"" + name + "\" is read-only");
 }
 
 function _arrayWithHoles(arr) {
@@ -6187,7 +6191,7 @@ function keywords_re() {
   return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
 }
 // line breaking rules
-Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
+Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1, not_close], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
 // ----------------------------------------------------------------------
 Formatter.prototype["break"] = function () {
   var code = this.__code__.replace(/\n[ \t]*/g, '\n ').replace(/^\s+/, '');
@@ -9571,7 +9575,7 @@ function transform_syntax() {
         var item = bindings[_name7];
         if (item === null) {
           return;
-        } else if (item) {
+        } else if (_name7 in bindings) {
           log({
             name: _name7,
             binding: bindings[_name7]
@@ -9602,7 +9606,8 @@ function transform_syntax() {
                 log('|| next 2');
                 next(_name7, new Pair(_car.cdr, _cdr));
               }
-              return _car.car;
+              // wrap with Value to handle undefined
+              return new Value(_car.car);
             } else if (is_nil(_cdr)) {
               return _car;
             } else {
@@ -9758,6 +9763,9 @@ function transform_syntax() {
               // undefined can be null caused by null binding
               // on empty ellipsis
               if (car !== undefined) {
+                if (car instanceof Value) {
+                  car.valueOf(), _readOnlyError("car");
+                }
                 if (is_spread) {
                   if (is_array) {
                     if (Array.isArray(car)) {
@@ -9814,6 +9822,9 @@ function transform_syntax() {
               nested: true
             });
             if (car) {
+              if (car instanceof Value) {
+                car.valueOf(), _readOnlyError("car");
+              }
               return new Pair(car, _nil);
             }
             return _nil;
@@ -9852,6 +9863,9 @@ function transform_syntax() {
               value: value
             });
             if (typeof value !== 'undefined') {
+              if (value instanceof Value) {
+                value = value.valueOf();
+              }
               if (is_array) {
                 _result3.push(value);
               } else {
@@ -9892,6 +9906,9 @@ function transform_syntax() {
             }
           }
           log('<<<< 2');
+          log({
+            result: _result3
+          });
           return _result3;
         }
       }
@@ -17301,10 +17318,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 31 Mar 2024 11:02:22 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 31 Mar 2024 13:11:06 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 31 Mar 2024 11:02:22 +0000').valueOf();
+  var date = LString('Sun, 31 Mar 2024 13:11:06 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17344,7 +17361,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 31 Mar 2024 11:02:22 +0000';
+var date = 'Sun, 31 Mar 2024 13:11:06 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

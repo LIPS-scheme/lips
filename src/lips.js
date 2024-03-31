@@ -4548,7 +4548,7 @@ function transform_syntax(options = {}) {
                 const item = bindings[name];
                 if (item === null) {
                     return;
-                } else if (item) {
+                } else if (name in bindings) {
                     log({ name, binding: bindings[name] });
                     if (is_pair(item)) {
                         log('[t 2 Pair ' + nested);
@@ -4575,7 +4575,8 @@ function transform_syntax(options = {}) {
                                 log('|| next 2');
                                 next(name, new Pair(car.cdr, cdr));
                             }
-                            return car.car;
+                            // wrap with Value to handle undefined
+                            return new Value(car.car);
                         } else if (is_nil(cdr)) {
                             return car;
                         } else {
@@ -4729,6 +4730,9 @@ function transform_syntax(options = {}) {
                             // undefined can be null caused by null binding
                             // on empty ellipsis
                             if (car !== undefined) {
+                                if (car instanceof Value) {
+                                    car = car.valueOf();
+                                }
                                 if (is_spread) {
                                     if (is_array) {
                                         if (Array.isArray(car)) {
@@ -4778,6 +4782,9 @@ function transform_syntax(options = {}) {
                             nested: true
                         });
                         if (car) {
+                            if (car instanceof Value) {
+                                car = car.valueOf();
+                            }
                             return new Pair(
                                 car,
                                 nil
@@ -4808,7 +4815,7 @@ function transform_syntax(options = {}) {
                         const next = (key, value) => {
                             new_bind[key] = value;
                         };
-                        const value = transform_ellipsis_expr(
+                        let value = transform_ellipsis_expr(
                             expr,
                             bind,
                             { nested: false },
@@ -4816,6 +4823,9 @@ function transform_syntax(options = {}) {
                         );
                         log({ value });
                         if (typeof value !== 'undefined') {
+                            if (value instanceof Value) {
+                                value = value.valueOf();
+                            }
                             if (is_array) {
                                 result.push(value);
                             } else {
@@ -4850,6 +4860,7 @@ function transform_syntax(options = {}) {
                         }
                     }
                     log('<<<< 2');
+                    log({ result });
                     return result;
                 }
             }

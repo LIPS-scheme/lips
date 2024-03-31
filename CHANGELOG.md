@@ -7,6 +7,7 @@
 * fix duplicated identifiers in syntax-rules (case of SRFI-239 example implementation)
 * fix `load` of absolute path in Node
 * fix require of LIPS package from Node
+* fix transforming `syntax-rules` ellipsis that expand into #void
 
 ## 1.0.0-beta.19
 ### Breaking

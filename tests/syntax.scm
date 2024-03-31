@@ -1594,3 +1594,15 @@
                  (clause obj pair null doted clauses ...))))))
 
         (t.is (foo '(1 2) ((_ . _) 'pair)) 'pair)))
+
+(test "syntax: ellipsis maps into #void"
+      (lambda (t)
+        (define-syntax when
+          (syntax-rules ()
+            ((_ test body ...)
+             (let ((tmp test))
+               (if tmp
+                   (begin
+                     body ...))))))
+
+        (t.snapshot (macroexpand (when (assoc 'bar alist) #void)))))
