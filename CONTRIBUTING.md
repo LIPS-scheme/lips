@@ -81,3 +81,21 @@ run ESLint execute:
 ```bash
 make lint
 ```
+
+## Codepell
+
+LIPS use [Codespell](https://github.com/codespell-project/codespell) to catch
+grammar mistakes. It runs as GitHub Action. But you can test locally so you can
+fix the type before it will give error from Action.
+
+You can install Codespell using PIP (you need to have Python installed):
+
+```bash
+pip install codespell
+```
+
+The run:
+
+```bash
+make codespell
+```
