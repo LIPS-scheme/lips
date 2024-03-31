@@ -1463,10 +1463,10 @@ class Parser {
         // to read data from the parser stream #150
         const internal = get_internal(this.__env__);
         const stdin = internal.get('stdin');
-        this.__env__.set('lips',  { ...lips, __parser__: this });
+        global_env.set('lips',  { ...lips, __parser__: this });
         internal.set('stdin', new ParserInputPort(this, this.__env__));
         const cleanup = () => {
-            this.__env__.set('lips', lips);
+            global_env.set('lips', lips);
             internal.set('stdin', stdin);
         }
         return unpromise(fn(), (result) => {
