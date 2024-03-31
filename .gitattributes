@@ -10,6 +10,7 @@ tests/snapshots/* binary
 *.xcm binary
 *.xcb binary
 dist/** linguist-generated
+docs/reference.json linguist-generated binary
 *config.js linguist-vendored
 docs/** linguist-documentation
 **/*.lips linguist-language=scheme

@@ -1,6 +1,7 @@
 ## 1.0.0-beta.20
 ### Feature
 * allow to call `load` with `@lips` prefix [#354](https://github.com/jcubic/lips/issues/354)
+* add string interpolation [#321](https://github.com/jcubic/lips/issues/321)
 * add default repr for R7RS records
 ### Bugfix
 * fix duplicated identifiers in syntax-rules (case of SRFI-239 example implementation)

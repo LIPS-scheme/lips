@@ -594,6 +594,7 @@
 ;; -----------------------------------------------------------------------------
 (define (regex re . rest)
   "(regex re)
+   (regex re flags)
 
    Creates a new regular expression from string, to not break Emacs formatting."
   (typecheck "regex" re "string")
@@ -731,6 +732,51 @@
                                    (concat ":" key " " value))))
                           (join " "))
                      ")")))
+
+;; -----------------------------------------------------------------------------
+(set-special! "#\"" '%string-interpolation lips.specials.SYMBOL)
+
+(define (%read-interpolated . rest)
+  "(%read-interpolated [port])
+
+   Function read from input port or stdin and return list of strings
+   interleaved with expressions from interpolation ${...}"
+  (let ((port (if (null? rest) (current-input-port) (car rest))))
+    (let loop ((part "") (result (vector)) (char (read-char port)))
+      (cond ((and (char=? char #\$)
+                  (char=? (peek-char port) #\{))
+             (read-char)
+             (let ((expr (read port)))
+               (let ((next (peek-char port)))
+                 (if (char=? next #\})
+                     (begin
+                       (read-char)
+                       (loop "" (vector-append result (vector part expr)) (read-char)))
+                     (error (string-append "Parse Error: expecting } got " (repr next)))))))
+            ((char=? char #\\)
+             (loop (string-append part (repr (read-char))) result (read-char)))
+            ((char=? char #\")
+             (vector->list (vector-append result (vector part))))
+            ((eof-object? char)
+             (error "Parse Error: expecting character #eof found"))
+            (else
+             (loop (string-append part (repr char)) result (read-char)))))))
+
+(define (%string-interpolation)
+  "(%string-interpolation)
+
+   String interpolation syntax-extension that read remainder of a string and return
+   LISP scheme code that evaluate to the string."
+  (let* ((lexer lips.__parser__.__lexer__)
+         (token lexer.__token__)
+         (offset (+ token.col 2))
+         (re (regex (string-append "\\n\\s{1," (repr offset) "}") "g")))
+    `(string-append ,@(map (lambda (expr)
+                             (if (string? expr)
+                                 (begin
+                                   (expr.replace re "\n"))
+                                 `(repr ,expr)))
+                           (%read-interpolated)))))
 
 ;; -----------------------------------------------------------------------------
 (define (bound? x . rest)
