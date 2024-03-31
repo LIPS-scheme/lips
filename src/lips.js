@@ -2325,7 +2325,7 @@ Formatter.rules = [
     [[p_o, not_p, sexp], 1, not_close],
     [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
     [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
-    [[p_o, keywords_re('if'), not_p, glob], 1],
+    [[p_o, keywords_re('if'), not_p, glob], 1, not_close],
     [[p_o, def_lambda_re, identifiers], 0, not_close],
     [[p_o, def_lambda_re, identifiers, string_re], 0, not_close],
     [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close],
