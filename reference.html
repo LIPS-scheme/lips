@@ -1,0 +1,1686 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-pages plugin-id-default" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.2.0">
+<title data-rh="true">LIPS Scheme | LIPS Scheme</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" name="twitter:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" property="og:url" content="https://lips.js.org/reference"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="LIPS Scheme | LIPS Scheme"><meta data-rh="true" name="description" content="Powerfull Scheme based Lisp in JavaScript"><meta data-rh="true" property="og:description" content="Powerfull Scheme based Lisp in JavaScript"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://lips.js.org/reference"><link data-rh="true" rel="alternate" href="https://lips.js.org/reference" hreflang="en"><link data-rh="true" rel="alternate" href="https://lips.js.org/reference" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://5NWAQNIDET-dsn.algolia.net" crossorigin="anonymous"><script data-rh="true" src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js" data-bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb"></script><link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="LIPS Scheme blog RSS Feed">
+
+
+
+<link rel="search" type="application/opensearchdescription+xml" title="LIPS Scheme" href="/opensearch.xml"><link rel="stylesheet" href="/assets/css/styles.029394e1.css">
+<script src="/assets/js/runtime~main.7a2fde60.js" defer="defer"></script>
+<script src="/assets/js/main.945b7ad4.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return localStorage.getItem("theme")}catch(t){}}();t(null!==e?e:"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" target="_self" href="/"><div class="navbar__logo"><img src="/img/logo-black.svg" alt="LIPS Scheme Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"><img src="/img/logo-white.svg" alt="LIPS Scheme Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"></div><b class="navbar__title text--truncate">Scheme</b></a><a class="navbar__item navbar__link" href="/docs/intro">Documentation</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/reference">Reference</a><a class="navbar__item navbar__link" href="/blog">Blog</a></div><div class="navbar__items navbar__items--right"><a href="https://twitter.com/LIPS_scheme" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Twitter/X<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><a href="https://gitter.im/jcubic/lips" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Chat<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><a href="https://github.com/jcubic/lips" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="Switch between dark and light mode (currently light mode)" aria-label="Switch between dark and light mode (currently light mode)" aria-live="polite"><svg viewBox="0 0 24 24" width="24" height="24" class="lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" class="darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><button type="button" class="DocSearch DocSearch-Button" aria-label="Search"><span class="DocSearch-Button-Container"><svg width="20" height="20" class="DocSearch-Search-Icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z" stroke="currentColor" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="DocSearch-Button-Placeholder">Search</span></span><span class="DocSearch-Button-Keys"></span></button></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="main-wrapper mainWrapper_z2l0"><main class="container_bfhl" style="--length:89"><h2 class="header_gB2a">LIPS Scheme Function and Macro Reference</h2><div class="search_Dg8h"><div class="input_wQOC"><label for="term">Search</label><input id="term"></div><ul><li><h2>-</h2><pre>(- n1 n2 ...)
+(- n)
+
+Subtracts n2 and subsequent numbers from n1. If only one argument is passed
+it will negate the value.</pre></li><li><h2>--&gt;</h2><pre>Helper macro that simplifies calling methods on objects. It works with chaining
+usage: (--&gt; ($ &quot;body&quot;)
+            (css &quot;color&quot; &quot;red&quot;)
+            (on &quot;click&quot; (lambda () (display &quot;click&quot;))))
+
+       (--&gt; document (querySelectorAll &quot;div&quot;))
+
+       (--&gt; (fetch &quot;https://jcubic.pl&quot;)
+            (text)
+            (match #/&lt;title&gt;([^&lt;]+)&lt;\/title&gt;/)
+            1)
+
+       (--&gt; document
+            (querySelectorAll &quot;.cmd-prompt&quot;)
+            0
+            &#x27;innerHTML
+            (replace #/&lt;(&quot;[^&quot;]+&quot;|[^&gt;])+&gt;/g &quot;&quot;))
+
+       (--&gt; document.body
+            (style.setProperty &quot;--color&quot; &quot;red&quot;))</pre></li><li><h2>.</h2><pre>(. obj . args)
+(get obj . args)
+
+This function uses an object as a base and keeps using arguments to get the
+property of JavaScript object. Arguments need to be a strings.
+e.g. `(. console &quot;log&quot;)` if you use any function inside LIPS it
+will be weakly bound (can be rebound), so you can call this log function
+without problem unlike in JavaScript when you use
+`var log = console.log`.
+`get` is an alias because . doesn&#x27;t work everywhere, e.g. you can&#x27;t
+pass it as an argument.</pre></li><li><h2>..</h2><pre>(.. foo.bar.baz)
+
+Gets the value from a nested object where the argument is a period separated symbol.</pre></li><li><h2>*</h2><pre>(* . numbers)
+
+Multiplies all numbers passed as arguments. If single value is passed
+it will return that value.</pre></li><li><h2>**</h2><pre>(** a b)
+
+Function that calculates number a to to the power of b.</pre></li><li><h2>/</h2><pre>(/ n1 n2 ...)
+(/ n)
+
+Divides n1 by n2 and subsequent arguments one by one. If single argument
+is passed it will calculate (/ 1 n).</pre></li><li><h2>&amp;</h2><pre>(&amp; a b)
+
+Function that calculates the bitwise and operation.</pre></li><li><h2>+</h2><pre>(+ . numbers)
+
+Sums all numbers passed as arguments. If single value is passed it will
+return that value.</pre></li><li><h2>&lt;</h2><pre>(&lt; x1 x2 ...)
+
+Function that compares its numerical arguments and checks if they are
+monotonically increasing, i.e. x1 &lt; x2 and x2 &lt; x3 and so on.</pre></li><li><h2>&lt;&lt;</h2><pre>(&lt;&lt; a b)
+
+Function that left shifts the value a by value b bits.</pre></li><li><h2>&lt;=</h2><pre>(&lt;= x1 x2 ...)
+
+Function that compares its numerical arguments and checks if they are
+monotonically nondecreasing, i.e. x1 &lt;= x2 and x2 &lt;= x3 and so on.</pre></li><li><h2>=</h2><pre>(== x1 x2 ...)
+
+Function that compares its numerical arguments and checks if they are
+all equal.</pre></li><li><h2>==</h2><pre>(== x1 x2 ...)
+
+Function that compares its numerical arguments and checks if they are
+all equal.</pre></li><li><h2>&gt;</h2><pre>(&gt; x1 x2 x3 ...)
+
+Function that compares its numerical arguments and checks if they are
+monotonically decreasing, i.e. x1 &gt; x2 and x2 &gt; x3 and so on.</pre></li><li><h2>&gt;=</h2><pre>(&gt;= x1 x2 ...)
+
+Function that compares its numerical arguments and checks if they are
+monotonically nonincreasing, i.e. x1 &gt;= x2 and x2 &gt;= x3 and so on.</pre></li><li><h2>&gt;&gt;</h2><pre>(&gt;&gt; a b)
+
+Function that right shifts the value a by value b bits.</pre></li><li><h2>|</h2><pre>(| a b)
+
+Function that calculates the bitwise or operation.</pre></li><li><h2>~</h2><pre>(~ number)
+
+Function that calculates the bitwise inverse (flip all the bits).</pre></li><li><h2>1-</h2><pre>(1- number)
+
+Function that subtracts 1 from the number and return result.</pre></li><li><h2>1+</h2><pre>(1+ number)
+
+Function that adds 1 to the number and return result.</pre></li><li><h2>abs</h2><pre>(abs number)
+
+Function that returns the absolute value (magnitude) of number.</pre></li><li><h2>alist-&gt;assign</h2><pre>(alist-&gt;assign alist . list-of-alists)
+
+Function that works like Object.assign but for LIPS alists.</pre></li><li><h2>alist-&gt;object</h2><pre>(alist-&gt;object alist)
+
+Function that converts alist pairs to a JavaScript object.</pre></li><li><h2>always</h2><pre>(always constant)
+
+Higher-order function that returns a new thunk that always returns
+the given constant when called.</pre></li><li><h2>and</h2><pre>(and . expressions)
+
+Macro that evaluates each expression in sequence and if any value returns false
+it will stop and return false. If each value returns true it will return the
+last value. If it&#x27;s called without arguments it will return true.</pre></li><li><h2>angle</h2><pre>(angle x)
+
+Returns angle of the complex number in polar coordinate system.</pre></li><li><h2>append</h2><pre>(append item ...)
+
+Function that creates a new list with each argument appended end-to-end.
+It will always return a new list and not modify its arguments.</pre></li><li><h2>append!</h2><pre>(append! arg1 ...)
+
+Destructive version of append, it can modify the lists in place. It returns
+a new list where each argument is appended to the end. It may modify
+lists added as arguments.</pre></li><li><h2>apply</h2><pre>(apply fn list)
+
+Function that calls fn with the list of arguments.</pre></li><li><h2>apropos</h2><pre>(apropos name)
+
+Search the current environment and display names that match the given name.
+name can be regex, string or symbol.</pre></li><li><h2>array-&gt;list</h2><pre>(array-&gt;list array)
+
+Function that converts a JavaScript array to a LIPS cons list.</pre></li><li><h2>array?</h2><pre>(array? expression)
+
+Predicate that tests if value is an array.</pre></li><li><h2>assoc</h2><pre>(assoc obj alist)
+
+Returns pair from alist that match given key using equal? check.</pre></li><li><h2>assq</h2><pre>(assq obj alist)
+
+Returns pair from a list that matches given key using eq? check.</pre></li><li><h2>assv</h2><pre>(assv obj alist)
+
+Returns pair from alist that match given key using eqv? check.</pre></li><li><h2>atan</h2><pre>(atan z)
+(atan x y)
+
+Function calculates arcus tangent of a complex number.
+If two arguments are passed and they are not complex numbers
+it calculate Math.atan2 on those arguments.</pre></li><li><h2>await</h2><pre>(await value)
+
+Unquotes a quoted promise so it can be automagically evaluated (resolved
+to its value).</pre></li><li><h2>begin</h2><pre>(begin . args)
+
+Macro that runs a list of expressions in order and returns the value
+of the last one. It can be used in places where you can only have a
+single expression, like (if).</pre></li><li><h2>begin*</h2><pre>(begin* . body)
+
+This macro is a parallel version of begin. It evaluates each expression
+in the body and if it&#x27;s a promise it will await it in parallel and return
+the value of the last expression (i.e. it uses Promise.all()).</pre></li><li><h2>binary</h2><pre>(binary fn)
+
+Returns a new function with arguments limited to two.</pre></li><li><h2>binary-port?</h2><pre>(binary-port? port)
+
+Function that tests if argument is binary port.</pre></li><li><h2>boolean?</h2><pre>(boolean? x)
+
+Returns true if value is boolean.</pre></li><li><h2>boolean=?</h2><pre>(boolean=? b1 b2 ...)
+
+Checks if all arguments are boolean and if they are the same.</pre></li><li><h2>bound?</h2><pre>(bound? x [env])
+
+Function that check if the variable is defined in the given environment,
+or interaction-environment if not specified.</pre></li><li><h2>buffer-&gt;u8vector</h2><pre>(buffer-&gt;u8vector bin)
+
+Cross platform function that can be used in both Node and browser.
+It can be used together with %read-file or %read-binary-file to convert
+the result ArrayBuffer or Buffer to u8vector.</pre></li><li><h2>bytevector</h2><pre>(u8vector v1 v2 ...)
+
+Create unsigned 8-bit integer vector (C unsigned char) from give arguments.</pre></li><li><h2>bytevector-append</h2><pre>(bytevector-append v1 ...)
+
+Create new bytevector u8vector that is created from joining each argument.</pre></li><li><h2>bytevector-copy</h2><pre>(bytevector-copy v)
+(bytevector-copy v start)
+(bytevector-copy v start end)
+
+Returns a new vector from start to end. If no start and end is provided
+whole vector is copied and returned.</pre></li><li><h2>bytevector-copy!</h2><pre>(bytevector-copy! to at from)
+(bytevector-copy! to at from start)
+(bytevector-copy! to at from start end)
+
+Copies the bytes of bytevector from between start and end to bytevector to,
+starting at at.</pre></li><li><h2>bytevector-length</h2><pre>(u8vector-length v)
+
+return length of unsigned 8-bit integer vector (C unsigned char).</pre></li><li><h2>bytevector-u8-ref</h2><pre>(u8vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>bytevector-u8-set!</h2><pre>(u8vector-set! vector k)
+
+Function set value of unsigned 8-bit integer vector (C unsigned char) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>bytevector?</h2><pre>(u8vector? x)
+
+Returns #t of argument is unsigned 8-bit integer vector (C unsigned char),
+otherwise it return #f.</pre></li><li><h2>caaaaar</h2><pre>(caaaaar arg)
+
+Function that calculates (car (car (car (car (car arg)))))</pre></li><li><h2>caaaadr</h2><pre>(caaaadr arg)
+
+Function that calculates (car (car (car (car (cdr arg)))))</pre></li><li><h2>caaaar</h2><pre>(caaaar arg)
+
+Function that calculates (car (car (car (car arg))))</pre></li><li><h2>caaadar</h2><pre>(caaadar arg)
+
+Function that calculates (car (car (car (cdr (car arg)))))</pre></li><li><h2>caaaddr</h2><pre>(caaaddr arg)
+
+Function that calculates (car (car (car (cdr (cdr arg)))))</pre></li><li><h2>caaadr</h2><pre>(caaadr arg)
+
+Function that calculates (car (car (car (cdr arg))))</pre></li><li><h2>caaar</h2><pre>(caaar arg)
+
+Function that calculates (car (car (car arg)))</pre></li><li><h2>caadaar</h2><pre>(caadaar arg)
+
+Function that calculates (car (car (cdr (car (car arg)))))</pre></li><li><h2>caadadr</h2><pre>(caadadr arg)
+
+Function that calculates (car (car (cdr (car (cdr arg)))))</pre></li><li><h2>caadar</h2><pre>(caadar arg)
+
+Function that calculates (car (car (cdr (car arg))))</pre></li><li><h2>caaddar</h2><pre>(caaddar arg)
+
+Function that calculates (car (car (cdr (cdr (car arg)))))</pre></li><li><h2>caadddr</h2><pre>(caadddr arg)
+
+Function that calculates (car (car (cdr (cdr (cdr arg)))))</pre></li><li><h2>caaddr</h2><pre>(caaddr arg)
+
+Function that calculates (car (car (cdr (cdr arg))))</pre></li><li><h2>caadr</h2><pre>(caadr arg)
+
+Function that calculates (car (car (cdr arg)))</pre></li><li><h2>caar</h2><pre>(caar arg)
+
+Function that calculates (car (car arg))</pre></li><li><h2>cadaaar</h2><pre>(cadaaar arg)
+
+Function that calculates (car (cdr (car (car (car arg)))))</pre></li><li><h2>cadaadr</h2><pre>(cadaadr arg)
+
+Function that calculates (car (cdr (car (car (cdr arg)))))</pre></li><li><h2>cadaar</h2><pre>(cadaar arg)
+
+Function that calculates (car (cdr (car (car arg))))</pre></li><li><h2>cadadar</h2><pre>(cadadar arg)
+
+Function that calculates (car (cdr (car (cdr (car arg)))))</pre></li><li><h2>cadaddr</h2><pre>(cadaddr arg)
+
+Function that calculates (car (cdr (car (cdr (cdr arg)))))</pre></li><li><h2>cadadr</h2><pre>(cadadr arg)
+
+Function that calculates (car (cdr (car (cdr arg))))</pre></li><li><h2>cadar</h2><pre>(cadar arg)
+
+Function that calculates (car (cdr (car arg)))</pre></li><li><h2>caddaar</h2><pre>(caddaar arg)
+
+Function that calculates (car (cdr (cdr (car (car arg)))))</pre></li><li><h2>caddadr</h2><pre>(caddadr arg)
+
+Function that calculates (car (cdr (cdr (car (cdr arg)))))</pre></li><li><h2>caddar</h2><pre>(caddar arg)
+
+Function that calculates (car (cdr (cdr (car arg))))</pre></li><li><h2>cadddar</h2><pre>(cadddar arg)
+
+Function that calculates (car (cdr (cdr (cdr (car arg)))))</pre></li><li><h2>caddddr</h2><pre>(caddddr arg)
+
+Function that calculates (car (cdr (cdr (cdr (cdr arg)))))</pre></li><li><h2>cadddr</h2><pre>(cadddr arg)
+
+Function that calculates (car (cdr (cdr (cdr arg))))</pre></li><li><h2>caddr</h2><pre>(caddr arg)
+
+Function that calculates (car (cdr (cdr arg)))</pre></li><li><h2>cadr</h2><pre>(cadr arg)
+
+Function that calculates (car (cdr arg))</pre></li><li><h2>call-with-current-continuation</h2><pre>(call/cc proc)
+
+Call-with-current-continuation.
+
+NOT SUPPORTED BY LIPS RIGHT NOW</pre></li><li><h2>call-with-input-file</h2><pre>(call-with-input-file filename proc)
+
+Procedure open file for reading, call user defined procedure with given port
+and then close the port. It return value that was returned by user proc
+and it close the port even if user proc throw exception.</pre></li><li><h2>call-with-output-file</h2><pre>(call-with-output-file filename proc)
+
+Procedure open file for writing, call user defined procedure with port
+and then close the port. It return value that was returned by user proc
+and it close the port even if user proc throw exception.</pre></li><li><h2>call-with-port</h2><pre>(call-with-port port proc)
+
+Proc is executed with given port and after it returns, the port is closed.</pre></li><li><h2>call-with-values</h2><pre>(call-with-values producer consumer)
+
+Calls the producer procedure with no arguments, then calls the
+consumer procedure with the returned value as an argument -- unless
+the returned value is a special Values object created by (values), if it is
+the values are unpacked and the consumer is called with multiple arguments.</pre></li><li><h2>call/cc</h2><pre>(call/cc proc)
+
+Call-with-current-continuation.
+
+NOT SUPPORTED BY LIPS RIGHT NOW</pre></li><li><h2>car</h2><pre>(car pair)
+
+This function returns the car (item 1) of the list.</pre></li><li><h2>cdaaaar</h2><pre>(cdaaaar arg)
+
+Function that calculates (cdr (car (car (car (car arg)))))</pre></li><li><h2>cdaaadr</h2><pre>(cdaaadr arg)
+
+Function that calculates (cdr (car (car (car (cdr arg)))))</pre></li><li><h2>cdaaar</h2><pre>(cdaaar arg)
+
+Function that calculates (cdr (car (car (car arg))))</pre></li><li><h2>cdaadar</h2><pre>(cdaadar arg)
+
+Function that calculates (cdr (car (car (cdr (car arg)))))</pre></li><li><h2>cdaaddr</h2><pre>(cdaaddr arg)
+
+Function that calculates (cdr (car (car (cdr (cdr arg)))))</pre></li><li><h2>cdaadr</h2><pre>(cdaadr arg)
+
+Function that calculates (cdr (car (car (cdr arg))))</pre></li><li><h2>cdaar</h2><pre>(cdaar arg)
+
+Function that calculates (cdr (car (car arg)))</pre></li><li><h2>cdadaar</h2><pre>(cdadaar arg)
+
+Function that calculates (cdr (car (cdr (car (car arg)))))</pre></li><li><h2>cdadadr</h2><pre>(cdadadr arg)
+
+Function that calculates (cdr (car (cdr (car (cdr arg)))))</pre></li><li><h2>cdadar</h2><pre>(cdadar arg)
+
+Function that calculates (cdr (car (cdr (car arg))))</pre></li><li><h2>cdaddar</h2><pre>(cdaddar arg)
+
+Function that calculates (cdr (car (cdr (cdr (car arg)))))</pre></li><li><h2>cdadddr</h2><pre>(cdadddr arg)
+
+Function that calculates (cdr (car (cdr (cdr (cdr arg)))))</pre></li><li><h2>cdaddr</h2><pre>(cdaddr arg)
+
+Function that calculates (cdr (car (cdr (cdr arg))))</pre></li><li><h2>cdadr</h2><pre>(cdadr arg)
+
+Function that calculates (cdr (car (cdr arg)))</pre></li><li><h2>cdar</h2><pre>(cdar arg)
+
+Function that calculates (cdr (car arg))</pre></li><li><h2>cddaaar</h2><pre>(cddaaar arg)
+
+Function that calculates (cdr (cdr (car (car (car arg)))))</pre></li><li><h2>cddaadr</h2><pre>(cddaadr arg)
+
+Function that calculates (cdr (cdr (car (car (cdr arg)))))</pre></li><li><h2>cddaar</h2><pre>(cddaar arg)
+
+Function that calculates (cdr (cdr (car (car arg))))</pre></li><li><h2>cddadar</h2><pre>(cddadar arg)
+
+Function that calculates (cdr (cdr (car (cdr (car arg)))))</pre></li><li><h2>cddaddr</h2><pre>(cddaddr arg)
+
+Function that calculates (cdr (cdr (car (cdr (cdr arg)))))</pre></li><li><h2>cddadr</h2><pre>(cddadr arg)
+
+Function that calculates (cdr (cdr (car (cdr arg))))</pre></li><li><h2>cddar</h2><pre>(cddar arg)
+
+Function that calculates (cdr (cdr (car arg)))</pre></li><li><h2>cdddaar</h2><pre>(cdddaar arg)
+
+Function that calculates (cdr (cdr (cdr (car (car arg)))))</pre></li><li><h2>cdddadr</h2><pre>(cdddadr arg)
+
+Function that calculates (cdr (cdr (cdr (car (cdr arg)))))</pre></li><li><h2>cdddar</h2><pre>(cdddar arg)
+
+Function that calculates (cdr (cdr (cdr (car arg))))</pre></li><li><h2>cddddar</h2><pre>(cddddar arg)
+
+Function that calculates (cdr (cdr (cdr (cdr (car arg)))))</pre></li><li><h2>cdddddr</h2><pre>(cdddddr arg)
+
+Function that calculates (cdr (cdr (cdr (cdr (cdr arg)))))</pre></li><li><h2>cddddr</h2><pre>(cddddr arg)
+
+Function that calculates (cdr (cdr (cdr (cdr arg))))</pre></li><li><h2>cdddr</h2><pre>(cdddr arg)
+
+Function that calculates (cdr (cdr (cdr arg)))</pre></li><li><h2>cddr</h2><pre>(cddr arg)
+
+Function that calculates (cdr (cdr arg))</pre></li><li><h2>cdr</h2><pre>(cdr pair)
+
+This function returns the cdr (all but first) of the list.</pre></li><li><h2>ceiling</h2><pre>(ceiling number)
+
+Function that calculates the ceiling of a number.</pre></li><li><h2>char-&gt;integer</h2><pre>(char-&gt;integer chr)
+
+Returns the codepoint of Unicode character.</pre></li><li><h2>char-alphabetic?</h2><pre>(char-alphabetic? chr)
+
+Returns true if character is leter of the ASCII alphabet.</pre></li><li><h2>char-ci&lt;?</h2><pre>(char-ci&lt;? chr1 chr2)
+
+Returns true if characters are monotonically increasing case insensitive.</pre></li><li><h2>char-ci&lt;=?</h2><pre>(char-ci&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically non-decreasing, case insensitive.</pre></li><li><h2>char-ci=?</h2><pre>(char-ci=? chr1 chr2 ...)
+
+Checks if all characters are equal, case insensitive.</pre></li><li><h2>char-ci&gt;?</h2><pre>(char-ci&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically decreasing case insensitive.</pre></li><li><h2>char-ci&gt;=?</h2><pre>(char-ci&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically non-increasing, case insensitive.</pre></li><li><h2>char-downcase</h2><pre>(char-downcase chr)
+
+Create lowercase version of the character.</pre></li><li><h2>char-foldcase</h2><pre>(char-foldcase char)
+
+Returns lowercase character using the Unicode simple case-folding algorithm.</pre></li><li><h2>char-lower-case?</h2><pre>(char-upper-case? char)
+
+Checks if character is lower case.</pre></li><li><h2>char-numeric?</h2><pre>(char-numeric? chr)
+
+Returns true if character is number.</pre></li><li><h2>char-ready?</h2><pre>(char-ready?)
+(char-ready? port)
+
+Checks if characters is ready in input port. This is useful mostly
+for interactive ports that return false if it would wait for user input.
+It return false if port is closed.</pre></li><li><h2>char-upcase</h2><pre>(char-upcase char)
+
+Create uppercase version of the character.</pre></li><li><h2>char-upper-case?</h2><pre>(char-upper-case? char)
+
+Checks if character is upper case.</pre></li><li><h2>char-whitespace?</h2><pre>(char-whitespace? chr)
+
+Returns true if character is whitespace.</pre></li><li><h2>char?</h2><pre>(char? obj)
+
+Checks if the object is a character.</pre></li><li><h2>char&lt;?</h2><pre>(char&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically increasing.</pre></li><li><h2>char&lt;=?</h2><pre>(char&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically non-decreasing.</pre></li><li><h2>char=?</h2><pre>(char=? chr1 chr2 ...)
+
+Checks if all characters are equal.</pre></li><li><h2>char&gt;?</h2><pre>(char&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically decreasing.</pre></li><li><h2>char&gt;=?</h2><pre>(char&lt;? chr1 chr2 ...)
+
+Returns true if characters are monotonically non-increasing.</pre></li><li><h2>clone</h2><pre>(clone list)
+
+Function that returns a clone of the list, that does not share any pairs with the
+original, so the clone can be safely mutated without affecting the original.</pre></li><li><h2>close-input-port</h2><pre>(close-input-port port)
+
+Procedure close port that was opened with open-input-file. After that
+it no longer accept reading from that port.</pre></li><li><h2>close-output-port</h2><pre>(close-output-port port)
+
+Procedure close port that was opened with open-output-file. After that
+it no longer accept write to that port.</pre></li><li><h2>close-port</h2><pre>(close-port port)
+
+Close input or output port.</pre></li><li><h2>command-line</h2><pre>(command-line)
+
+Returns the command line arguments, or an empty list if not running under Node.js.</pre></li><li><h2>complement</h2><pre>(complement fn)
+
+Higher order function that returns the Boolean complement of the given function.
+If the function fn for a given arguments return true the result function
+will return false, if it would return false, the result function will return true.</pre></li><li><h2>complex?</h2><pre>(complex? x)
+
+Checks if argument x is complex.</pre></li><li><h2>compose</h2><pre>(compose . fns)
+
+Higher-order function that creates a new function that applies all functions
+from right to left and returns the last value. Reverse of pipe.
+e.g.:
+((compose (curry + 2) (curry * 3)) 10) ==&gt; (+ 2 (* 3 10)) ==&gt; 32</pre></li><li><h2>concat</h2><pre>(concat . strings)
+
+Function that creates a new string by joining its arguments.</pre></li><li><h2>cond</h2><pre>(cond (predicate? . body)
+      (predicate? . body))
+
+(cond (predicate? =&gt; procedure)
+      (predicate? =&gt; procedure))
+
+Macro for condition checks. For usage instead of nested ifs.
+You can use predicate and any number of expressions. Or symbol =&gt;
+Followed by procedure that will be invoked with result
+of the predicate.</pre></li><li><h2>cons</h2><pre>(cons left right)
+
+This function returns a new list with the first appended
+before the second. If the second is not a list cons will
+return a dotted pair.</pre></li><li><h2>constructor</h2><pre>(constructor)
+
+Function that is present in JavaScript environment. We define it in Scheme
+to fix an issue with define-class. This function throw an error.</pre></li><li><h2>continuation?</h2><pre>(continuation? expression)
+
+Predicate that tests if value is a callable continuation.</pre></li><li><h2>cos</h2><pre>(cos n)
+
+Function that calculates cosine of a number.</pre></li><li><h2>current-directory</h2><pre>(current-directory)
+
+Returns the current working directory, default is the path from where
+the script was executed.</pre></li><li><h2>current-environment</h2><pre>(current-environment)
+
+Function that returns the current environment (they&#x27;re first-class objects!)</pre></li><li><h2>current-error-port</h2><pre>(current-output-port)
+
+Returns the default stderr port.</pre></li><li><h2>current-input-port</h2><pre>(current-input-port)
+
+Returns the default stdin port.</pre></li><li><h2>current-jiffy</h2><pre>(current-jiffy)
+
+Return current jiffy. In LIPS is jiffy since start of the process.
+You can divide this value by (jiffies-per-second) to get seconds since
+start of the process. And you can add %%start-jiffy to get jiffy since
+January 1, 1970.</pre></li><li><h2>current-output-port</h2><pre>(current-output-port)
+
+Returns the default stdout port.</pre></li><li><h2>current-second</h2><pre>(current-second)
+
+Functionn return exact integer of the seconds since January 1, 1970</pre></li><li><h2>curry</h2><pre>(curry fn . args)
+
+Higher-order function that creates a curried version of the function.
+The result function will have partially applied arguments and it
+will keep returning one-argument functions until all arguments are provided,
+then it calls the original function with the accumulated arguments.
+
+e.g.:
+(define (add a b c d) (+ a b c d))
+(define add1 (curry add 1))
+(define add12 (add 2))
+(display (add12 3 4))</pre></li><li><h2>debugger</h2><pre>(debugger)
+
+Function that triggers the JavaScript debugger (e.g. the browser devtools)
+using the &quot;debugger;&quot; statement. If a debugger is not running this
+function does nothing.</pre></li><li><h2>define</h2><pre>(define name expression)
+(define name expression &quot;doc string&quot;)
+(define (function-name . args) . body)
+
+Macro for defining values. It can be used to define variables,
+or functions. If the first argument is list it will create a function
+with name being first element of the list. This form expands to
+`(define function-name (lambda args body))`</pre></li><li><h2>define-class</h2><pre>(define-class name parent . body)
+
+Defines a class - JavaScript function constructor with prototype.
+
+usage:
+
+  (define-class Person Object
+      (constructor (lambda (self name)
+                     (set-obj! self &#x27;_name name)))
+      (hi (lambda (self)
+            (display (string-append self._name &quot; says hi&quot;))
+            (newline))))
+  (define jack (new Person &quot;Jack&quot;))
+  (jack.hi) ; prints &quot;Jack says hi&quot;</pre></li><li><h2>define-formatter-rule</h2><pre>(rule-pattern pattern)
+
+Anaphoric macro for defining patterns for the formatter.
+With Ahead, Pattern and * defined values.</pre></li><li><h2>define-global</h2><pre>(define-global var value)
+(define-global (name . args) body)
+
+Defines functions or variables in the global context, so they can be used
+inside let and get let variables in a closure. Useful for universal macros.</pre></li><li><h2>define-library</h2><pre>(define-library (library (name namespace) . body)
+
+Macro for defining modules inside you can use define to create functions.
+And use export name to add that name to defined environment.</pre></li><li><h2>define-macro</h2><pre>(define-macro (name . args) body)
+
+The meta-macro, that creates new macros. If the return value is a list structure
+it will be evaluated where the macro is invoked from. You can use quasiquote `
+and unquote , and unquote-splicing ,@ inside to create an expression that will be
+evaluated at runtime. Macros works like this: if you pass any expression to a
+macro the arguments will not be evaluated unless the macro&#x27;s body explicitly
+calls (eval) on it. Because of this a macro can manipulate the expression
+(arguments) as lists.</pre></li><li><h2>define-record-type</h2><pre>(define-record-type name constructor pred . fields)
+
+Macro for defining records. Example of usage:
+
+(define-record-type &lt;pare&gt;
+  (kons x y)
+  pare?
+  (x kar set-kar!)
+  (y kdr set-kdr!))
+
+(define p (kons 1 2))
+(print (kar p))
+;; ==&gt; 1
+(set-kdr! p 3)
+(print (kdr p))
+;; ==&gt; 3</pre></li><li><h2>define-symbol-macro</h2><pre>(define-symbol-macro type (name . args) . body)
+
+Creates syntax extensions for evaluator similar to built-in , or `.
+It&#x27;s like an alias for a real macro. Similar to CL reader macros
+but it receives already parsed code like normal macros. Type can be SPLICE
+or LITERAL symbols (see set-special!). ALL default symbol macros are literal.</pre></li><li><h2>define-syntax</h2><pre>(define-syntax name expression [__doc__])
+
+Defines a new hygienic macro using syntax-rules with optional documentation.</pre></li><li><h2>define-syntax-parameter</h2><pre>(define-syntax-parameter name syntax [__doc__])
+
+Binds &lt;keyword&gt; to the transformer obtained by evaluating &lt;transformer spec&gt;.
+The transformer provides the default expansion for the syntax parameter,
+and in the absence of syntax-parameterize, is functionally equivalent to
+define-syntax.</pre></li><li><h2>defmacro?</h2><pre>(defmacro? expression)
+
+Checks if object is a macro and it&#x27;s expandable.</pre></li><li><h2>degree-&gt;radians</h2><pre>(degree-&gt;radians x)
+
+Convert degrees to radians.</pre></li><li><h2>delay</h2><pre>(delay expression)
+
+Will create a promise from expression that can be forced with (force).</pre></li><li><h2>delete-file</h2><pre>(delete-file filename)
+
+Deletes the file of given name.</pre></li><li><h2>denominator</h2><pre>(denominator n)
+
+Return denominator of rational or same number if one is not rational.</pre></li><li><h2>digit-value</h2><pre>(digit-value chr)
+
+Return digit number if character is numeral (as per char-numeric?)
+or #f otherwise.</pre></li><li><h2>dir</h2><pre>(dir obj)
+
+Returns all props on the object including those in prototype chain.</pre></li><li><h2>display</h2><pre>(display string [port])
+
+This function outputs the string to the standard output or
+the port if given. No newline.</pre></li><li><h2>display-error</h2><pre>(display-error . args)
+
+Display an error message on stderr.</pre></li><li><h2>do</h2><pre>(do ((&lt;var&gt; &lt;init&gt; &lt;next&gt;)) (test return) . body)
+
+Iteration macro that evaluates the expression body in scope of the variables.
+On each loop it changes the variables according to the &lt;next&gt; expression and runs
+test to check if the loop should continue. If test is a single value, the macro
+will return undefined. If the test is a pair of expressions the macro will
+evaluate and return the second expression after the loop exits.</pre></li><li><h2>do-iterator</h2><pre>(do-iterator (var expr) (test result) body ...)
+
+Iterates over iterators (e.g. created with JavaScript generator function)
+that works with normal and async iterators. You can loop over an infinite
+iterators and break the loop if you want, using expression like in do macro.
+Long synchronous iterators will block the main thread (you can&#x27;t print
+1000 numbers from infinite iterators, because it will freeze the browser),
+but if you use async iterators you can process the values as they are
+generated.</pre></li><li><h2>drop</h2><pre>(take list n)
+
+Returns a list where first n elements are removed.</pre></li><li><h2>dynamic-wind</h2><pre>(dynamic-wind before thunk after)
+
+Accepts 3 procedures/lambdas and executes before, then thunk, and
+always after even if an error occurs in thunk.</pre></li><li><h2>empty?</h2><pre>(empty? object)
+
+Function that returns #t if value is nil (an empty list) or undefined.</pre></li><li><h2>env</h2><pre>(env)
+(env obj)
+
+Function that returns a list of names (functions, macros and variables)
+that are bound in the current environment or one of its parents.</pre></li><li><h2>environment-bound?</h2><pre>(environment-bound? env symbol)
+
+Checks if symbol is a bound variable similar to bound?.</pre></li><li><h2>environment?</h2><pre>(environment? obj)
+
+Checks if object is a LIPS environment.</pre></li><li><h2>eof-object</h2><pre>(eof-object)
+
+Procedure returns eof object that indicate end of the port</pre></li><li><h2>eof-object?</h2><pre>(eof-object? arg)
+
+Checks if value is eof object, returned from input string
+port when there are no more data to read.</pre></li><li><h2>eq?</h2><pre>(eq? a b)
+
+Function that compares two values if they are identical.</pre></li><li><h2>equal?</h2><pre>(equal? a b)
+
+The function checks if values are equal. If both are a pair or an array
+it compares their elements recursively. If pairs have cycles it compares
+them with eq?</pre></li><li><h2>eqv?</h2><pre>(eqv? a b)
+
+Function that compares the values. It returns true if they are the same, they
+need to have the same type.</pre></li><li><h2>error</h2><pre>(error message ...)
+
+Function raises error with given message and arguments,
+which are called invariants.</pre></li><li><h2>error-object-irritants</h2><pre>(error-object-irritants error-object)
+
+Returns a list of the irritants encapsulated by error-object.</pre></li><li><h2>error-object-message</h2><pre>(error-object-message error-object)
+
+Returns the message encapsulated by error-object.</pre></li><li><h2>error-object?</h2><pre>(error-object? obj)
+
+Checks if object is of Error object thrown by error function.</pre></li><li><h2>escape-regex</h2><pre>(escape-regex string)
+
+Function that returns a new string where all special operators used in regex,
+are escaped with backslashes so they can be used in the RegExp constructor
+to match a literal string.</pre></li><li><h2>eval</h2><pre>(eval expr)
+(eval expr environment)
+
+Function that evaluates LIPS Scheme code. If the second argument is provided
+it will be the environment that the code is evaluated in.</pre></li><li><h2>even?</h2><pre>(even? number)
+
+Checks if number is even.</pre></li><li><h2>every</h2><pre>(every fn list)
+
+Function that calls fn on each item of the list, if every value returns true
+it will return true otherwise it return false.
+Analogous to Python all(map(fn, list)).</pre></li><li><h2>exact</h2><pre>(inexact-&gt;exact number)
+
+Function that converts real number to exact rational number.</pre></li><li><h2>exact-&gt;inexact</h2><pre>(exact-&gt;inexact n)
+
+Convert exact number to inexact.</pre></li><li><h2>exact-integer?</h2><pre>(exact-integer? n)
+
+Returns #t if z is both exact and an integer; otherwise
+returns #f.</pre></li><li><h2>exact?</h2><pre>(exact? n)</pre></li><li><h2>exp</h2><pre>(exp n)
+
+Function that calculates e raised to the power of n.</pre></li><li><h2>expt</h2><pre>(** a b)
+
+Function that calculates number a to to the power of b.</pre></li><li><h2>f32vector</h2><pre>(f32vector v1 v2 ...)
+
+Create 32-bit IEEE-754 floating point number vector (C float) from give arguments.</pre></li><li><h2>f32vector-length</h2><pre>(f32vector-length v)
+
+return length of 32-bit IEEE-754 floating point number vector (C float).</pre></li><li><h2>f32vector-ref</h2><pre>(f32vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>f32vector-set!</h2><pre>(f32vector-set! vector k)
+
+Function set value of 32-bit IEEE-754 floating point number vector (C float) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>f32vector?</h2><pre>(f32vector? x)
+
+Returns #t of argument is 32-bit IEEE-754 floating point number vector (C float),
+otherwise it return #f.</pre></li><li><h2>f64vector</h2><pre>(f64vector v1 v2 ...)
+
+Create 64-bit IEEE-754 floating point number vector (C double) from give arguments.</pre></li><li><h2>f64vector-length</h2><pre>(f64vector-length v)
+
+return length of 64-bit IEEE-754 floating point number vector (C double).</pre></li><li><h2>f64vector-ref</h2><pre>(f64vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>f64vector-set!</h2><pre>(f64vector-set! vector k)
+
+Function set value of 64-bit IEEE-754 floating point number vector (C double) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>f64vector?</h2><pre>(f64vector? x)
+
+Returns #t of argument is 64-bit IEEE-754 floating point number vector (C double),
+otherwise it return #f.</pre></li><li><h2>features</h2><pre>(features)
+
+Function returns implemented features as a list.</pre></li><li><h2>filter</h2><pre>(filter fn list)
+(filter regex list)
+
+Higher-order function that calls `fn` for each element of the list
+and return a new list for only those elements for which fn returns
+a truthy value. If called with a regex it will create a matcher function.</pre></li><li><h2>find</h2><pre>(find fn list)
+(find regex list)
+
+Higher-order function that finds the first value for which fn return true.
+If called with a regex it will create a matcher function.</pre></li><li><h2>finite?</h2><pre>(finite? x)
+
+Checks if value is finite.</pre></li><li><h2>flatten</h2><pre>(flatten list)
+
+Returns a shallow list from tree structure (pairs).</pre></li><li><h2>flip</h2><pre>(flip fn)
+
+Higher-order function that returns a new function where the first two arguments
+are swapped.
+
+Example:
+
+  (define first (curry (flip vector-ref) 0))
+  (first #(1 2 3))
+  ;; ==&gt; 1</pre></li><li><h2>floor</h2><pre>(floor number)
+
+Function that calculates the floor of a number.</pre></li><li><h2>flush-output</h2><pre>(flush-output [port])
+
+If output-port is buffered, this causes the contents of its buffer to be written to
+the output device. Otherwise it has no effect. Returns an unspecified value.</pre></li><li><h2>flush-output-port</h2><pre>(flush-output-port port)
+
+Function do nothing, flush is not needed in LIPS in both NodeJS and Browser.
+The function is added, so it don&#x27;t throw exception when using R7RS code.</pre></li><li><h2>fold</h2><pre>(fold fn init . lists)
+
+Function fold is left-to-right reversal of reduce. It call `fn`
+on each pair of elements of the list and returns a single value.
+e.g. it computes (fn &#x27;a &#x27;x (fn &#x27;b &#x27;y (fn &#x27;c &#x27;z &#x27;foo)))
+for: (fold fn &#x27;foo &#x27;(a b c) &#x27;(x y z))</pre></li><li><h2>fold-left</h2><pre>(fold fn init . lists)
+
+Function fold is left-to-right reversal of reduce. It call `fn`
+on each pair of elements of the list and returns a single value.
+e.g. it computes (fn &#x27;a &#x27;x (fn &#x27;b &#x27;y (fn &#x27;c &#x27;z &#x27;foo)))
+for: (fold fn &#x27;foo &#x27;(a b c) &#x27;(x y z))</pre></li><li><h2>fold-right</h2><pre>(reduce fn init list . lists)
+
+Higher-order function that takes each element of the list and calls
+the fn with result of previous call or init and the next element
+of the list until each element is processed, and returns a single value
+as result of last call to `fn` function.
+e.g. it computes (fn &#x27;c &#x27;z (fn &#x27;b &#x27;y (fn &#x27;a &#x27;x &#x27;foo)))
+for: (reduce fn &#x27;foo &#x27;(a b c) &#x27;(x y z))</pre></li><li><h2>for-each</h2><pre>(for-each fn . lists)
+
+Higher-order function that calls function `fn` on each
+value of the argument. If you provide more than one list
+it will take each value from each list and call `fn` function
+with that many arguments as number of list arguments.</pre></li><li><h2>force</h2><pre>(force promise)
+
+Function that forces the promise and evaluates the delayed expression.</pre></li><li><h2>format</h2><pre>(format string n1 n2 ...)
+
+This function accepts a string template and replaces any
+escape sequences in its inputs:
+
+* ~a value as if printed with `display`
+* ~s value as if printed with `write`
+* ~% newline character
+* ~~ literal tilde &#x27;~&#x27;
+
+If there are missing inputs or other escape characters it
+will error.</pre></li><li><h2>function?</h2><pre>(function? expression)
+
+Predicate that tests if value is a callable function.</pre></li><li><h2>gcd</h2><pre>(gcd n1 n2 ...)
+
+Function that returns the greatest common divisor of the arguments.</pre></li><li><h2>gensym</h2><pre>(gensym)
+
+Generates a unique symbol that is not bound anywhere,
+to use with macros as meta name.</pre></li><li><h2>gensym-interal</h2><pre>(gensym-interal symbol)
+
+Parser extension that creates a new quoted named gensym.</pre></li><li><h2>gensym?</h2><pre>(gensym? value)
+
+Returns #t if value is a symbol created by gensym. It returns #f otherwise.</pre></li><li><h2>get</h2><pre>(. obj . args)
+(get obj . args)
+
+This function uses an object as a base and keeps using arguments to get the
+property of JavaScript object. Arguments need to be a strings.
+e.g. `(. console &quot;log&quot;)` if you use any function inside LIPS it
+will be weakly bound (can be rebound), so you can call this log function
+without problem unlike in JavaScript when you use
+`var log = console.log`.
+`get` is an alias because . doesn&#x27;t work everywhere, e.g. you can&#x27;t
+pass it as an argument.</pre></li><li><h2>get-environment-variable</h2><pre>(get-environment-variable name)
+
+Returns given environment variable. This function returns #void
+when called in the browser.</pre></li><li><h2>get-environment-variables</h2><pre>(get-environment-variables)
+
+Returns all process environment variables as an alist. This function returns
+an empty list when called in the browser.</pre></li><li><h2>get-output-bytevector</h2><pre>(get-output-string port)
+
+Gets full string from string port. If nothing was wrote
+to given port it will return empty string.</pre></li><li><h2>get-output-string</h2><pre>(get-output-string port)
+
+Gets full string from string port. If nothing was wrote
+to given port it will return empty string.</pre></li><li><h2>get-resource</h2><pre>(get-resource url)
+
+Load JavaScript or CSS file in browser by adding script/link tag to head
+of the current document. When called from Node it allow it allows to load
+JavaScript files only.</pre></li><li><h2>globalize</h2><pre>(globalize expr)
+
+ Macro will get the value of the expression and add each method as function
+ to global scope.</pre></li><li><h2>help</h2><pre>(help object)
+
+This macro returns documentation for a function or macro.
+You can save the function or macro in a variable and use it
+here. But getting help for a variable requires passing the
+variable in a `quote`.</pre></li><li><h2>http-get</h2><pre>(http-get url)
+
+Node.js function that sends a HTTP Request and returns a string or
+binary Buffer object.</pre></li><li><h2>identity</h2><pre>(identity n)
+
+No-op function. It just returns its argument.</pre></li><li><h2>if</h2><pre>(if cond true-expr false-expr)
+
+Macro that evaluates cond expression and if the value is true, it
+evaluates and returns true-expression, if not it evaluates and returns
+false-expression.</pre></li><li><h2>ignore</h2><pre>(ignore . body)
+
+Macro that will evaluate the expression and swallow any promises that may
+be created. It will discard any value that may be returned by the last body
+expression. The code should have side effects and/or when it&#x27;s promise
+it should resolve to undefined.</pre></li><li><h2>imag-part</h2><pre>(imag-part n)
+
+Return imaginary part of the complex number n.</pre></li><li><h2>import</h2><pre>(import (library namespace))
+(import (only (library namespace) name1 name2))
+
+Macro for importing names from library.</pre></li><li><h2>in</h2><pre>(in key value)
+
+Function that uses the Javascript &quot;in&quot; operator to check if key is
+a valid property in the value.</pre></li><li><h2>include</h2><pre>(include file ...)
+
+Load at least one file content and insert them into one,
+body expression.</pre></li><li><h2>indexed-db?</h2><pre>(indexed-db?)
+
+Function that tests if IndexedDB is available.</pre></li><li><h2>inexact</h2><pre>(exact-&gt;inexact n)
+
+Convert exact number to inexact.</pre></li><li><h2>inexact-&gt;exact</h2><pre>(inexact-&gt;exact number)
+
+Function that converts real number to exact rational number.</pre></li><li><h2>inexact?</h2><pre>(inexact? n)</pre></li><li><h2>infinite?</h2><pre>(infinite? x)
+
+Checks if value is infinite.</pre></li><li><h2>input-port-open?</h2><pre>(input-port-open? port)
+
+Checks if argument is input-port and if you can read from it.</pre></li><li><h2>input-port?</h2><pre>(input-port? arg)
+
+Returns true if argument is input port.</pre></li><li><h2>instance?</h2><pre>(instance? obj)
+
+Checks if object is an instance, created with a new operator</pre></li><li><h2>instanceof</h2><pre>(instanceof type obj)
+
+Predicate that tests if the obj is an instance of type.</pre></li><li><h2>integer-&gt;char</h2><pre>(integer-&gt;char chr)
+
+Function that converts number argument to character.</pre></li><li><h2>integer?</h2><pre>(integer? x)
+
+Checks if the argument x is integer.</pre></li><li><h2>interaction-environment</h2><pre>(interaction-environment)
+
+Returns the interaction environment equal to lips.env. This can be overwritten
+when creating new interpreter with lips.Interpreter.</pre></li><li><h2>iterator-&gt;array</h2><pre>(iterator-&gt;array object)
+
+Return array from JavaScript iterator object.</pre></li><li><h2>iterator?</h2><pre>(iterator? x)
+
+ Checks if value is JavaScript iterator object.</pre></li><li><h2>join</h2><pre>(join separator list)
+
+Function that returns a string by joining elements of the list using separator.</pre></li><li><h2>key-&gt;string</h2><pre>(key-&gt;string symbol)
+
+If symbol is a keyword it converts that to string and removes the colon.</pre></li><li><h2>key?</h2><pre>(key? symbol)
+
+Checks if symbol is a keyword (has a colon as first character).</pre></li><li><h2>lambda</h2><pre>(lambda (a b) body)
+(lambda args body)
+(lambda (a b . rest) body)
+
+The lambda macro creates a new anonymous function. If the first element of
+the body is a string and there is more elements the string is used as the
+documentation string, that can be read using (help fn).</pre></li><li><h2>lcm</h2><pre>(lcm n1 n2 ...)
+
+Function that returns the least common multiple of the arguments.</pre></li><li><h2>length</h2><pre>(length expression)
+
+Function that returns the length of the object. The object can be a LIPS
+list or any object that has a &quot;length&quot; property. Returns undefined if the
+length could not be found.</pre></li><li><h2>let</h2><pre>(let ((a value-a) (b value-b) ...) . body)
+
+Macro that creates a new environment, then evaluates and assigns values to names,
+and then evaluates the body in context of that environment.  Values are evaluated
+sequentially but you can&#x27;t access previous values/names when the next are
+evaluated. You can only get them in the body of the let expression.  (If you want
+to define multiple variables and use them in each other&#x27;s definitions, use
+`let*`.)</pre></li><li><h2>let-env</h2><pre>(let-env env . body)
+
+Special macro that evaluates body in context of given environment
+object.</pre></li><li><h2>let-env-values</h2><pre>(let-env-values env ((name var)) . body)
+
+Adds mappings for variables var from specified env.
+it is similar to let-env but lexical scope is working with it.</pre></li><li><h2>let-syntax</h2><pre>(let-syntax ((name fn) ...) . body)
+
+ Works like a combination of let and define-syntax. It creates
+ local macros and evaluates body in context of those macros.
+ The macro to letrec-syntax is like letrec is to let.</pre></li><li><h2>let*</h2><pre>(let* ((a value-a) (b value-b) ...) . body)
+
+Macro similar to `let`, but the subsequent bindings after the first
+are evaluated in the environment including the previous let variables,
+so you can define one variable, and use it in the next&#x27;s definition.</pre></li><li><h2>letrec</h2><pre>(letrec ((a value-a) (b value-b) ...) . body)
+
+Macro that creates a new environment, then evaluates and assigns values to
+names and then evaluates the body in context of that environment.
+Values are evaluated sequentially and the next value can access the
+previous values/names.</pre></li><li><h2>letrec-syntax</h2><pre>(letrec-syntax ((name fn) ...) . body)
+
+ Works like a combination of letrec and define-syntax. It creates
+ local macros and evaluates the body in context of those macros.</pre></li><li><h2>letrec*</h2><pre>(letrec* ((a value-a) (b value-b) ...) . body)
+
+Same as letrec but the order of execution of the binding is guaranteed,
+so you can use recursive code as well as referencing the previous binding.
+
+In LIPS both letrec and letrec* behave the same.</pre></li><li><h2>list</h2><pre>(list . args)
+
+Function that creates a new list out of its arguments.</pre></li><li><h2>list-&gt;array</h2><pre>(list-&gt;array list)
+
+Function that converts a LIPS list into a JavaScript array.</pre></li><li><h2>list-&gt;string</h2><pre>(list-&gt;string _list)
+
+Returns a string from a list of characters.</pre></li><li><h2>list-&gt;vector</h2><pre>(list-&gt;array list)
+
+Function that converts a LIPS list into a JavaScript array.</pre></li><li><h2>list-copy</h2><pre>(list-copy obj)
+
+Copy the object passed as argument but only if it&#x27;s list. The car elements
+of the list are not copied, they are passed as is.</pre></li><li><h2>list-match?</h2><pre>(list-match? predicate list)
+
+Checks if consecutive elements of the list match the predicate function.</pre></li><li><h2>list-ref</h2><pre>(list-ref list n)
+
+Returns n-th element of a list.</pre></li><li><h2>list-set!</h2><pre>(list-set! list n)
+
+Returns n-th element of a list.</pre></li><li><h2>list-tail</h2><pre>(list-tail list k)
+
+Returns the sublist of list obtained by omitting the first k elements.</pre></li><li><h2>list?</h2><pre>(list? obj)
+
+Predicate that tests if value is a proper linked list structure.
+The car of each pair can be any value. It returns false on cyclic lists.&quot;</pre></li><li><h2>list*</h2><pre>(list* arg1 ...)
+
+Parallel asynchronous version of list. Like begin* except all values
+are returned in a list.</pre></li><li><h2>load</h2><pre>(load filename)
+(load filename environment)
+
+Fetches the file (from disk or network) and evaluates its content as LIPS code.
+If the second argument is provided and it&#x27;s an environment the evaluation
+will happen in that environment.</pre></li><li><h2>log</h2><pre>(log z)
+(log z1 z2)
+
+Function that calculates natural logarithm (base e) of z. Where the argument
+can be any number (including complex negative and rational). If the value is 0
+it returns NaN. It two arguments are provided it will calculate logarithm
+of z1 with given base z2.</pre></li><li><h2>macro?</h2><pre>(macro? expression)
+
+Predicate that tests if value is a macro.</pre></li><li><h2>macroexpand</h2><pre>(macroexpand expr)
+
+Macro that expand all macros inside and return single expression as output.</pre></li><li><h2>macroexpand-1</h2><pre>(macroexpand-1 expr)
+
+Macro similar to macroexpand but it expand macros only one level
+and return single expression as output.</pre></li><li><h2>magnitude</h2><pre>(magnitude x)
+
+Returns magnitude of the complex number in polar coordinate system.</pre></li><li><h2>make-bytevector</h2><pre>(make-u8vector k fill)
+
+Allocate new unsigned 8-bit integer vector (C unsigned char) of length k,
+with optional initial values.</pre></li><li><h2>make-f32vector</h2><pre>(make-f32vector k fill)
+
+Allocate new 32-bit IEEE-754 floating point number vector (C float) of length k,
+with optional initial values.</pre></li><li><h2>make-f64vector</h2><pre>(make-f64vector k fill)
+
+Allocate new 64-bit IEEE-754 floating point number vector (C double) of length k,
+with optional initial values.</pre></li><li><h2>make-parameter</h2><pre>(make-parameter init converter)
+
+Function creates new dynamic variable that can be custimized with parameterize
+macro. The value should be assigned to a variable e.g.:
+
+(define radix (make-parameter 10))
+
+The result value is a procedure that return the value of dynamic variable.</pre></li><li><h2>make-polar</h2><pre>(make-polar magnitude angle)
+
+Create new complex number from polar parameters.</pre></li><li><h2>make-promise</h2><pre>(make-promise fn)
+
+Function that creates a promise from a function.</pre></li><li><h2>make-rectangular</h2><pre>(make-rectangular im re)
+
+Creates a complex number from imaginary and real part (a+bi form).</pre></li><li><h2>make-s16vector</h2><pre>(make-s16vector k fill)
+
+Allocate new signed 16-bit integer vector (C short) of length k,
+with optional initial values.</pre></li><li><h2>make-s32vector</h2><pre>(make-s32vector k fill)
+
+Allocate new signed 32-bit integer vector (C unsigned int) of length k,
+with optional initial values.</pre></li><li><h2>make-s8vector</h2><pre>(make-s8vector k fill)
+
+Allocate new signed 8-bit integer vector (C signed char) of length k,
+with optional initial values.</pre></li><li><h2>make-string</h2><pre>(make-string k [char])
+
+Returns new string with k elements. If char is provided
+it&#x27;s filled with that character.</pre></li><li><h2>make-tags</h2><pre>(make-tags expression)
+
+Returns a list structure of code with better syntax then raw LIPS</pre></li><li><h2>make-u16vector</h2><pre>(make-u16vector k fill)
+
+Allocate new unsigned 16-bit integer vector (C unsigned short) of length k,
+with optional initial values.</pre></li><li><h2>make-u32vector</h2><pre>(make-u32vector k fill)
+
+Allocate new unsigned 32-bit integer vector (C int) of length k,
+with optional initial values.</pre></li><li><h2>make-u8vector</h2><pre>(make-u8vector k fill)
+
+Allocate new unsigned 8-bit integer vector (C unsigned char) of length k,
+with optional initial values.</pre></li><li><h2>make-vector</h2><pre>(make-vector n [fill])
+
+Creates a new vector with n empty elements. If fill is specified it will set
+all elements of the vector to that value.</pre></li><li><h2>map</h2><pre>(map fn . lists)
+
+Higher-order function that calls function `fn` with each
+value of the list. If you provide more then one list as argument
+it will take each value from each list and call `fn` function
+with that many argument as number of list arguments. The return
+values of the fn calls are accumulated in a result list and
+returned by map.</pre></li><li><h2>match</h2><pre>(match pattern string)
+
+Function that returns a match object from JavaScript as a list or #f if
+no match.</pre></li><li><h2>max</h2><pre>(max n1 n2 ...)
+
+Returns the maximum of its arguments.</pre></li><li><h2>member</h2><pre>(member obj list)
+
+Returns first object in the list that match using equal? function.</pre></li><li><h2>memq</h2><pre>(memq obj list)
+
+Returns first object in the list that match using eq? function.</pre></li><li><h2>memv</h2><pre>(memv obj list)
+
+Returns first object in the list that match using eqv? function.</pre></li><li><h2>min</h2><pre>(min n1 n2 ...)
+
+Returns the minimum of its arguments.</pre></li><li><h2>modulo</h2><pre>(modulo a b)
+
+Returns modulo operation on its argumennts.</pre></li><li><h2>n-ary</h2><pre>(n-ary n fn)
+
+Returns a new function that limits the number of arguments to n.</pre></li><li><h2>nan?</h2><pre>(nan? x)
+
+Checks if argument x is Not a Number (NaN) value.</pre></li><li><h2>native-symbol?</h2><pre>(native-symbol? object)
+
+Checks if value is JavaScript Symbol.</pre></li><li><h2>native.number</h2><pre>(native.number obj)
+
+If argument is a number it will convert it to a native number.</pre></li><li><h2>negative?</h2><pre>(negative? x)
+
+Checks if the number is smaller then 0</pre></li><li><h2>new</h2><pre>(new obj . args)
+
+Function that creates new JavaScript instance of an object.</pre></li><li><h2>new-library</h2><pre>(new-library name)
+
+Create new empty library object with empty namespace.</pre></li><li><h2>newline</h2><pre>(newline [port])
+
+Write newline character to standard output or given port</pre></li><li><h2>not</h2><pre>(not x)
+
+Returns true if value is false and false otherwise.</pre></li><li><h2>nth</h2><pre>(nth index obj)
+
+Function that returns the nth element of the list or array.
+If used with a non-indexable value it will error.</pre></li><li><h2>nth-pair</h2><pre>(nth-pair list n)
+
+Returns nth pair of a list.</pre></li><li><h2>null-environment</h2><pre>(null-environment)
+
+Returns a clean environment with only the standard library.</pre></li><li><h2>null?</h2><pre>(null? expression)
+
+Predicate that tests if value is null-ish (i.e. undefined, nil, or
+Javascript null).</pre></li><li><h2>number-&gt;string</h2><pre>(number-&gt;string x [radix])
+
+Function that converts number to string with optional radix (number base).</pre></li><li><h2>number?</h2><pre>(number? expression)
+
+Predicate that tests if value is a number or NaN value.</pre></li><li><h2>numerator</h2><pre>(numerator n)
+
+Return numerator of rational or same number if n is not rational.</pre></li><li><h2>object</h2><pre>(object :name value)
+
+Creates a JavaScript object using key like syntax.</pre></li><li><h2>object-&gt;alist</h2><pre>(object-&gt;alist object)
+
+Function that converts a JavaScript object to Alist</pre></li><li><h2>object-literal</h2><pre>(object-literal :name value)
+
+Creates a JavaScript object using key like syntax. This is similar,
+to object but all values are quoted. This macro is used by the &amp; object literal.</pre></li><li><h2>object?</h2><pre>(object? expression)
+
+Predicate that tests if value is an plain object (not another LIPS type).</pre></li><li><h2>odd?</h2><pre>(odd? number)
+
+Checks if number is odd.</pre></li><li><h2>once</h2><pre>(once fn)
+
+Higher-order function that returns a new function, that only calls the original
+on the first invocation, and immediately returns the first call&#x27;s result again
+on subsequent invocations.</pre></li><li><h2>open-binary-input-file</h2><pre>(open-binary-input-file filename)
+
+Returns new Input Binary Port with given filename. In Browser
+user need to provide global fs variable that is instance of FS interface.</pre></li><li><h2>open-binary-output-file</h2><pre>(open-binary-output-file filename)
+
+Opens file and return port that can be used for writing. If file
+exists it will throw an Error.</pre></li><li><h2>open-input-bytevector</h2><pre>(open-input-bytevector bytevector)
+
+Create new input binary port with given bytevector</pre></li><li><h2>open-input-file</h2><pre>(open-input-file filename)
+
+Returns new Input Port with given filename. In Browser user need to
+provide global fs variable that is instance of FS interface.</pre></li><li><h2>open-input-string</h2><pre>(open-input-string string)
+
+Creates new string port as input that can be used to
+read S-exressions from this port using `read` function.</pre></li><li><h2>open-output-bytevector</h2><pre>(open-output-bytevector)
+
+Create new output port that can be used to write binary data.
+After done with the data the output buffer can be obtained by calling
+`get-output-bytevector` function.</pre></li><li><h2>open-output-file</h2><pre>(open-output-file filename)
+
+Function that opens file and return port that can be used for writing. If file
+exists it will throw an Error.</pre></li><li><h2>open-output-string</h2><pre>(open-output-string)
+
+Creates new output port that can used to write string into
+and after finish get the whole string using `get-output-string`.</pre></li><li><h2>or</h2><pre>(or . expressions)
+
+Macro that executes the values one by one and returns the first that is
+a truthy value. If there are no expressions that evaluate to true it
+returns false.</pre></li><li><h2>output-port-open?</h2><pre>(output-port-open? port)
+
+Checks if argument is output-port and if you can write to it.</pre></li><li><h2>output-port?</h2><pre>(output-port? arg)
+
+Returns true if argument is output port.</pre></li><li><h2>pair-map</h2><pre>(pair-map fn list)
+
+Function that calls fn argument for pairs in a list and returns a combined list
+with values returned from function fn. It works likes map but take two items
+from the list each time.</pre></li><li><h2>pair?</h2><pre>(pair? expression)
+
+Predicate that tests if value is a pair or list structure.</pre></li><li><h2>parameterize</h2><pre>(parameterize ((name value) ...)
+
+Macro that change the dynamic variable created by make-parameter.</pre></li><li><h2>parent.frame</h2><pre>(parent.frame)
+
+Returns the parent environment if called from inside a function.
+If no parent frame can be found it returns nil.</pre></li><li><h2>parent.frames</h2><pre>(parent.frames)
+
+Returns the list of environments from parent frames (lambda function calls)</pre></li><li><h2>peek-char</h2><pre>(peek-char port)
+
+This function reads and returns a character from the string
+port, or, if there is no more data in the string port, it
+returns an EOF.</pre></li><li><h2>peek-u8</h2><pre>(peek-u8)
+(peek-u8 port)
+
+Return next byte from input-binary port. If there are no more bytes
+it return eof object.</pre></li><li><h2>pipe</h2><pre>(pipe . fns)
+
+Higher-order function that creates a new function that applies all functions
+from left to right and returns the last value. Reverse of compose.
+e.g.:
+((pipe (curry + 2) (curry * 3)) 10) ==&gt; (* 3 (+ 2 10)) ==&gt; 36</pre></li><li><h2>plain-object?</h2><pre>(plain-object? x)
+
+Checks if value is a plain JavaScript object created using the object macro.</pre></li><li><h2>pluck</h2><pre>(pluck . strings)
+
+If called with a single string it will return a function that when
+called with an object will return that key from the object.
+If called with more then one string the returned function will
+create a new object by copying all properties from the given object.</pre></li><li><h2>port?</h2><pre>(port? x)
+
+Returns true if the argument is an input or output port object.</pre></li><li><h2>positive?</h2><pre>(positive? x)
+
+Checks if the number is larger then 0</pre></li><li><h2>pprint</h2><pre>(pprint expression)
+
+This function will pretty print its input to stdout. If it is called
+with a non-list, it will just call the print function on its
+input.</pre></li><li><h2>pretty-format</h2><pre>(pretty-format pair)
+
+Returns a pretty printed string from pair expression.</pre></li><li><h2>print</h2><pre>(print . args)
+
+This function converts each input into a string and prints
+the result to the standard output (by default it&#x27;s the
+console but it can be defined in user code). This function
+calls `(newline)` after printing each input.</pre></li><li><h2>procedure?</h2><pre>(procedure? expression)
+
+Predicate that tests if value is a callable function or continuation.</pre></li><li><h2>promise</h2><pre>(promise . body)
+
+Anaphoric macro that exposes resolve and reject functions from JS promise.</pre></li><li><h2>promise?</h2><pre>(promise? obj)
+
+Checks if the value is a promise created with delay or make-promise.</pre></li><li><h2>promisify</h2><pre>(promisify fn)
+
+Simple function for adding promises to NodeJS two-callback based functions.
+Function tested only with fs module.</pre></li><li><h2>prototype?</h2><pre>(prototype? obj)
+
+Predicate that tests if value is a valid JavaScript prototype,
+i.e. calling (new) with it will not throw &#x27;&lt;x&gt; is not a constructor&#x27;.</pre></li><li><h2>qsort</h2><pre>(qsort list predicate)
+
+Sorts the list using the quick sort algorithm according to predicate.</pre></li><li><h2>quasiquote</h2><pre>(quasiquote list)
+
+Similar macro to `quote` but inside it you can use special expressions (unquote
+x) abbreviated to ,x that will evaluate x and insert its value verbatim or
+(unquote-splicing x) abbreviated to ,@x that will evaluate x and splice the value
+into the result. Best used with macros but it can be used outside.</pre></li><li><h2>quote</h2><pre>(quote expression) or &#x27;expression
+
+Macro that returns a single LIPS expression as data (it won&#x27;t evaluate the
+argument). It will return a list if put in front of LIPS code.
+And if put in front of a symbol it will return the symbol itself, not the value
+bound to that name.</pre></li><li><h2>quote-promise</h2><pre>(quote-promise expr) or &#x27;&gt;expr
+
+Macro used to escape automati awaiting of the expression. It will be wrapped
+with a JavaScript class that behaves like Promise but will not be automatically
+resolved by LIPS like normal promises are.</pre></li><li><h2>quoted-symbol?</h2><pre>(quoted-symbol? code)
+
+Helper function that tests if value is a quoted symbol. To be used in macros
+that pass literal code that is transformed by parser.
+
+usage:
+
+  (define-macro (test x)
+     (if (quoted-symbol? x)
+         `&#x27;,(cadr x)))
+
+  (list &#x27;hello (test &#x27;world))</pre></li><li><h2>quotient</h2><pre>(quotient a b)
+
+Return quotient from division as integer.</pre></li><li><h2>radians-&gt;degree</h2><pre>(radians-&gt;degree x)
+
+Convert radians to degrees.</pre></li><li><h2>raise</h2><pre>(raise obj)
+
+Throws the object verbatim (no wrapping an a new Error).</pre></li><li><h2>random</h2><pre>(random)
+(random seed)
+
+Function that generates new random real number using Knuth algorithm.</pre></li><li><h2>range</h2><pre>(range stop)
+(range start stop)
+(range start stop step)
+
+Returns a list of numbers from start to stop with optional step.
+If start is not defined it starts from 0. If start is larger than stop
+the step needs to be negative otherwise it will hang in an infinite loop.</pre></li><li><h2>rational?</h2><pre>(rational? x)
+
+Checks if the value is rational.</pre></li><li><h2>rationalize</h2><pre>(rationalize number tolerance)
+
+Returns simplest rational number approximation differing from number by no more
+than the tolerance.</pre></li><li><h2>read</h2><pre>(read [port])
+
+This function, if called with a port, it will parse the next
+item from the port. If called without an input, it will read
+a string from standard input (using the browser&#x27;s prompt or
+a user defined input method) and parse it. This function can be
+used together with `eval` to evaluate code from port.</pre></li><li><h2>read-all</h2><pre>(read-all)
+(read-all port)
+
+Read all S-Expressions from port and return them as a list</pre></li><li><h2>read-bytevector</h2><pre>(read-bytevector k)
+(read-bytevector k port)
+
+Read next n bytes from input-binary port. If there are no more bytes
+it returns eof object. If there are less then n bytes in port it
+return the only bytes that are available</pre></li><li><h2>read-bytevector!</h2><pre>(read-bytevector! bytevector)
+(read-bytevector! bytevector port)
+(read-bytevector! bytevector port start)
+(read-bytevector! bytevector port start end)
+
+Reads next bytes from binary input port and write them into byte vector.
+if not start is specified it start to write into 0 position of the vector until
+the end or end the vector if no end is specified.</pre></li><li><h2>read-char</h2><pre>(read-char port)
+
+This function reads and returns the next character from the
+input port.</pre></li><li><h2>read-line</h2><pre>(read-line port)
+
+This function reads and returns the next line from the input
+port.</pre></li><li><h2>read-string</h2><pre>(read-string k)
+(read-string k port)
+
+Reads the next k characters, or as many as are available
+before the end of file, from the textual input port into a
+newly allocated string in left-to-right order and returns the
+string. If no characters are available before the end of file,
+an end-of-file object is returned.</pre></li><li><h2>read-u8</h2><pre>(read-u8)
+(read-u8 port)
+
+Read next byte from input-binary port. If there are no more bytes
+it return eof object.</pre></li><li><h2>real-part</h2><pre>(real-part n)
+
+Return real part of the complex number n.</pre></li><li><h2>real?</h2><pre>(real? x)
+
+Checks if the argument x is real.</pre></li><li><h2>reduce</h2><pre>(reduce fn init list . lists)
+
+Higher-order function that takes each element of the list and calls
+the fn with result of previous call or init and the next element
+of the list until each element is processed, and returns a single value
+as result of last call to `fn` function.
+e.g. it computes (fn &#x27;c &#x27;z (fn &#x27;b &#x27;y (fn &#x27;a &#x27;x &#x27;foo)))
+for: (reduce fn &#x27;foo &#x27;(a b c) &#x27;(x y z))</pre></li><li><h2>regex</h2><pre>(regex re)
+
+Creates a new regular expression from string, to not break Emacs formatting.</pre></li><li><h2>regex?</h2><pre>(regex? x)
+
+Returns true if value is a regular expression, or false otherwise.</pre></li><li><h2>remainder</h2><pre>(% n1 n2)
+
+Function returns the remainder of n1/n2 (modulo).</pre></li><li><h2>remainder__</h2><pre>(modulo a b)
+
+Returns remainder from division operation.</pre></li><li><h2>replace</h2><pre>(replace pattern replacement string)
+
+Function that changes pattern to replacement inside string. Pattern can be a
+string or regex and replacement can be function or string. See Javascript
+String.replace().</pre></li><li><h2>repr</h2><pre>(repr obj)
+
+Function that returns a LIPS code representation of the object as a string.</pre></li><li><h2>require</h2><pre>(require module)
+
+Function used inside Node.js to import a module.</pre></li><li><h2>require.resolve</h2><pre>(require.resolve path)
+
+Returns the path relative to the current module.
+
+Only available when LIPS is running under Node.js.</pre></li><li><h2>reset</h2><pre>(reset)
+
+Function resets the environment and removes all user defined variables.</pre></li><li><h2>response-&gt;content</h2><pre>(response-&gt;text binary res)
+
+Reads all text from a Node.js HTTP response object. If binary argument
+is true it will return Buffer object that can be converted to u8vector.
+
+***Warning:*** it may overflow the Javascript call stack when converting the
+whole buffer to u8vector, because LIPS doesn&#x27;t have TCO.</pre></li><li><h2>reverse</h2><pre>(reverse list)
+
+Function that reverses the list or array. If value is not a list
+or array it will error.</pre></li><li><h2>round</h2><pre>(round number)
+
+Function that calculates the round of a number.</pre></li><li><h2>s16vector</h2><pre>(s16vector v1 v2 ...)
+
+Create signed 16-bit integer vector (C short) from give arguments.</pre></li><li><h2>s16vector-length</h2><pre>(s16vector-length v)
+
+return length of signed 16-bit integer vector (C short).</pre></li><li><h2>s16vector-ref</h2><pre>(s16vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>s16vector-set!</h2><pre>(s16vector-set! vector k)
+
+Function set value of signed 16-bit integer vector (C short) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>s16vector?</h2><pre>(s16vector? x)
+
+Returns #t of argument is signed 16-bit integer vector (C short),
+otherwise it return #f.</pre></li><li><h2>s32vector</h2><pre>(s32vector v1 v2 ...)
+
+Create signed 32-bit integer vector (C unsigned int) from give arguments.</pre></li><li><h2>s32vector-length</h2><pre>(s32vector-length v)
+
+return length of signed 32-bit integer vector (C unsigned int).</pre></li><li><h2>s32vector-ref</h2><pre>(s32vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>s32vector-set!</h2><pre>(s32vector-set! vector k)
+
+Function set value of signed 32-bit integer vector (C unsigned int) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>s32vector?</h2><pre>(s32vector? x)
+
+Returns #t of argument is signed 32-bit integer vector (C unsigned int),
+otherwise it return #f.</pre></li><li><h2>s8vector</h2><pre>(s8vector v1 v2 ...)
+
+Create signed 8-bit integer vector (C signed char) from give arguments.</pre></li><li><h2>s8vector-length</h2><pre>(s8vector-length v)
+
+return length of signed 8-bit integer vector (C signed char).</pre></li><li><h2>s8vector-ref</h2><pre>(s8vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>s8vector-set!</h2><pre>(s8vector-set! vector k)
+
+Function set value of signed 8-bit integer vector (C signed char) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>s8vector?</h2><pre>(s8vector? x)
+
+Returns #t of argument is signed 8-bit integer vector (C signed char),
+otherwise it return #f.</pre></li><li><h2>scheme-report-environment</h2><pre>(scheme-report-environment version)
+
+Returns new Environment object for given Scheme Spec version.
+Only argument 5 is supported that create environment for R5RS.</pre></li><li><h2>search</h2><pre>(search pattern string)
+
+Function that returns the first found index of the pattern inside a string.</pre></li><li><h2>set-car!</h2><pre>(set-car! obj value)
+
+Function that sets the car (first item) of the list/pair to specified value.
+The old value is lost.</pre></li><li><h2>set-cdr!</h2><pre>(set-cdr! obj value)
+
+Function that sets the cdr (tail) of the list/pair to specified value.
+It will destroy the list. The old tail is lost.</pre></li><li><h2>set-current-directory!</h2><pre>(set-current-directory! string)
+
+Changes the current working directory to provided string.</pre></li><li><h2>set-global!</h2><pre>(set-global! name)
+
+Macro to make the name a Javascript global variable (i.e. accessible on globalThis).</pre></li><li><h2>set-obj!</h2><pre>(set-obj! obj key value)
+(set-obj! obj key value props)
+
+Function set a property of a JavaScript object. props should be a vector of pairs,
+passed to Object.defineProperty.</pre></li><li><h2>set-repr!</h2><pre>(add-repr! type fn)
+
+Function that adds the string representation to the type, which should be
+a constructor function.
+
+Function fn should have args (obj q) and it should return a string. obj
+is the value that need to be converted to a string. If the object is nested
+and you need to use `repr` recursively, it should pass the second parameter q
+to repr, so string will be quoted when it&#x27;s true.
+
+e.g.: (lambda (obj q) (string-append &quot;&lt;&quot; (repr obj q) &quot;&gt;&quot;))</pre></li><li><h2>set-special!</h2><pre>(set-special! symbol name [type])
+
+Add a special symbol to the list of transforming operators by the parser.
+e.g.: `(add-special! &quot;#&quot; &#x27;x)` will allow to use `#(1 2 3)` and it will be
+transformed into (x (1 2 3)) so you can write x macro that will process
+the list. 3rd argument is optional, and it can be one of two values:
+lips.specials.LITERAL, which is the default behavior, or
+lips.specials.SPLICE which causes the value to be unpacked into the expression.
+This can be used for e.g. to make `#(1 2 3)` into (x 1 2 3) that is needed
+by # that defines vectors.</pre></li><li><h2>set!</h2><pre>(set! name value)
+
+Macro that can be used to set the value of the variable or slot (mutate it).
+set! searches the scope chain until it finds first non empty slot and sets it.</pre></li><li><h2>shuffle</h2><pre>(shuffle obj)
+
+Order items in vector or list in random order.</pre></li><li><h2>sin</h2><pre>(sin n)
+
+Function that calculates sine of a number.</pre></li><li><h2>single</h2><pre>(single list)
+
+Checks if argument is list with one element.</pre></li><li><h2>some</h2><pre>(some fn list)
+
+Higher-order function that calls fn on each element of the list.
+It stops and returns true when fn returns true for a value.
+If none of the values give true, some will return false.
+Analogous to Python any(map(fn, list)).</pre></li><li><h2>sort</h2><pre>(sort list [predicate])
+
+Sorts the list using optional predicate function. If no comparison function
+is given it will use &lt;= and sort in increasing order.</pre></li><li><h2>split</h2><pre>(split separator string)
+
+Function that creates a list by splitting string by separator which can
+be a string or regular expression.</pre></li><li><h2>sqrt</h2><pre>(sqrt number)
+
+Function that returns the square root of the number.</pre></li><li><h2>square</h2><pre>(square z)
+
+Returns the square of z. This is equivalent to (* z z).</pre></li><li><h2>string</h2><pre>(string chr1 chr2 ...)
+
+Function that creates a new string from it&#x27;s arguments. Each argument
+needs to be a character object.</pre></li><li><h2>string-&gt;list</h2><pre>(string-&gt;list string)
+
+Returns a list of characters created from string.</pre></li><li><h2>string-&gt;number</h2><pre>(string-&gt;number number [radix])
+
+Function that parses a string into a number.</pre></li><li><h2>string-&gt;symbol</h2><pre>(string-&gt;symbol string)
+
+Function that converts a string to a LIPS symbol.</pre></li><li><h2>string-&gt;utf8</h2><pre>(string-&gt;utf8 string)
+(string-&gt;utf8 string start)
+(string-&gt;utf8 string start end)
+
+Converts string into u8 bytevector using utf8 encoding.
+The start and end is the range of the input string for the conversion.</pre></li><li><h2>string-&gt;vector</h2><pre>(string-&gt;list string)
+(string-&gt;list string start)
+(string-&gt;list string start end)
+
+Function that copies given range of string to list. If no start is specified it use
+start of the string, if no end is specified it convert to the end of the string.</pre></li><li><h2>string-append</h2><pre>(concat . strings)
+
+Function that creates a new string by joining its arguments.</pre></li><li><h2>string-ci&lt;?</h2><pre>(string-ci&lt;? string1 string2 ...)
+
+Returns true if strings are monotonically increasing, ignoring the case.</pre></li><li><h2>string-ci&lt;=?</h2><pre>(string-ci&lt;=? string1 string2 ...)
+
+Returns true if strings are monotonically non-decreasing, ignoring the case.</pre></li><li><h2>string-ci=?</h2><pre>(string-ci=? string1 string2 ...)
+
+Checks if all strings are equal, ignoring the case.</pre></li><li><h2>string-ci&gt;?</h2><pre>(string-ci&gt;? string1 string2 ...)
+
+Returns true if strings are monotonically decreasing, ignoring the case</pre></li><li><h2>string-ci&gt;=?</h2><pre>(string-ci&gt;=? string1 string2 ...)
+
+Returns true if strings are monotonically non-increasing, ignoring the case.</pre></li><li><h2>string-copy</h2><pre>(string-copy x)
+
+Creates a new string based on given argument.</pre></li><li><h2>string-downcase</h2><pre>(string-downcase string)
+
+Function convert a string passed as argument to lower case.</pre></li><li><h2>string-fill!</h2><pre>(string-fill! symbol char)
+
+Function that destructively fills the string with given character.</pre></li><li><h2>string-foldcase</h2><pre>(string-foldcase string)
+
+Returns lowercase string using the Unicode simple case-folding algorithm.</pre></li><li><h2>string-for-each</h2><pre>(string-for-each fn string1 stringr2 ...)
+
+Applies a function fn to each element of the strings, similar string-map.
+But the return value is #void.</pre></li><li><h2>string-join</h2><pre>(join separator list)
+
+Function that returns a string by joining elements of the list using separator.</pre></li><li><h2>string-length</h2><pre>(string-length string)
+
+Returns the length of the string.</pre></li><li><h2>string-map</h2><pre>(string-map fn string1 stringr2 ...)
+
+Returns new string from applying function fn to each element
+of the strings, similar to map for lists.</pre></li><li><h2>string-ref</h2><pre>(string-ref string k)
+
+Returns character inside string at given zero-based index.</pre></li><li><h2>string-set!</h2><pre>(string-set! string index char)
+
+Replaces character in string at a given index.</pre></li><li><h2>string-split</h2><pre>(split separator string)
+
+Function that creates a list by splitting string by separator which can
+be a string or regular expression.</pre></li><li><h2>string-upcase</h2><pre>(string-downcase string)
+
+Function convert a string passed as argument to upper case.</pre></li><li><h2>string?</h2><pre>(string? expression)
+
+Predicate that tests if value is a string.</pre></li><li><h2>string&lt;?</h2><pre>(string&lt;? string1 string2 ...)
+
+Returns true if strings are monotonically increasing.</pre></li><li><h2>string&lt;=?</h2><pre>(string&lt;? string1 string2 ...)
+
+Returns true if strings are monotonically non-decreasing.</pre></li><li><h2>string=?</h2><pre>(string=? string1 string2 ...)
+
+Checks if all strings are equal.</pre></li><li><h2>string&gt;?</h2><pre>(string&lt;? string1 string2 ...)
+
+Returns true if strings are monotonically decreasing.</pre></li><li><h2>string&gt;=?</h2><pre>(string&lt;? string1 string2 ...)
+
+Returns true if strings are monotonically non-increasing.</pre></li><li><h2>substring</h2><pre>(substring string start end)
+
+Function that returns the slice of the string starting at start and ending
+with end.</pre></li><li><h2>sxml</h2><pre>(sxml expr)
+
+Macro for JSX like syntax but with SXML.
+e.g. usage:
+
+(sxml (div (@ (data-foo &quot;hello&quot;)
+             (id &quot;foo&quot;))
+          (span &quot;hello&quot;)
+          (span &quot;world&quot;)))
+;; ==&gt; &lt;div data-foo=&quot;hello&quot; id=&quot;foo&quot;&gt;&lt;span&gt;hello&lt;/span&gt;
+;; ==&gt; &lt;span&gt;world&lt;/span&gt;&lt;/div&gt;</pre></li><li><h2>sxml-unquote</h2><pre>(sxml-unquote expression) or ~expression
+
+Treat expression as code and evaluate it inside sxml, similar to unquote
+with quasiquote.</pre></li><li><h2>symbol-&gt;string</h2><pre>(symbol-&gt;string symbol)
+
+Function that converts a LIPS symbol to a string.</pre></li><li><h2>symbol-append</h2><pre>(symbol-append s1 s2 ...)
+
+Function that creates a new symbol from symbols passed as arguments.</pre></li><li><h2>symbol?</h2><pre>(symbol? expression)
+
+Predicate that tests if value is a LIPS symbol.</pre></li><li><h2>symbol=?</h2><pre>(symbol=? s1 s2 ...)
+
+Checks if each value is symbol and it&#x27;s the same according to string=? predicate.</pre></li><li><h2>syntax-parameterize</h2><pre>(syntax-parameterize (bindings) body)
+
+Macro work similar to let-syntax but the the bindnds will be exposed to the user.
+With syntax-parameterize you can define anaphoric macros.</pre></li><li><h2>syntax-rules</h2><pre>(syntax-rules () (pattern expression) ...)
+
+Base of hygienic macros, it will return a new syntax expander
+that works like Lisp macros.</pre></li><li><h2>take</h2><pre>(take list n)
+
+Returns n first values of the list.</pre></li><li><h2>tan</h2><pre>(tan n)
+
+Function that calculates tangent of a number.</pre></li><li><h2>textual-port?</h2><pre>(textual-port? port)
+
+Function that tests if argument is string port.</pre></li><li><h2>throw</h2><pre>(throw string)
+
+Throws a new exception.</pre></li><li><h2>timer</h2><pre>(timer time . body)
+
+Evaluates body after delay, it returns the timer ID from setTimeout.
+To clear the timer you can use native JS clearTimeout function.</pre></li><li><h2>tree-&gt;array</h2><pre>(tree-&gt;array list)
+
+Function that converts a LIPS cons tree structure into a JavaScript array.</pre></li><li><h2>tree-map</h2><pre>(tree-map fn tree)
+
+Tree version of map. fn is invoked on every leaf.</pre></li><li><h2>truncate</h2><pre>(truncate n)
+
+Function that returns the integer part (floor) of a real number.</pre></li><li><h2>try</h2><pre>(try expr (catch (e) code))
+(try expr (catch (e) code) (finally code))
+(try expr (finally code))
+
+Macro that executes expr and catches any exceptions thrown. If catch is provided
+it&#x27;s executed when an error is thrown. If finally is provided it&#x27;s always
+executed at the end.</pre></li><li><h2>type</h2><pre>(type object)
+
+Function that returns the type of an object as string.</pre></li><li><h2>typecheck</h2><pre>(typecheck label value type [position])
+
+Checks the type of value and errors if the type is not one allowed.  Type can be
+string or list of strings. The position optional argument is used to create a
+proper error message for the nth argument of function calls.</pre></li><li><h2>typecheck-args</h2><pre>(typecheck-args type label lst)
+
+Function that makes sure that all items in list are of same type.</pre></li><li><h2>typecheck-number</h2><pre>(typecheck-number label value type [position])
+
+Function similar to typecheck but checks if the argument is a number
+and specific type of number e.g. complex.</pre></li><li><h2>typed-array?</h2><pre>(typed-array? o)
+
+Function that tests if the arguments is a JavaScript typed array (Scheme byte vector).</pre></li><li><h2>u16vector</h2><pre>(u16vector v1 v2 ...)
+
+Create unsigned 16-bit integer vector (C unsigned short) from give arguments.</pre></li><li><h2>u16vector-length</h2><pre>(u16vector-length v)
+
+return length of unsigned 16-bit integer vector (C unsigned short).</pre></li><li><h2>u16vector-ref</h2><pre>(u16vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>u16vector-set!</h2><pre>(u16vector-set! vector k)
+
+Function set value of unsigned 16-bit integer vector (C unsigned short) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>u16vector?</h2><pre>(u16vector? x)
+
+Returns #t of argument is unsigned 16-bit integer vector (C unsigned short),
+otherwise it return #f.</pre></li><li><h2>u32vector</h2><pre>(u32vector v1 v2 ...)
+
+Create unsigned 32-bit integer vector (C int) from give arguments.</pre></li><li><h2>u32vector-length</h2><pre>(u32vector-length v)
+
+return length of unsigned 32-bit integer vector (C int).</pre></li><li><h2>u32vector-ref</h2><pre>(u32vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>u32vector-set!</h2><pre>(u32vector-set! vector k)
+
+Function set value of unsigned 32-bit integer vector (C int) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>u32vector?</h2><pre>(u32vector? x)
+
+Returns #t of argument is unsigned 32-bit integer vector (C int),
+otherwise it return #f.</pre></li><li><h2>u8-ready?</h2><pre>(u8-ready?)
+(u8-ready? port)
+
+Returns #t if a byte is ready on the binary input port and returns #f otherwise.
+If u8-ready? returns #t then the next read-u8 operation on the given port is
+guaranteed not to hang. If the port is at end of file then u8-ready? returns #t.</pre></li><li><h2>u8vector</h2><pre>(u8vector v1 v2 ...)
+
+Create unsigned 8-bit integer vector (C unsigned char) from give arguments.</pre></li><li><h2>u8vector-length</h2><pre>(u8vector-length v)
+
+return length of unsigned 8-bit integer vector (C unsigned char).</pre></li><li><h2>u8vector-ref</h2><pre>(u8vector-ref vector k)
+
+Returns value from vector at index k.
+If index is out of range it throw exception.</pre></li><li><h2>u8vector-set!</h2><pre>(u8vector-set! vector k)
+
+Function set value of unsigned 8-bit integer vector (C unsigned char) at index k.
+If index is out of range it throw exception.</pre></li><li><h2>u8vector?</h2><pre>(u8vector? x)
+
+Returns #t of argument is unsigned 8-bit integer vector (C unsigned char),
+otherwise it return #f.</pre></li><li><h2>unary</h2><pre>(unary fn)
+
+Returns a new function with arguments limited to one.</pre></li><li><h2>unbind</h2><pre>(unbind fn)
+
+Function that removes the weak &#x27;this&#x27; binding from a function so you
+can get properties from the actual function object.</pre></li><li><h2>unfold</h2><pre>(unfold fn init)
+
+Returns a list from the given function and init value. The function should
+return a pair where first is the item added to the list and second is next value
+passed to the function. If the function returns false it ends the loop.</pre></li><li><h2>unquote</h2><pre>(unquote code) or ,code
+
+Special form used in the quasiquote macro. It evaluates the expression inside and
+substitutes the value into quasiquote&#x27;s result.</pre></li><li><h2>unquote-splicing</h2><pre>(unquote-splicing code) or ,@code
+
+Special form used in the quasiquote macro. It evaluates the expression inside and
+splices the list into quasiquote&#x27;s result. If it is not the last element of the
+expression, the computed value must be a pair.</pre></li><li><h2>unset-repr!</h2><pre>(unset-repr! type)
+
+Removes the string representation of the type, which should be constructor function,
+added by add-repr! function.</pre></li><li><h2>unset-special!</h2><pre>(unset-special! name)
+
+Function that removes a special symbol from parser added by `set-special!`,
+name must be a string.</pre></li><li><h2>unset!</h2><pre>(unset! name)
+
+Function to delete the specified name from environment.
+Trying to access the name afterwards will error.</pre></li><li><h2>utf8-&gt;string</h2><pre>(utf8-&gt;string u8vector)
+(utf8-&gt;string u8vector start)
+(utf8-&gt;string u8vector start end)
+
+Converts u8 bytevector into string using utf8 encoding.
+The start and end is the range of the input byte vector for the conversion.</pre></li><li><h2>value</h2><pre>(value obj)
+
+Function that unwraps LNumbers and converts &#x27;() to #void.</pre></li><li><h2>values</h2><pre>(values a1 a2 ...)
+
+If called with more then one element it will create a special
+Values object that can be used in the call-with-values function.</pre></li><li><h2>values-ref</h2><pre>(values-ref values n)
+
+Returns n value of values object which is result of value function.</pre></li><li><h2>vector</h2><pre>(vector 1 2 3 (+ 3 1)) or #(1 2 3 4)
+
+Macro for defining vectors (Javascript Arrays). Vector literals are
+automatically quoted, so you can&#x27;t use expressions inside them, only other
+literals, like other vectors or objects.</pre></li><li><h2>vector-&gt;list</h2><pre>(vector-&gt;list vector)
+(vector-&gt;list vector start)
+(vector-&gt;list vector start end)
+
+Function that copies given range of vector to list. If no start is specified it use
+start of the vector, if no end is specified it convert to the end of the vector.</pre></li><li><h2>vector-&gt;string</h2><pre>(vector-&gt;string vector)
+(vector-&gt;string vector start)
+(vector-&gt;string vector start end)
+
+Returns new string created from vector of characters in given range.
+If no start is given it create string from 0, if no end is given it return
+string to the end.</pre></li><li><h2>vector-append</h2><pre>(vector-append v1 v2 ...)
+
+Returns new vector by combining it&#x27;s arguments that should be vectors.</pre></li><li><h2>vector-copy</h2><pre>(vector-copy vector)
+(vector-copy vector start)
+(vector-copy vector start end)
+
+Returns a new vecotor that is a copy of given vector. If start
+is not provided it starts at 0, if end it&#x27;s not provided it copy
+til the end of the given vector.</pre></li><li><h2>vector-copy!</h2><pre>(vector-copy to at from)
+(vector-copy to at from start)
+(vector-copy to at from start end)
+
+Copies the elements of vector from between start and end into
+vector to starting at `at`. If start is missing it start at 0 and if end
+is missing it copy til the end of the vector from. It throws an error
+if vector from don&#x27;t fit into the destination `to`.</pre></li><li><h2>vector-fill!</h2><pre>(vector-fill! vector fill)
+(vector-fill! vector fill start)
+(vector-fill! vector fill start end)
+
+Fill vector with a given value in given range. If start is not given is start
+at 0. If end is not given it fill till the end if the vector.</pre></li><li><h2>vector-for-each</h2><pre>(vector-for-each fn vector1 vector2 ...)
+
+Invokes every Returns new vector from applying function fn to each element
+of the vectors, similar to map for lists.</pre></li><li><h2>vector-length</h2><pre>(vector-length vec)
+
+Returns length of the vector. It errors if the argument is not a vector.</pre></li><li><h2>vector-map</h2><pre>(vector-map fn vector1 vector2 ...)
+
+Returns new vector from applying function fn to each element
+of the vectors, similar to map for lists.</pre></li><li><h2>vector-ref</h2><pre>(vector-ref vec n)
+
+Returns nth element of the vector vec.</pre></li><li><h2>vector-set!</h2><pre>(vector-set! vec n value)
+
+Function that sets nth item of the vector to value.</pre></li><li><h2>vector?</h2><pre>(vector? n)
+
+Returns true if value is vector and false if not.</pre></li><li><h2>wait</h2><pre>(wait time . expr)
+
+Returns a promise that will resolve with the expression after delay.</pre></li><li><h2>warn-quote</h2><pre>(warn-quote)
+
+Simple macro that throws an error, when you try to use ’ symbol as quote in code.</pre></li><li><h2>while</h2><pre>(while cond body)
+
+Creates a loop, it executes cond and body until cond expression is false.</pre></li><li><h2>with-exception-handler</h2><pre>(with-exception-handler handler thunk)
+
+Procedure call and return value of thunk function, if exception happen
+it call handler procedure.</pre></li><li><h2>with-input-from-file</h2><pre>(with-input-from-file string thunk)
+
+Procedure open file and make it current-input-port then thunk is executed.
+After thunk is executed current-input-port is restored and file port
+is closed.</pre></li><li><h2>with-input-from-port</h2><pre>(with-input-from-port port thunk)
+
+Procedure use port and make it current-input-port then thunk is executed.
+After thunk is executed current-input-port is restored and given port
+is closed.</pre></li><li><h2>with-input-from-string</h2><pre>(with-input-from-string string thunk)
+
+Procedure open string and make it current-input-port then thunk is executed.
+After thunk is executed current-input-port is restored and string port
+is closed.</pre></li><li><h2>with-tags</h2><pre>(with-tags expression)
+
+valutes LIPS shorter code for S-Expression equivalent of JSX.
+e.g.:
+
+(with-tags (:div (:class &quot;item&quot; :id &quot;item-1&quot;)
+                 (list (:span () &quot;Random Item&quot;)
+                       (:a (:onclick (lambda (e) (alert &quot;close&quot;)))
+                           &quot;close&quot;))))
+
+Above expression can be passed to function that renders JSX (like render
+in React, Preact) To get the string from the macro you can use vhtml
+library from npm.</pre></li><li><h2>write</h2><pre>(write obj [port])
+
+Write object to standard output or give port. For strings it will include
+wrap in quotes.</pre></li><li><h2>write-bytevector</h2><pre>(write-bytevector bytevector)
+(write-bytevector bytevector port)
+
+Write byte vector into binary output port.</pre></li><li><h2>write-char</h2><pre>(write-char string)
+(write-char string port)
+
+Writes the character char (not an external representation of the character)
+to the given textual output port and returns an unspecified value.</pre></li><li><h2>write-string</h2><pre>(write-string string)
+(write-string string port)
+(write-string string port start)
+(write-string string port start end)
+
+Writes the characters of string from start to end in left-toright order
+to the textual output port.</pre></li><li><h2>write-u8</h2><pre>(write-u8 byte)
+(write-u8 byte port)
+
+Write byte into binary output port.</pre></li><li><h2>Y</h2><pre>(Y f)
+
+  _ __   __    _            _       _      _ __   __         _   _  _
+ /  \ \ / /   /  __        /   ____  \    /  \ \ / /    ____  \   \  \
++    \ v /   +   \ \      +   / ___|  +  +    \ v /    / ___|  +   +  +
+|     \ /    |    \ \     |  | |__    |  |     \ /    | |__    |   |  |
+|     | |    |    /  \    |  |  __|   |  |     | |    |  __|   |   |  |
+|     | |    |   / /\ \   |  | |      |  |     | |    | |      |   |  |
++     |_|    +  /_/  \_\  +  |_|      +  +     |_|    |_|      +   +  +
+ \_           \_           \_       _/    \_                 _/  _/ _/</pre></li><li><h2>zero?</h2><pre>(zero? x)
+
+Checks if the number is equal to 0</pre></li><li><h2>zip</h2><pre>(zip list1 list2 ...)
+
+Return list where elements are taken from each list.
+e.g.:
+(zip &#x27;(1 2 3) &#x27;(2 3 4))
+;; ==&gt; &#x27;((1 2) (2 3) (3 4))</pre></li></ul></div></main></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/docs/intro">Getting Started</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/scheme-intro/what-is-lisp">Introduction to Scheme</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/category/lips-introduction">LIPS Scheme Introduction</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://gitter.im/jcubic/lips" target="_blank" rel="noopener noreferrer" class="footer__link-item">Gitter<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://twitter.com/LIPS_scheme" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/blog">Blog</a></li><li class="footer__item"><a href="https://github.com/jcubic/lips" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright (c) 2018-2024 <a href="https://jakub.jankiewicz.org">Jakub T. Jankiewicz</a><br>Website content licenses with <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> unless noted otherwise.</div><a href="https://notbyai.fyi"><svg width="131" height="42" viewBox="0 0 131 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M.5.5H116c8.008 0 14.5 6.492 14.5 14.5v26.5H15C6.992 41.5.5 35.008.5 27V.5Z" fill="#000" stroke="#ACACAC"></path><path d="M17.96 24.157a9.446 9.446 0 0 0 11.89 0l-1.34-1.654a7.316 7.316 0 0 1-9.21 0l-1.34 1.654ZM19.404 20.513v-2.877h2.13v2.877h-2.13ZM26.012 17.637v2.876h2.13v-2.877h-2.13Z" fill="#fff"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M35 21.5C35 27.851 29.851 33 23.5 33S12 27.851 12 21.5 17.149 10 23.5 10 35 15.149 35 21.5Zm-2.13 0a9.37 9.37 0 1 1-18.74 0 9.37 9.37 0 0 1 18.74 0Z" fill="#fff"></path><path d="M48.29 22.178c.99 0 1.798.263 2.425.79.632.52.949 1.388.949 2.601v6.516h-2.566V26.2c0-.509-.067-.9-.202-1.171-.246-.497-.715-.746-1.406-.746-.85 0-1.432.364-1.748 1.092-.164.385-.247.876-.247 1.474v5.237H43v-9.658h2.416v1.411c.323-.497.627-.855.914-1.074.516-.39 1.169-.586 1.96-.586ZM57.56 30.3c.733 0 1.295-.263 1.688-.79.392-.526.588-1.275.588-2.245 0-.97-.196-1.716-.588-2.237-.393-.527-.955-.79-1.688-.79-.732 0-1.297.263-1.695.79-.393.52-.59 1.266-.59 2.237 0 .97.197 1.719.59 2.246.398.526.963.79 1.695.79Zm4.903-3.035c0 1.42-.404 2.636-1.212 3.648-.808 1.006-2.036 1.51-3.682 1.51s-2.873-.504-3.681-1.51c-.809-1.012-1.213-2.228-1.213-3.648 0-1.397.404-2.607 1.213-3.631.808-1.024 2.035-1.536 3.681-1.536s2.873.512 3.682 1.536c.808 1.024 1.212 2.234 1.212 3.63ZM62.56 24.3v-1.802h1.336v-2.699h2.478v2.699h1.556V24.3h-1.556v5.113c0 .397.05.645.15.746.1.094.404.142.913.142h.238l.255-.018v1.89l-1.187.045c-1.183.042-1.991-.165-2.425-.621-.281-.29-.422-.737-.422-1.34V24.3h-1.335ZM77.602 22.196c1.26 0 2.244.458 2.952 1.376.715.917 1.072 2.1 1.072 3.55 0 1.504-.351 2.75-1.054 3.738-.703.988-1.684 1.483-2.944 1.483-.79 0-1.426-.16-1.906-.48-.287-.19-.598-.52-.932-.994v1.216H72.34V19.018h2.495v4.651c.316-.45.665-.793 1.046-1.03.45-.295 1.025-.443 1.722-.443Zm-.641 8.06c.644 0 1.145-.263 1.502-.79.358-.526.536-1.219.536-2.077 0-.686-.088-1.255-.263-1.704-.334-.853-.95-1.279-1.846-1.279-.908 0-1.531.418-1.871 1.252-.176.444-.264 1.018-.264 1.722 0 .829.182 1.515.545 2.06.363.544.917.816 1.66.816ZM83.094 33.94l.317.018a3.9 3.9 0 0 0 .703-.026c.222-.03.41-.098.562-.205.147-.1.281-.31.404-.63.13-.32.182-.515.159-.586L81.724 22.41h2.785l2.091 7.137 1.977-7.137h2.663l-3.286 9.516c-.633 1.835-1.134 2.971-1.503 3.41-.369.443-1.107.665-2.214.665-.223 0-.401-.003-.536-.009-.135 0-.337-.009-.606-.026V33.94ZM97.783 27.14h3.286l-1.617-5.148-1.669 5.148ZM97.95 19h3.058l4.586 13.085h-2.934l-.835-2.69h-4.771l-.897 2.69h-2.829L97.95 19ZM110.59 32.085h-2.688V19h2.688v13.085Z" fill="#fff"></path><path d="M106.306 19H112v2.226h-5.694V19ZM106.306 29.862H112v2.226h-5.694v-2.226ZM42.975 9.896l1.02 3.97 1.035-3.97h1l1.04 3.947 1.084-3.947h.892l-1.54 5.039h-.926l-1.08-3.9-1.044 3.9h-.926L42 9.896h.975ZM49.816 9.896h.846v.87c.07-.169.24-.374.51-.616a1.354 1.354 0 0 1 1.02-.362l.203.019v.893a1.378 1.378 0 0 0-.292-.023c-.449 0-.794.138-1.035.414-.24.273-.361.588-.361.946v2.898h-.891V9.896ZM53.066 9.92h.906v5.015h-.906V9.919Zm0-1.896h.906v.96h-.906v-.96ZM55.4 8.49h.902v1.406h.846v.692h-.846v3.288c0 .176.063.293.188.353.07.035.185.052.347.052h.138c.05-.003.108-.008.173-.014v.668c-.102.028-.21.048-.321.06a3.114 3.114 0 0 1-.357.02c-.416 0-.698-.1-.846-.302-.149-.203-.223-.467-.223-.79v-3.335h-.718v-.692h.718V8.489ZM58.121 8.49h.902v1.406h.846v.692h-.846v3.288c0 .176.062.293.188.353.07.035.185.052.346.052h.139c.05-.003.107-.008.173-.014v.668c-.102.028-.21.048-.322.06a3.115 3.115 0 0 1-.356.02c-.416 0-.698-.1-.847-.302-.148-.203-.223-.467-.223-.79v-3.335h-.717v-.692h.717V8.489ZM62.872 9.783c.377 0 .741.085 1.095.254.353.166.622.383.807.65.178.253.297.55.356.889.053.232.08.602.08 1.11h-3.887c.016.511.143.922.38 1.232.238.308.606.462 1.105.462.465 0 .837-.146 1.114-.438.158-.17.27-.365.337-.588h.876c-.023.185-.1.392-.233.62a2.113 2.113 0 0 1-1.44 1.063 3.21 3.21 0 0 1-.728.076c-.66 0-1.22-.227-1.679-.682-.459-.458-.688-1.097-.688-1.92 0-.808.231-1.465.693-1.97.462-.505 1.066-.758 1.812-.758Zm1.421 2.23c-.036-.367-.12-.66-.252-.88-.244-.407-.652-.611-1.223-.611-.41 0-.753.14-1.03.423-.277.28-.424.635-.44 1.068h2.945ZM66.207 9.896h.847v.715c.25-.295.516-.507.797-.635a2.22 2.22 0 0 1 .936-.193c.752 0 1.26.25 1.525.748.145.273.218.663.218 1.172v3.232h-.907v-3.176c0-.307-.047-.555-.143-.743-.159-.314-.446-.47-.862-.47-.21 0-.384.02-.52.06a1.344 1.344 0 0 0-.643.414 1.25 1.25 0 0 0-.292.518 3.39 3.39 0 0 0-.065.757v2.64h-.89V9.896ZM74.401 8h.867v2.508c.195-.242.427-.425.698-.55.27-.13.565-.194.881-.194.66 0 1.195.217 1.605.65.412.43.618 1.064.618 1.905 0 .796-.202 1.458-.608 1.985-.407.527-.97.79-1.689.79-.402 0-.742-.092-1.02-.277-.165-.11-.341-.285-.53-.527v.645h-.822V8Zm2.318 6.347c.482 0 .841-.182 1.08-.546.24-.364.36-.844.36-1.44 0-.53-.12-.969-.36-1.317-.239-.348-.59-.522-1.056-.522-.405 0-.762.142-1.069.428-.304.285-.456.756-.456 1.411 0 .474.063.858.189 1.153.234.555.671.833 1.312.833ZM83.326 9.896h.986c-.126.323-.405 1.06-.837 2.211-.324.866-.594 1.572-.812 2.117-.515 1.286-.878 2.07-1.09 2.353-.21.282-.574.423-1.089.423-.125 0-.223-.005-.292-.014a2.452 2.452 0 0 1-.247-.052v-.771c.155.04.267.065.336.075.07.01.13.014.183.014.165 0 .286-.027.362-.08a.69.69 0 0 0 .198-.188 22.88 22.88 0 0 0 .401-.903l-1.96-5.185h1.01l1.42 4.102 1.431-4.102ZM87.703 8h.891v2.578c.212-.254.402-.433.57-.536.287-.179.645-.268 1.074-.268.77 0 1.29.255 1.565.767.148.279.223.666.223 1.162v3.232h-.916v-3.176c0-.37-.05-.641-.149-.814-.162-.276-.465-.414-.91-.414-.37 0-.706.12-1.006.362-.3.242-.45.698-.45 1.37v2.672h-.892V8ZM94.138 9.896v3.345c0 .257.042.467.128.63.159.301.454.452.886.452.621 0 1.043-.263 1.268-.79.122-.283.183-.67.183-1.162V9.896h.891v5.039h-.841l.01-.744c-.116.192-.26.353-.431.485-.34.263-.753.395-1.238.395-.756 0-1.27-.24-1.545-.72-.148-.257-.222-.6-.222-1.03V9.896h.91ZM98.79 9.896h.88v.715c.212-.248.403-.428.575-.541a1.792 1.792 0 0 1 1-.287c.423 0 .763.099 1.02.296.145.113.277.28.396.5.198-.27.431-.47.698-.598.268-.132.568-.198.901-.198.713 0 1.199.245 1.456.734.139.263.208.618.208 1.063v3.355h-.926v-3.5c0-.336-.089-.567-.267-.692a1.077 1.077 0 0 0-.644-.188c-.35 0-.652.111-.906.334-.251.222-.376.594-.376 1.115v2.93h-.906v-3.288c0-.342-.043-.591-.129-.748-.135-.235-.388-.353-.758-.353-.336 0-.643.124-.921.372-.274.248-.41.696-.41 1.345v2.673h-.892V9.896ZM107.818 13.594c0 .245.094.437.282.579.188.14.411.211.669.211.313 0 .617-.069.911-.207.495-.229.742-.604.742-1.124v-.682c-.109.066-.249.12-.421.164-.171.044-.34.076-.505.094l-.539.066c-.324.041-.566.105-.728.193-.274.148-.411.383-.411.706Zm2.159-1.713c.204-.025.341-.106.411-.244a.72.72 0 0 0 .059-.325c0-.288-.109-.497-.327-.626-.214-.131-.523-.197-.926-.197-.465 0-.795.119-.99.357-.109.132-.18.328-.213.588h-.832c.017-.62.228-1.052.634-1.293.409-.245.883-.367 1.421-.367.624 0 1.131.113 1.52.338.386.226.579.578.579 1.054v2.903c0 .088.019.158.055.212.04.053.12.08.243.08.039 0 .084-.002.133-.005a3.93 3.93 0 0 0 .159-.024v.626a2.661 2.661 0 0 1-.317.07c-.073.01-.172.015-.297.015-.307 0-.53-.104-.669-.31a1.156 1.156 0 0 1-.153-.466c-.182.225-.443.421-.783.588-.339.166-.714.249-1.123.249-.492 0-.895-.141-1.209-.423a1.392 1.392 0 0 1-.465-1.068c0-.468.154-.83.461-1.087.306-.257.709-.416 1.208-.475l1.421-.17ZM112.678 9.896h.846v.715c.251-.295.517-.507.797-.635.281-.129.593-.193.936-.193.753 0 1.261.25 1.525.748.145.273.218.663.218 1.172v3.232h-.906v-3.176c0-.307-.048-.555-.144-.743-.158-.314-.445-.47-.861-.47-.211 0-.385.02-.52.06a1.347 1.347 0 0 0-.644.414 1.253 1.253 0 0 0-.292.518c-.043.175-.064.428-.064.757v2.64h-.891V9.896Z" fill="#fff"></path></svg></a></div></div><script>var owa_baseUrl="https://stats.jcubic.pl/",owa_cmds=owa_cmds||[];owa_cmds.push(["setSiteId","922150e605063a8580e17047ffbf3ec2"]),owa_cmds.push(["trackPageView"]),owa_cmds.push(["trackClicks"]),function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,owa_baseUrl="https:"==document.location.protocol?window.owa_baseSecUrl||owa_baseUrl.replace(/http:/,"https:"):owa_baseUrl,e.src=owa_baseUrl+"modules/base/js/owa.tracker-combined-min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(e,a)}()</script></footer></div>
+</body>
+</html>
