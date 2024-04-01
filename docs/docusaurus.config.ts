@@ -126,7 +126,7 @@ const config: Config = {
     algolia: {
       appId: '5NWAQNIDET',
       apiKey: 'ee3d103e9ce731b709e72350bb1f061f',
-      indexName: 'lips-js',
+      indexName: 'lips-js'
     },
     footer: {
       style: 'dark',
