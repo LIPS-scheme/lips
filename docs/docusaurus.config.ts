@@ -24,6 +24,7 @@ const config: Config = {
   projectName: 'lips', // Usually your repo name.
   deploymentBranch: 'docusaurus',
 
+  trailingSlash: false,
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
