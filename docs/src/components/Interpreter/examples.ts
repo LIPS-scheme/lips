@@ -4,16 +4,16 @@ const examples = [
 
 **NOTE**: you can hover over Scheme symbols and get tooltip with documentation.`,
     code: `;; &() is object literal used with quasiquote
-(let ((object \`&(:name "LIPS Scheme"
-                 :version ,lips.version)))
+(let ((obj \`&(:name "LIPS Scheme"
+                :version ,lips.version)))
   ;; you can access JavaScript properties
   ;; with dot notation, print is display + newline
-  (print (string-append object.name
+  (print (string-append obj.name
                         " "
-                        object.version))
+                        obj.version))
   ;; you can mix scheme and JavaScript
   (setTimeout (lambda ()
-                (alert (JSON.stringify object)))
+                (alert (JSON.stringify obj)))
               1000)
   #void)`
   },
