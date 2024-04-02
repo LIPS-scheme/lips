@@ -509,7 +509,7 @@ function run_repl(err, rl) {
     }
     let prev_line;
     const is_emacs = process.env.INSIDE_EMACS;
-    function continue_multiline() {
+    function continue_multiline(code) {
         multiline = true;
         if (cmd.match(/\x1b\[200~/) || !supports_paste_brackets) {
             rl.prompt();
@@ -607,7 +607,7 @@ function run_repl(err, rl) {
                         rl.resume();
                     });
                 } else {
-                    continue_multiline();
+                    continue_multiline(code);
                 }
             } catch (e) {
                 console.error(e.message);
