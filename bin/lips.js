@@ -480,7 +480,7 @@ if (options.version || options.V) {
 function unify_prompt(a, b) {
     var result = a;
     if (a.length < b.length) {
-        result += new Array((b.length - a.length) + 1).join(' ');
+        result += ' '.repeat(b.length - a.length);
     }
     return result;
 }
@@ -528,7 +528,7 @@ function run_repl(err, rl) {
             } catch (e) {
                 ind = 0;
             }
-            const spaces = new Array(ind + 1).join(' ');
+            const spaces = ' '.repeat(ind);
             if (is_emacs) {
                 rl.setPrompt('');
                 rl.prompt();
@@ -558,16 +558,13 @@ function run_repl(err, rl) {
             const lines = code.split('\n');
             if (terminal) {
                 const stdout = scheme(code).split('\n').map((line, i) => {
-                    let prefix;
-                    if (i === 0) {
-                        prefix = unify_prompt(prompt, continuePrompt);
-                    } else {
-                        prefix = unify_prompt(continuePrompt, prompt);
-                    }
+                    const prefix = i === 0 ? prompt : continuePrompt;
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
-                let num = lines.length;
-                const format = `\x1b[${num}F${stdout}\n`;
+                const len = lines.length;
+                // overwrite all lines to get rid of any artifacts left my stdin
+                // mostly becasue of parenthesis matching
+                const format = `\x1b[${len}F${stdout}\n`;
                 process.stdout.write(format);
             }
             cmd += '\n';
