@@ -416,57 +416,13 @@ if (options.version || options.V) {
         console.log(banner.replace(/(\n\nLIPS.+)/m, entry)); // '
     }
     var prompt = 'lips> ';
-    var continuePrompt = '... ';
+    var continue_prompt = '... ';
     var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS);
     rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         prompt: prompt,
         terminal
-    });
-    rl._writeToOutput = function _writeToOutput(string) {
-        try {
-        let code = scheme(string);
-        if (string.endsWith(')')) {
-            let count = 0;
-            const token = tokenize(string, true).reverse().find(token => {
-                if (is_open(token.token)) {
-                    count--;
-                } else if (is_close(token.token)) {
-                    count++;
-                }
-                return is_open(token.token) && count === 0;
-            });
-            const re = /(\x1b\[[0-9;]*m)/;
-            let str_len = 0, found;
-            if (token) {
-                code = code.split(re).reduce((acc, str) => {
-                    let result
-                    if (str.match(re)) {
-                        result = str;
-                    } else if (found) {
-                        result = str;
-                    } else if (str_len + str.length <= token.offset) {
-                        result = str;
-                        str_len += str.length;
-                    } else {
-                        const pos = token.offset - str_len;
-                        result = str.substring(0, pos) + '\x1b[7m(\x1b[m' + str.substring(pos + 1);
-                        found = true;
-                    }
-                    return acc + result;
-                }, '');
-            }
-        }
-        rl.output.write(code);
-        } catch(e) {
-            console.error(e);
-        }
-    };
-    process.stdin.on('keypress', (c, k) => {
-        setTimeout(function() {
-            rl._refreshLine(); // force refresh colors
-        }, 0);
     });
     const historySize = Number(env.LIPS_REPL_HISTORY_SIZE);
     if (!Number.isNaN(historySize) && historySize > 0) {
@@ -516,15 +472,15 @@ function run_repl(err, rl) {
             if (is_emacs) {
                 rl.setPrompt('');
             } else {
-                rl.setPrompt(continuePrompt);
+                rl.setPrompt(continue_prompt);
             }
             if (terminal) {
-                rl.write(' '.repeat(prompt.length - continuePrompt.length));
+                rl.write(' '.repeat(prompt.length - continue_prompt.length));
             }
         } else {
             let ind;
             try {
-                ind = indent(code, 2, prompt.length - continuePrompt.length);
+                ind = indent(code, 2, prompt.length - continue_prompt.length);
             } catch (e) {
                 ind = 0;
             }
@@ -533,12 +489,60 @@ function run_repl(err, rl) {
                 rl.setPrompt('');
                 rl.prompt();
             } else {
-                rl.setPrompt(continuePrompt);
+                rl.setPrompt(continue_prompt);
                 rl.prompt();
                 rl.write(spaces);
             }
         }
     }
+    rl._writeToOutput = function _writeToOutput(string) {
+        try {
+            const prefix = multiline ? continue_prompt : prompt;
+            const current_line = prefix + rl.line;
+            let code = scheme(string);
+            if (rl.line[rl.cursor - 1] === ')') {
+                let count = 0;
+                const input = prefix + rl.line.substring(0, rl.cursor);
+                const token = tokenize(input, true).reverse().find(token => {
+                    if (is_open(token.token)) {
+                        count--;
+                    } else if (is_close(token.token)) {
+                        count++;
+                    }
+                    return is_open(token.token) && count === 0;
+                });
+                const re = /(\x1b\[[0-9;]*m)/;
+                let str_len = 0, found;
+                if (token) {
+                    const orig = code;
+                    code = code.split(re).reduce((acc, str) => {
+                        let result
+                        if (str.match(re)) {
+                            result = str;
+                        } else if (found) {
+                            result = str;
+                        } else if (str_len + str.length <= token.offset) {
+                            result = str;
+                            str_len += str.length;
+                        } else {
+                            const pos = token.offset - str_len;
+                            result = str.substring(0, pos) + '\x1b[7m(\x1b[m' + str.substring(pos + 1);
+                            found = true;
+                        }
+                        return acc + result;
+                    }, '');
+                }
+            }
+            rl.output.write(code);
+        } catch(e) {
+            console.error(e);
+        }
+    };
+    process.stdin.on('keypress', (c, k) => {
+        setTimeout(function() {
+            rl._refreshLine(); // force refresh colors
+        }, 0);
+    });
     bootstrap(interp).then(function() {
         if (supports_paste_brackets) {
             process.stdin.on('keypress', (c, k) => {
@@ -558,7 +562,7 @@ function run_repl(err, rl) {
             const lines = code.split('\n');
             if (terminal) {
                 const stdout = scheme(code).split('\n').map((line, i) => {
-                    const prefix = i === 0 ? prompt : continuePrompt;
+                    const prefix = i === 0 ? prompt : continue_prompt;
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
                 const len = lines.length;
