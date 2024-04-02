@@ -3,6 +3,7 @@
 * allow to call `load` with `@lips` prefix [#354](https://github.com/jcubic/lips/issues/354)
 * add string interpolation [#321](https://github.com/jcubic/lips/issues/321)
 * add default repr for R7RS records
+* add parenthesis matching in Node.js REPL
 ### Bugfix
 * fix duplicated identifiers in syntax-rules (case of SRFI-239 example implementation)
 * fix `load` of absolute path in Node

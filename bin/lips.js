@@ -425,7 +425,43 @@ if (options.version || options.V) {
         terminal
     });
     rl._writeToOutput = function _writeToOutput(string) {
-        rl.output.write(scheme(string));
+        try {
+        let code = scheme(string);
+        if (string.endsWith(')')) {
+            let count = 0;
+            const token = tokenize(string, true).reverse().find(token => {
+                if (is_open(token.token)) {
+                    count--;
+                } else if (is_close(token.token)) {
+                    count++;
+                }
+                return is_open(token.token) && count === 0;
+            });
+            const re = /(\x1b\[[0-9;]*m)/;
+            let str_len = 0, found;
+            if (token) {
+                code = code.split(re).reduce((acc, str) => {
+                    let result
+                    if (str.match(re)) {
+                        result = str;
+                    } else if (found) {
+                        result = str;
+                    } else if (str_len + str.length <= token.offset) {
+                        result = str;
+                        str_len += str.length;
+                    } else {
+                        const pos = token.offset - str_len;
+                        result = str.substring(0, pos) + '\x1b[7m(\x1b[m' + str.substring(pos + 1);
+                        found = true;
+                    }
+                    return acc + result;
+                }, '');
+            }
+        }
+        rl.output.write(code);
+        } catch(e) {
+            console.error(e);
+        }
     };
     process.stdin.on('keypress', (c, k) => {
         setTimeout(function() {
@@ -447,6 +483,18 @@ function unify_prompt(a, b) {
         result += new Array((b.length - a.length) + 1).join(' ');
     }
     return result;
+}
+
+function is_open(token) {
+    return ['(', '['].includes(token);
+}
+
+function is_close(token) {
+    return [')', ']'].includes(token);
+}
+
+function strip_ansi(string) {
+    return string.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
 function run_repl(err, rl) {
