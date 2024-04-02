@@ -563,7 +563,7 @@ function run_repl(err, rl) {
                 }).join('\n');
                 const len = lines.length;
                 // overwrite all lines to get rid of any artifacts left my stdin
-                // mostly becasue of parenthesis matching
+                // mostly because of parenthesis matching
                 const format = `\x1b[${len}F${stdout}\n`;
                 process.stdout.write(format);
             }
