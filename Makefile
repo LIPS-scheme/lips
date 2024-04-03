@@ -11,7 +11,7 @@ COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
 UNICODE_ALL=https://unicode.org/Public/UNIDATA/UnicodeData.txt
 UNICODE_FOLD=https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
-WORK_TREE=`git worktree list | cut -f1 -d' ' | grep -v "\`pwd\`$$" | xargs -I{} basename {} | tr $$'\n' ','`
+WORK_TREE=`git worktree list | cut -f1 -d' ' | grep -v "\`pwd\`$$" | xargs -I{} basename {} | tr $$'\n' ',' | sed 's/,$$//'`
 
 MAKE=make
 GIT=git
@@ -132,7 +132,7 @@ coverage:
 	$(NPM) run coverage
 
 codespell:
-	@$(CODESPELL) -S $(WORK_TREE)"package-lock.json,node_modules,build,coverage"
+	@$(CODESPELL) -S $(WORK_TREE)
 
 lint:
 	$(ESLINT) src/lips.js lib/js/bookmark.js
