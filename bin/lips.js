@@ -544,13 +544,24 @@ function run_repl(err, rl) {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
             let code = scheme(string);
+            let code_above = cmd && scheme(cmd.substring(0, cmd.length - 1));
             if (rl.line[rl.cursor - 1] === ')') {
                 const substring = rl.line.substring(0, rl.cursor);
                 const input = prefix + substring;
                 const token = matched_token(input);
                 if (token) {
                     code = mark_paren(code, token);
+                } else if (cmd) {
+                    const input = cmd + rl.line;
+                    const token = matched_token(input);
+                    if (token) {
+                        code_above = mark_paren(code_above, token);
+                    }
                 }
+            }
+            // ignore the process when user press enter
+            if (code_above && !string.match(/^[\n\r]+$/)) {
+                process.stdout.write(ansi_rewrite_above(code_above));
             }
             rl.output.write(code);
         } catch(e) {
