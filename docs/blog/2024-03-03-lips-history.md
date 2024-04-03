@@ -33,14 +33,14 @@ still see the code on [CodePen](https://codepen.io/jcubic/pen/gvvzdp). Then I mo
 
 At the beginning it was Lisp based on Scheme, but at one point after version
 [0.20.1 dated as Jul 1, 2020](https://github.com/jcubic/lips/releases/tag/0.20.1), I've started
-adding features on devel branch and decided that I want full Scheme implementation. But it turns out
-that there are way to many breaking changes to release next version. So I decided that I will
+adding features on devel branch and decided that I want a full Scheme implementation. But it turns out
+that there were way too many breaking changes to release the next version. So I decided that I will
 release it as beta-1.0. Since then, LIPS keep introducing new Beta versions. You can see the
 [latest release on GitHub](https://github.com/jcubic/lips/releases).
 
 ## Future of LIPS
 
 For the future plans I want in final version 1.0 are implementation of continutations and Tail Calls
-(<abbr title="Tail Call Optimization">TCO</abbr>) and to be compatibible (more or less) with
-[R<sup>7</sup>RS specification](https://standards.scheme.org/). To see the progress you can check
+(<abbr title="Tail Call Optimization">TCO</abbr>) and to be compatible (more or less) with
+[R<sup>7</sup>RS specification](https://standards.scheme.org/). To see the progress, you can check
 [1.0 Milestone on GitHub](https://github.com/jcubic/lips/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0).
