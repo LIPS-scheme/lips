@@ -49,12 +49,25 @@ If you want to learn more about lisp macros, there are two great books:
 
 * [Piecing Together a Printed Copy of "On Lisp"](https://www.lurklurk.org/onlisp/onlisp.html)
 
-  You can also read this [discussion on Reddit](https://www.reddit.com/r/lisp/comments/l71amc/on_lisp_paperback_replica/).
+  You can also read this [discussion on
+  Reddit](https://www.reddit.com/r/lisp/comments/l71amc/on_lisp_paperback_replica/).
 
-* Another great book about advanced lisp macros is [Let over Lambda](https://letoverlambda.com/) by [Doug Hoyte](https://hoytech.com/).
+* Another great book about advanced lisp macros is [Let over Lambda](https://letoverlambda.com/) by
+  [Doug Hoyte](https://hoytech.com/).
 
 
-**NOTE**: Unfortunately, there are no good books about Scheme hygienic macros.
+## Scheme hygienic macros
+
+**NOTE**: Unfortunately, there are no good books about Scheme hygienic macros.  But you can read
+those documents:
+* [Writing Powerful Macros in Scheme](https://github.com/mnieper/scheme-macros) by [Marc
+Nieper-Wißkirchen](https://github.com/mnieper).
+* [JRM’s Syntax-rules Primer for the Merely Eccentric](http://www.phyast.pitt.edu/~micheles/syntax-rules.pdf)
+* [An Advanced Syntax-Rules Primer for the Mildly Insane](https://www.eighty-twenty.org/~tonyg/Darcs/macromod/doc/reference/petrofsky/petrofsky-advanced-syntax-rules-primer-for-the-mildly-insane.txt) by Al Petrofsky.
+* Oleg Kiselyov part of the website contains [advanced usage of Scheme maros](https://okmij.org/ftp/Scheme/macros.html).
+
+You can also lookup resources from this Reddit posts:
+* [Collection of Links About Scheme Macros](https://www.reddit.com/r/scheme/comments/3chowf/collection_of_links_about_scheme_macros/)
 
 ## More Resources
 You can find common recipes inside [Scheme Cookbook](https://cookbook.scheme.org/) and [more books
