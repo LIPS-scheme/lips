@@ -1,6 +1,6 @@
 ---
 slug: lips-history
-title: LIPS History
+title: LIPS Scheme History
 authors: jcubic
 tags: [lips, scheme, history]
 ---
