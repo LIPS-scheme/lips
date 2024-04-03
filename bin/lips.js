@@ -433,14 +433,6 @@ if (options.version || options.V) {
     setupHistory(rl, terminal ? env.LIPS_REPL_HISTORY : '', run_repl);
 }
 
-function unify_prompt(a, b) {
-    var result = a;
-    if (a.length < b.length) {
-        result += ' '.repeat(b.length - a.length);
-    }
-    return result;
-}
-
 function is_open(token) {
     return ['(', '['].includes(token);
 }
@@ -449,8 +441,59 @@ function is_close(token) {
     return [')', ']'].includes(token);
 }
 
-function strip_ansi(string) {
-    return string.replace(/\x1b\[[0-9;]*m/g, '');
+// find matching open parentheses. The last token is always
+// a closing parenthesis
+function matched_token(code) {
+    let count = 0;
+    // true to tokenize return tokens with meta data
+    return tokenize(code, true).reverse().find(token => {
+        if (is_open(token.token)) {
+            count--;
+        } else if (is_close(token.token)) {
+            count++;
+        }
+        return is_open(token.token) && count === 0;
+    });
+}
+
+// hightlight the open parentheses based on token metadata
+function mark_paren(code, token) {
+    const re = /(\x1b\[[0-9;]*m)/;
+    let str_len = 0, found;
+    return code.split(re).reduce((acc, str) => {
+        let result
+        if (str.match(re)) {
+            result = str;
+        } else if (found) {
+            result = str;
+        } else if (str_len + str.length <= token.offset) {
+            result = str;
+            str_len += str.length;
+        } else {
+            const pos = token.offset - str_len;
+            const before = str.substring(0, pos);
+            const after = str.substring(pos + 1);
+            result = `${before}\x1b[7m(\x1b[m${after}`;
+            found = true;
+        }
+        return acc + result;
+    }, '');
+}
+
+// function accept ANSI (syntax highlighted code) and
+// return ANSI escapes to overwrite the code
+// this is needed to make sure that syntax hightlighting
+// is always correct
+function ansi_rewrite_above(ansi_code) {
+    const lines = ansi_code.split('\n');
+    const stdout = lines.map((line, i) => {
+        const prefix = i === 0 ? prompt : continue_prompt;
+        return '\x1b[K' + prefix + line;
+    }).join('\n');
+    const len = lines.length;
+    // overwrite all lines to get rid of any artifacts left my stdin
+    // mostly because of parenthesis matching
+    return `\x1b[${len}F${stdout}\n`;
 }
 
 function run_repl(err, rl) {
@@ -458,6 +501,7 @@ function run_repl(err, rl) {
     let cmd = '';
     let multiline = false;
     let resolve;
+    const brackets_re = /\x1b\[(200|201)~/g;
     // we use promise loop to fix issue when copy paste list of S-Expression
     let prev_eval = Promise.resolve();
     if (process.stdin.isTTY) {
@@ -465,9 +509,15 @@ function run_repl(err, rl) {
     }
     let prev_line;
     const is_emacs = process.env.INSIDE_EMACS;
+    function is_brackets_mode() {
+        return cmd.match(brackets_re);
+    }
     function continue_multiline(code) {
         multiline = true;
-        if (cmd.match(/\x1b\[200~/) || !supports_paste_brackets) {
+        // we don't do indentation for paste bracket mode
+        // indentation will also not work for old Node.js
+        // becase it's too problematice to make it right
+        if (is_brackets_mode() || !supports_paste_brackets) {
             rl.prompt();
             if (is_emacs) {
                 rl.setPrompt('');
@@ -495,74 +545,45 @@ function run_repl(err, rl) {
             }
         }
     }
-    function matched_token(code) {
-        let count = 0;
-        return tokenize(code, true).reverse().find(token => {
-            if (is_open(token.token)) {
-                count--;
-            } else if (is_close(token.token)) {
-                count++;
-            }
-            return is_open(token.token) && count === 0;
-        });
-    }
-    function mark_paren(code, token) {
-        const re = /(\x1b\[[0-9;]*m)/;
-        let str_len = 0, found;
-        return code.split(re).reduce((acc, str) => {
-            let result
-            if (str.match(re)) {
-                result = str;
-            } else if (found) {
-                result = str;
-            } else if (str_len + str.length <= token.offset) {
-                result = str;
-                str_len += str.length;
-            } else {
-                const pos = token.offset - str_len;
-                const before = str.substring(0, pos);
-                const after = str.substring(pos + 1);
-                result = `${before}\x1b[7m(\x1b[m${after}`;
-                found = true;
-            }
-            return acc + result;
-        }, '');
-    }
-    function ansi_rewrite_above(ansi_code) {
-        const lines = ansi_code.split('\n');
-        const stdout = lines.map((line, i) => {
-            const prefix = i === 0 ? prompt : continue_prompt;
-            return '\x1b[K' + prefix + line;
-        }).join('\n');
-        const len = lines.length;
-        // overwrite all lines to get rid of any artifacts left my stdin
-        // mostly because of parenthesis matching
-        return `\x1b[${len}F${stdout}\n`;
+    function char_before_cursor() {
+        return rl.line[rl.cursor - 1];
     }
     rl._writeToOutput = function _writeToOutput(string) {
         try {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
             let code = scheme(string);
-            let code_above = cmd && scheme(cmd.substring(0, cmd.length - 1));
-            if (rl.line[rl.cursor - 1] === ')') {
-                const substring = rl.line.substring(0, rl.cursor);
-                const input = prefix + substring;
-                const token = matched_token(input);
-                if (token) {
-                    code = mark_paren(code, token);
-                } else if (cmd) {
-                    const input = cmd + rl.line;
+            if (!is_brackets_mode()) {
+                // we remove traling newline from cmd
+                let code_above = cmd && scheme(cmd.substring(0, cmd.length - 1));
+                if (char_before_cursor() === ')') {
+                    const substring = rl.line.substring(0, rl.cursor);
+                    const input = prefix + substring;
                     const token = matched_token(input);
                     if (token) {
-                        code_above = mark_paren(code_above, token);
+                        code = mark_paren(code, token);
+                    } else if (cmd) {
+                        const input = cmd + rl.line;
+                        // we match paren above the current line
+                        // but we need whole code with rl.line
+                        // so we need to ignore rl.line
+                        const token = matched_token(input);
+                        if (token) {
+                            // code_above don't include the current line that
+                            // is added after user press enter
+                            code_above = mark_paren(code_above, token);
+                        }
                     }
                 }
+                // ignore the process when user press enter
+                if (code_above && !string.match(/^[\n\r]+$/)) {
+                    // overwrite lines above the cursor this is side effect
+                    process.stdout.write(ansi_rewrite_above(code_above));
+                }
             }
-            // ignore the process when user press enter
-            if (code_above && !string.match(/^[\n\r]+$/)) {
-                process.stdout.write(ansi_rewrite_above(code_above));
-            }
+            // this always need to be executed inside rl._writeToOutput
+            // even if nothing changes, this make sure that the input
+            // stay intact while editing the command line
             rl.output.write(code);
         } catch(e) {
             console.error(e);
@@ -570,23 +591,29 @@ function run_repl(err, rl) {
     };
     process.stdin.on('keypress', (c, k) => {
         setTimeout(function() {
-            rl._refreshLine(); // force refresh colors
+            // we force triggering rl._writeToOutput function
+            // so we have the change to syntax highlight the command line
+            // this nees to happen on next tick so the string have time
+            // to updated with a given key
+            rl._refreshLine();
         }, 0);
     });
     bootstrap(interp).then(function() {
         if (supports_paste_brackets) {
+            // this make sure that the paste brackets ANSI escape
+            // is added to cmd so they can be processed in 'line' event
             process.stdin.on('keypress', (c, k) => {
                 if (k?.name?.match(/^paste-/)) {
                     cmd += k.sequence;
                 }
             });
+            // enable paste bracket mode by the terminal
             process.stdout.write('\x1b[?2004h');
         }
-        const re = /\x1b\[(200|201)~/g;
         rl.on('line', function(line) {
             try {
                 cmd += line;
-                const code = cmd.replace(re, '');
+                const code = cmd.replace(brackets_re, '');
                 if (cmd.match(/\x1b\[201~$/)) {
                     cmd = code;
                 }
