@@ -495,42 +495,61 @@ function run_repl(err, rl) {
             }
         }
     }
+    function matched_token(code) {
+        let count = 0;
+        return tokenize(code, true).reverse().find(token => {
+            if (is_open(token.token)) {
+                count--;
+            } else if (is_close(token.token)) {
+                count++;
+            }
+            return is_open(token.token) && count === 0;
+        });
+    }
+    function mark_paren(code, token) {
+        const re = /(\x1b\[[0-9;]*m)/;
+        let str_len = 0, found;
+        return code.split(re).reduce((acc, str) => {
+            let result
+            if (str.match(re)) {
+                result = str;
+            } else if (found) {
+                result = str;
+            } else if (str_len + str.length <= token.offset) {
+                result = str;
+                str_len += str.length;
+            } else {
+                const pos = token.offset - str_len;
+                const before = str.substring(0, pos);
+                const after = str.substring(pos + 1);
+                result = `${before}\x1b[7m(\x1b[m${after}`;
+                found = true;
+            }
+            return acc + result;
+        }, '');
+    }
+    function ansi_rewrite_above(ansi_code) {
+        const lines = ansi_code.split('\n');
+        const stdout = lines.map((line, i) => {
+            const prefix = i === 0 ? prompt : continue_prompt;
+            return '\x1b[K' + prefix + line;
+        }).join('\n');
+        const len = lines.length;
+        // overwrite all lines to get rid of any artifacts left my stdin
+        // mostly because of parenthesis matching
+        return `\x1b[${len}F${stdout}\n`;
+    }
     rl._writeToOutput = function _writeToOutput(string) {
         try {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
             let code = scheme(string);
             if (rl.line[rl.cursor - 1] === ')') {
-                let count = 0;
-                const input = prefix + rl.line.substring(0, rl.cursor);
-                const token = tokenize(input, true).reverse().find(token => {
-                    if (is_open(token.token)) {
-                        count--;
-                    } else if (is_close(token.token)) {
-                        count++;
-                    }
-                    return is_open(token.token) && count === 0;
-                });
-                const re = /(\x1b\[[0-9;]*m)/;
-                let str_len = 0, found;
+                const substring = rl.line.substring(0, rl.cursor);
+                const input = prefix + substring;
+                const token = matched_token(input);
                 if (token) {
-                    const orig = code;
-                    code = code.split(re).reduce((acc, str) => {
-                        let result
-                        if (str.match(re)) {
-                            result = str;
-                        } else if (found) {
-                            result = str;
-                        } else if (str_len + str.length <= token.offset) {
-                            result = str;
-                            str_len += str.length;
-                        } else {
-                            const pos = token.offset - str_len;
-                            result = str.substring(0, pos) + '\x1b[7m(\x1b[m' + str.substring(pos + 1);
-                            found = true;
-                        }
-                        return acc + result;
-                    }, '');
+                    code = mark_paren(code, token);
                 }
             }
             rl.output.write(code);
@@ -554,25 +573,17 @@ function run_repl(err, rl) {
         }
         const re = /\x1b\[(200|201)~/g;
         rl.on('line', function(line) {
-            cmd += line;
-            if (cmd.match(/\x1b\[201~$/)) {
-                cmd = cmd.replace(re, '');
-            }
-            const code = cmd.replace(re, '');
-            const lines = code.split('\n');
-            if (terminal) {
-                const stdout = scheme(code).split('\n').map((line, i) => {
-                    const prefix = i === 0 ? prompt : continue_prompt;
-                    return '\x1b[K' + prefix + line;
-                }).join('\n');
-                const len = lines.length;
-                // overwrite all lines to get rid of any artifacts left my stdin
-                // mostly because of parenthesis matching
-                const format = `\x1b[${len}F${stdout}\n`;
-                process.stdout.write(format);
-            }
-            cmd += '\n';
             try {
+                cmd += line;
+                const code = cmd.replace(re, '');
+                if (cmd.match(/\x1b\[201~$/)) {
+                    cmd = code;
+                }
+                if (terminal) {
+                    const output = ansi_rewrite_above(scheme(code));
+                    process.stdout.write(output);
+                }
+                cmd += '\n';
                 if (balanced_parenthesis(code)) {
                     // we need to clear the prompt because resume
                     // is adding the prompt that was present when pause was called
