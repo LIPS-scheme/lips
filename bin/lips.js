@@ -456,7 +456,7 @@ function matched_token(code) {
     });
 }
 
-// hightlight the open parentheses based on token metadata
+// highlight the open parentheses based on token metadata
 function mark_paren(code, token) {
     const re = /(\x1b\[[0-9;]*m)/;
     let str_len = 0, found;
@@ -482,7 +482,7 @@ function mark_paren(code, token) {
 
 // function accept ANSI (syntax highlighted code) and
 // return ANSI escapes to overwrite the code
-// this is needed to make sure that syntax hightlighting
+// this is needed to make sure that syntax highlighting
 // is always correct
 function ansi_rewrite_above(ansi_code) {
     const lines = ansi_code.split('\n');
@@ -516,7 +516,7 @@ function run_repl(err, rl) {
         multiline = true;
         // we don't do indentation for paste bracket mode
         // indentation will also not work for old Node.js
-        // becase it's too problematice to make it right
+        // because it's too problematice to make it right
         if (is_brackets_mode() || !supports_paste_brackets) {
             rl.prompt();
             if (is_emacs) {
@@ -554,7 +554,7 @@ function run_repl(err, rl) {
             const current_line = prefix + rl.line;
             let code = scheme(string);
             if (!is_brackets_mode()) {
-                // we remove traling newline from cmd
+                // we remove trailing newline from cmd
                 let code_above = cmd && scheme(cmd.substring(0, cmd.length - 1));
                 if (char_before_cursor() === ')') {
                     const substring = rl.line.substring(0, rl.cursor);
@@ -593,7 +593,7 @@ function run_repl(err, rl) {
         setTimeout(function() {
             // we force triggering rl._writeToOutput function
             // so we have the change to syntax highlight the command line
-            // this nees to happen on next tick so the string have time
+            // this needs to happen on next tick so the string have time
             // to updated with a given key
             rl._refreshLine();
         }, 0);
