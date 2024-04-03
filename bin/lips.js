@@ -563,7 +563,7 @@ function run_repl(err, rl) {
                     if (token) {
                         code = mark_paren(code, token);
                     } else if (cmd) {
-                        const input = cmd + rl.line;
+                        const input = cmd + substring;
                         // we match paren above the current line
                         // but we need whole code with rl.line
                         // so we need to ignore rl.line
