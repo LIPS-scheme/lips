@@ -372,6 +372,8 @@ I would also love to see if you use the library, I may even share the links of p
 
 Special thanks to [Lassi Kortela](https://github.com/lassik) for helping with Scheme code.
 
+Thanks for [Algolia DocSearch](https://docsearch.algolia.com/) for providing free search on LIPS website.
+
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
