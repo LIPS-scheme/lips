@@ -1,0 +1,34 @@
+.search {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.input {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  gap: 10px;
+  padding: 5px 5px;
+}
+
+.search input {
+  flex-grow: 1;
+  font-size: 1.2em;
+  padding: 0.2em 0.4em;
+}
+.search h2, .search input {
+  font-family: monospace;
+}
+
+.search  ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: calc(var(--length, 80) * 1ch);
+}
