@@ -5017,8 +5017,12 @@ function is_undef(value) {
     return typeof value === 'undefined';
 }
 // -------------------------------------------------------------------------
+function get_proto(obj) {
+    return Object.getPrototypeOf(obj);
+}
+// -------------------------------------------------------------------------
 function is_iterator(obj, symbol) {
-    if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+    if (has_own_symbol(obj, symbol) || has_own_symbol(get_proto(obj), symbol)) {
         return is_function(obj[symbol]);
     }
 }
