@@ -41,6 +41,11 @@ const config: Config = {
     [
       'classic',
       {
+        sitemap: {
+          lastmod: 'datetime',
+          changefreq: 'weekly',
+          filename: 'sitemap.xml',
+        },
         blog: {
           showReadingTime: true,
           editUrl: 'https://github.com/LIPS-scheme/lips/tree/master/docs/',
