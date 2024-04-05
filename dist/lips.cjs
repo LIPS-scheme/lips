@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Apr 2024 15:03:29 +0000
+ * build: Fri, 05 Apr 2024 21:06:55 +0000
  */
 
 'use strict';
@@ -6211,7 +6211,7 @@ function keywords_re() {
   return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
 }
 // line breaking rules
-Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1, not_close], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
+Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1, not_close], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1, not_close], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
 // ----------------------------------------------------------------------
 Formatter.prototype["break"] = function () {
   var code = this.__code__.replace(/\n[ \t]*/g, '\n ').replace(/^\s+/, '');
@@ -17342,10 +17342,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 05 Apr 2024 15:03:29 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 05 Apr 2024 21:06:54 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 05 Apr 2024 15:03:29 +0000').valueOf();
+  var date = LString('Fri, 05 Apr 2024 21:06:54 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17385,7 +17385,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 05 Apr 2024 15:03:29 +0000';
+var date = 'Fri, 05 Apr 2024 21:06:54 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

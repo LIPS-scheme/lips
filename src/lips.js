@@ -2328,8 +2328,8 @@ function keywords_re(...args) {
 // line breaking rules
 Formatter.rules = [
     [[sexp], 0, not_close],
-    [[p_o, keywords_re('begin', 'cond-expand')], 1],
-    [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+    [[p_o, keywords_re('begin', 'cond-expand')], 1, not_close],
+    [[p_o, let_re, symbol, p_o, let_value, p_e], 1, not_close],
     [[p_o, let_re, symbol, sexp_or_atom], 1, not_close],
     [[p_o, let_re, p_o, let_value], 1, not_close],
     [[p_o, keywords_re('define-syntax'), /.+/], 1],
