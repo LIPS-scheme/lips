@@ -8,7 +8,7 @@ import Screenshooter from './Screenshooter';
 export default function Tools(): JSX.Element {
   return (
     <div className={styles.tools}>
-      <Heading as="h2" className={styles.header}>Tools</Heading>
+      <Heading as="h2" id="tools" className={styles.header}>Tools</Heading>
       <Bookmark />
       <Screenshooter />
     </div>

@@ -4,7 +4,7 @@ import styles from '../styles.module.css';
 export default function Acknowledgment(): JSX.Element {
     return (
       <div className={styles.section}>
-        <Heading as="h2" className={styles.header}>Acknowledgments</Heading>
+        <Heading as="h2" id="acknowledgment" className={styles.header}>Acknowledgments</Heading>
         <ul>
           <li>Font used in logo is <a href="https://www.dafont.com/telegrafico.font">Telegrafico</a> by <a href="https://www.deviantart.com/ficod">ficod</a>.</li>
           <li>Current Parser is inspired by implementation in <a href="https://www.biwascheme.org/">BiwaScheme</a> by Yutaka HARA (yhara).</li>

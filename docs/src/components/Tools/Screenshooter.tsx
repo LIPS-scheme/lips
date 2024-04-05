@@ -9,7 +9,9 @@ export default function Screenshooter(): JSX.Element {
     <section id="bookmarklet">
       <div className="container">
         <ScreenshotSVG className={styles.svg} role="img" />
-        <Heading as="h3"><Link to="/screenshooter">Screenshooter</Link></Heading>
+        <Heading as="h3" id="screenshooter">
+          <Link to="/screenshooter">Screenshooter</Link>
+        </Heading>
         <p>This tool allow you to create nice screenshot of code. The screenshot tool is aware of
         any syntax added on top of Scheme. The tool is created using Codemirror and custom style
         build on top of Scheme syntax.</p>

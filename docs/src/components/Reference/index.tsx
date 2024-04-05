@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, ChangeEvent } from 'react';
 import Fuse, { FuseIndex } from 'fuse.js'
+import Heading from '@theme/Heading';
+
 
 import styles from './index.module.css';
 
@@ -54,8 +56,8 @@ export default function Reference({ docs }: ReferenceProps) {
       <ul>
         {result.map(({item}) => {
           return (
-            <li key={item.name} id={item.name}>
-              <h2>{ item.name }</h2>
+            <li key={item.name}>
+              <Heading as="h2" id={item.name}>{ item.name }</Heading>
               <pre>{ item.doc }</pre>
             </li>
           );

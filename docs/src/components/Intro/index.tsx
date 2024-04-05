@@ -5,7 +5,7 @@ import styles from '../styles.module.css';
 export default function Intro(): JSX.Element {
   return (
     <div className={styles.section}>
-      <Heading as="h2" className={styles.header}>Summary</Heading>
+      <Heading as="h2" id="summary" className={styles.header}>Summary</Heading>
       <p>
         LIPS Scheme is powerful lisp interpreter written in JavaScript. The aim of the project
         is to fully support <a href="https://standards.scheme.org/#r7rs">R7RS</a> specification
