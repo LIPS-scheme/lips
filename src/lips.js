@@ -1095,6 +1095,7 @@ class Lexer {
         var found = this.next_token();
         if (found) {
             this._token = this.__input__.substring(this._i, this._next);
+            read_only(this, '__token__', this.token(true));
             return this.token(meta);
         }
         return eof;
