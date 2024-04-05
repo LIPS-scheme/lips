@@ -771,6 +771,7 @@
          (token lexer.__token__)
          (offset (+ token.col 2))
          (re (regex (string-append "\\n\\s{1," (repr offset) "}") "g")))
+    (print token)
     `(string-append ,@(map (lambda (expr)
                              (if (string? expr)
                                  (begin

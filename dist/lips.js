@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Apr 2024 12:01:18 +0000
+ * build: Fri, 05 Apr 2024 13:15:56 +0000
  */
 
 (function (global, factory) {
@@ -4537,7 +4537,11 @@
         var found = this.next_token();
         if (found) {
           this._token = this.__input__.substring(this._i, this._next);
-          read_only(this, '__token__', this.token(true));
+          if (!this.__token__) {
+            // handle case when accessing __token__ from the syntax extension
+            // (e.g. string interpolation) as the first expression in a REPL
+            read_only(this, '__token__', this.token(true));
+          }
           return this.token(meta);
         }
         return eof;
@@ -17338,10 +17342,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 05 Apr 2024 12:01:18 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 05 Apr 2024 13:15:56 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 05 Apr 2024 12:01:18 +0000').valueOf();
+    var date = LString('Fri, 05 Apr 2024 13:15:56 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17381,7 +17385,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 05 Apr 2024 12:01:18 +0000';
+  var date = 'Fri, 05 Apr 2024 13:15:56 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

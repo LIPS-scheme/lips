@@ -1095,7 +1095,11 @@ class Lexer {
         var found = this.next_token();
         if (found) {
             this._token = this.__input__.substring(this._i, this._next);
-            read_only(this, '__token__', this.token(true));
+            if (!this.__token__) {
+                // handle case when accessing __token__ from the syntax extension
+                // (e.g. string interpolation) as the first expression in a REPL
+                read_only(this, '__token__', this.token(true));
+            }
             return this.token(meta);
         }
         return eof;
