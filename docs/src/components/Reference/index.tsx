@@ -54,7 +54,7 @@ export default function Reference({ docs }: ReferenceProps) {
       <ul>
         {result.map(({item}) => {
           return (
-            <li key={item.name}>
+            <li key={item.name} id={item.name}>
               <h2>{ item.name }</h2>
               <pre>{ item.doc }</pre>
             </li>
