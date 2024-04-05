@@ -3198,7 +3198,7 @@ Pair.prototype.map = function(fn) {
         return nil;
     }
 };
-var repr = new Map();
+const repr = new Map();
 // ----------------------------------------------------------------------
 function is_plain_object(object) {
     return object && typeof object === 'object' && object.constructor === Object;
@@ -3220,11 +3220,11 @@ function is_lips_function(x) {
 }
 // ----------------------------------------------------------------------
 function user_repr(obj) {
-    var constructor = obj.constructor || Object;
-    var plain_object = is_plain_object(obj);
+    const constructor = obj.constructor || Object;
+    const plain_object = is_plain_object(obj);
     var iterator = is_function(obj[Symbol.asyncIterator]) ||
         is_function(obj[Symbol.iterator]);
-    var fn;
+    let fn;
     if (repr.has(constructor)) {
         fn = repr.get(constructor);
     } else {
@@ -3233,7 +3233,7 @@ function user_repr(obj) {
             // if key is Object it should only work for plain_object
             // because otherwise it will match every object
             // we don't use instanceof so it don't work for subclasses
-            if (obj instanceof key &&
+            if (constructor === key &&
                 (key === Object && plain_object && !iterator || key !== Object)) {
                 fn = value;
             }
