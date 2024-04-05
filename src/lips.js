@@ -4057,7 +4057,7 @@ Syntax.Parameter = SyntaxParameter;
 // :: TODO detect cycles
 // ----------------------------------------------------------------------
 function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
-    var bindings = {
+    const bindings = {
         '...': {
             symbols: { }, // symbols ellipsis (x ...)
             lists: [ ]
@@ -4071,7 +4071,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     // duplicated ellipsis symbol
     log(symbols);
     /* eslint-disable complexity */
-    function traverse(pattern, code, pattern_names = [], ellipsis = false) {
+    function traverse(pattern, code, state = {}) {
+        const { ellipsis = false, trailing = false, pattern_names = [] } = state;
         log({
             code,
             pattern
@@ -4114,19 +4115,20 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     log('<<< a 3');
                     const names = [...pattern_names];
                     let node = code;
-                    if (!code.every(node => traverse(pattern[0], node, names, true))) {
+                    const new_state = { ...state, pattern_names: names, ellipsis: true };
+                    if (!code.every(node => traverse(pattern[0], node, new_state))) {
                         return false;
                     }
                 }
                 if (pattern.length > 2) {
                     const pat = pattern.slice(2);
-                    return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
+                    return traverse(pat, code.slice(-pat.length), state);
                 }
                 return true;
             }
-            const first = traverse(pattern[0], code[0], pattern_names, ellipsis);
+            const first = traverse(pattern[0], code[0], state);
             log({first, pattern: pattern[0], code: code[0]});
-            const rest = traverse(pattern.slice(1), code.slice(1), pattern_names, ellipsis);
+            const rest = traverse(pattern.slice(1), code.slice(1), state);
             log({first, rest});
             return first && rest;
         }
@@ -4167,7 +4169,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     }
                     const rest = list.cdr;
                     list.cdr = nil;
-                    if (!traverse(pattern.cdr.cdr, rest, pattern_names, ellipsis)) {
+                    if (!traverse(pattern.cdr.cdr, rest, state)) {
                         return false;
                     }
                 }
@@ -4216,7 +4218,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 return false;
                             } else if (!bindings['...'].symbols[name]) {
                                 bindings['...'].symbols[name] = new Pair(code.car, nil);
-                                return traverse(pattern.cdr.cdr, code.cdr);
+                                return traverse(pattern.cdr.cdr, code.cdr, state);
                             }
                         }
                         // code as improper list
@@ -4230,7 +4232,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 const copy = code.clone();
                                 copy.last_pair().cdr = nil;
                                 bindings['...'].symbols[name] = copy;
-                                return traverse(pattern.cdr.cdr, last_pair.cdr);
+                                return traverse(pattern.cdr.cdr, last_pair.cdr, state);
                             }
                         }
                         log('>> 7 ' + ellipsis);
@@ -4256,7 +4258,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                         // empty ellipsis with rest  (a b ... . d) #290
                         log('>> 8');
                         bindings['...'].symbols[name] = null;
-                        return traverse(pattern.cdr.cdr, code);
+                        return traverse(pattern.cdr.cdr, code, state);
                     } else {
                         log('>> 9');
                         return false;
@@ -4273,8 +4275,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 }
                 log('>> 11');
                 let node = code;
+                const new_state = { ...state, pattern_names: names, ellipsis: true };
                 while (is_pair(node)) {
-                    if (!traverse(pattern.car, node.car, names, true)) {
+                    if (!traverse(pattern.car, node.car, new_state)) {
                         return false;
                     }
                     node = node.cdr;
@@ -4283,8 +4286,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             } if (Array.isArray(pattern.car) ) {
                 var names = [...pattern_names];
                 let node = code;
+                const new_state = { ...state, pattern_names: names, ellipsis: true };
                 while (is_pair(node)) {
-                    if (!traverse(pattern.car, node.car, names, true)) {
+                    if (!traverse(pattern.car, node.car, new_state)) {
                         return false;
                     }
                     node = node.cdr;
@@ -4328,7 +4332,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 if (rest_pattern) {
                     // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
                     // where <> is symbol
-                    if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+                    if (!traverse(pattern.car, code.car, state)) {
                         return false;
                     }
                     log('>> 14');
@@ -4354,8 +4358,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) &&
                 is_pair(pattern.cdr.cdr.cdr) &&
                 !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) &&
-                traverse(pattern.car, code.car, pattern_names, ellipsis) &&
-                traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+                traverse(pattern.car, code.car, state) &&
+                traverse(pattern.cdr.cdr.cdr, code.cdr, state)) {
                 const name = pattern.cdr.car.__name__;
                 log({
                     pattern,
@@ -4373,8 +4377,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 pattern,
                 code
             });
-            const car = traverse(pattern.car, code.car, pattern_names, ellipsis);
-            const cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
+            const car = traverse(pattern.car, code.car, state);
+            const cdr = traverse(pattern.cdr, code.cdr, state);
             log({
                 $car_code: code.car,
                 $car_pattern: pattern.car,

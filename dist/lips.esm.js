@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Apr 2024 21:06:55 +0000
+ * build: Fri, 05 Apr 2024 22:05:36 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -9100,8 +9100,12 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
   log(symbols);
   /* eslint-disable complexity */
   function traverse(pattern, code) {
-    var pattern_names = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-    var ellipsis = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    var state = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var _state$ellipsis = state.ellipsis,
+      ellipsis = _state$ellipsis === void 0 ? false : _state$ellipsis;
+      state.trailing;
+      var _state$pattern_names = state.pattern_names,
+      pattern_names = _state$pattern_names === void 0 ? [] : _state$pattern_names;
     log({
       code: code,
       pattern: pattern
@@ -9143,25 +9147,29 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         } else if (Array.isArray(pattern[0])) {
           log('<<< a 3');
           var _names = _toConsumableArray(pattern_names);
+          var new_state = _objectSpread(_objectSpread({}, state), {}, {
+            pattern_names: _names,
+            ellipsis: true
+          });
           if (!code.every(function (node) {
-            return traverse(pattern[0], node, _names, true);
+            return traverse(pattern[0], node, new_state);
           })) {
             return false;
           }
         }
         if (pattern.length > 2) {
           var pat = pattern.slice(2);
-          return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
+          return traverse(pat, code.slice(-pat.length), state);
         }
         return true;
       }
-      var first = traverse(pattern[0], code[0], pattern_names, ellipsis);
+      var first = traverse(pattern[0], code[0], state);
       log({
         first: first,
         pattern: pattern[0],
         code: code[0]
       });
-      var rest = traverse(pattern.slice(1), code.slice(1), pattern_names, ellipsis);
+      var rest = traverse(pattern.slice(1), code.slice(1), state);
       log({
         first: first,
         rest: rest
@@ -9201,7 +9209,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
           }
           var _rest5 = list.cdr;
           list.cdr = _nil;
-          if (!traverse(pattern.cdr.cdr, _rest5, pattern_names, ellipsis)) {
+          if (!traverse(pattern.cdr.cdr, _rest5, state)) {
             return false;
           }
         }
@@ -9249,7 +9257,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
                 return false;
               } else if (!bindings['...'].symbols[_name3]) {
                 bindings['...'].symbols[_name3] = new Pair(code.car, _nil);
-                return traverse(pattern.cdr.cdr, code.cdr);
+                return traverse(pattern.cdr.cdr, code.cdr, state);
               }
             }
             // code as improper list
@@ -9263,7 +9271,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
                 var copy = code.clone();
                 copy.last_pair().cdr = _nil;
                 bindings['...'].symbols[_name3] = copy;
-                return traverse(pattern.cdr.cdr, last_pair.cdr);
+                return traverse(pattern.cdr.cdr, last_pair.cdr, state);
               }
             }
             log('>> 7 ' + ellipsis);
@@ -9281,7 +9289,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
             // empty ellipsis with rest  (a b ... . d) #290
             log('>> 8');
             bindings['...'].symbols[_name3] = null;
-            return traverse(pattern.cdr.cdr, code);
+            return traverse(pattern.cdr.cdr, code, state);
           } else {
             log('>> 9');
             return false;
@@ -9298,8 +9306,12 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         }
         log('>> 11');
         var _node3 = code;
+        var _new_state = _objectSpread(_objectSpread({}, state), {}, {
+          pattern_names: names,
+          ellipsis: true
+        });
         while (is_pair(_node3)) {
-          if (!traverse(pattern.car, _node3.car, names, true)) {
+          if (!traverse(pattern.car, _node3.car, _new_state)) {
             return false;
           }
           _node3 = _node3.cdr;
@@ -9309,8 +9321,12 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
       if (Array.isArray(pattern.car)) {
         var names = _toConsumableArray(pattern_names);
         var _node4 = code;
+        var _new_state2 = _objectSpread(_objectSpread({}, state), {}, {
+          pattern_names: names,
+          ellipsis: true
+        });
         while (is_pair(_node4)) {
-          if (!traverse(pattern.car, _node4.car, names, true)) {
+          if (!traverse(pattern.car, _node4.car, _new_state2)) {
             return false;
           }
           _node4 = _node4.cdr;
@@ -9354,7 +9370,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         if (rest_pattern) {
           // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
           // where <> is symbol
-          if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+          if (!traverse(pattern.car, code.car, state)) {
             return false;
           }
           log('>> 14');
@@ -9374,7 +9390,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         code: code
       });
       // case (x y) ===> (var0 var1 ... warn) where var1 match nil
-      if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+      if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, state) && traverse(pattern.cdr.cdr.cdr, code.cdr, state)) {
         var _name6 = pattern.cdr.car.__name__;
         log({
           pattern: pattern,
@@ -9392,8 +9408,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         pattern: pattern,
         code: code
       });
-      var car = traverse(pattern.car, code.car, pattern_names, ellipsis);
-      var cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
+      var car = traverse(pattern.car, code.car, state);
+      var cdr = traverse(pattern.cdr, code.cdr, state);
       log({
         $car_code: code.car,
         $car_pattern: pattern.car,
@@ -17339,10 +17355,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 05 Apr 2024 21:06:54 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 05 Apr 2024 22:05:36 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 05 Apr 2024 21:06:54 +0000').valueOf();
+  var date = LString('Fri, 05 Apr 2024 22:05:36 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17382,7 +17398,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 05 Apr 2024 21:06:54 +0000';
+var date = 'Fri, 05 Apr 2024 22:05:36 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
