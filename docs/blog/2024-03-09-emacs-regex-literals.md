@@ -2,6 +2,7 @@
 slug: emacs-scheme-regex
 title: Scheme Regex literals in Emacs
 authors: jcubic
+image: /img/emacs-scheme-regex.png
 tags: [scheme, emacs]
 ---
 

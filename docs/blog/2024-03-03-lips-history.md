@@ -2,6 +2,7 @@
 slug: lips-history
 title: LIPS Scheme History
 authors: jcubic
+image: /img/lips-history.png
 tags: [lips, scheme, history]
 ---
 
