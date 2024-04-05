@@ -59,8 +59,8 @@ export default function Screenshooter(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={siteConfig.title}
-      description={siteConfig.tagline}>
+      title={'Screenshooter'}
+      description={'Grab a screenshot of LIPS Scheme source code to share on social media'}>
       <main>
           <Heading as="h2" className="screenshot-header">Write LIPS Scheme code and grab a screenshot</Heading>
           <ScreenShotBox />

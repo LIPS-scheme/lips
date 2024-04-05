@@ -87,8 +87,8 @@ export default function ReferencePage(): JSX.Element {
 
   return (
     <Layout
-      title={siteConfig.title}
-      description={siteConfig.tagline}>
+      title={'Function and Macro Reference'}
+      description={'This is list of functions and macros that are part of LIPS Scheme implementation'}>
       <Head>
         <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
                 data-bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb"></script>
