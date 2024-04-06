@@ -122,7 +122,7 @@ function print(result) {
         if (last !== undefined) {
             try {
                 const ret = env.get('repr')(last, true);
-                console.log('\x1b[K' + ret.toString());
+                process.stdout.write('\x1b[K' + ret.toString());
             } catch(e) {
                 print_error(e, options.t || options.trace);
             }
@@ -517,7 +517,7 @@ function run_repl(err, rl) {
         // we don't do indentation for paste bracket mode
         // indentation will also not work for old Node.js
         // because it's too problematice to make it right
-        if (is_brackets_mode() || !supports_paste_brackets) {
+        if ((is_brackets_mode() || !supports_paste_brackets)) {
             rl.prompt();
             if (is_emacs) {
                 rl.setPrompt('');
@@ -553,7 +553,8 @@ function run_repl(err, rl) {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
             let code = scheme(string);
-            if (!is_brackets_mode()) {
+            const was_bracket = is_brackets_mode();
+            if (!was_bracket && !is_emacs) {
                 // we remove trailing newline from cmd
                 let code_above = cmd && scheme(cmd.substring(0, cmd.length - 1));
                 if (char_before_cursor() === ')') {
@@ -638,7 +639,7 @@ function run_repl(err, rl) {
                             if (newline || is_emacs) {
                                 // readline doesn't work with not ended lines
                                 // it ignore those, so we end them ourselves
-                                process.stdout.write("\n");
+                                process.stdout.write('\n');
                                 newline = false;
                             }
                             if (multiline) {
