@@ -9,6 +9,7 @@
 * fix `load` of absolute path in Node
 * fix require of LIPS package from Node
 * fix transforming `syntax-rules` ellipsis that expand into #void
+* fix improper lists in `syntax-rules` [#360](https://github.com/LIPS-scheme/lips/issues/360)
 
 ## 1.0.0-beta.19
 ### Breaking

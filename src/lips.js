@@ -117,21 +117,19 @@ function contentLoaded(win, fn) {
     }
 }
 // -------------------------------------------------------------------------
-/* eslint-disable */
 /* c8 ignore next 13 */
 function log(x, ...args) {
-    if (is_debug()) {
-        if (is_plain_object(x)) {
-            console.log(map_object(x, function(value) {
-                return toString(value, true);
-            }));
-        } else {
-            console.log(toString(x, true), ...args.map(item => {
-                return toString(item, true);
-            }));
-        }
+    if (is_plain_object(x) && is_debug(args[0])) {
+        console.log(map_object(x, function(value) {
+            return toString(value, true);
+        }));
+    } else if (is_debug()) {
+        console.log(toString(x, true), ...args.map(item => {
+            return toString(item, true);
+        }));
     }
 }
+/* eslint-enable */
 // ----------------------------------------------------------------------
 /* c8 ignore next */
 function is_debug(n = null) {
@@ -4153,23 +4151,28 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         if (is_pair(pattern) &&
             is_pair(pattern.cdr) &&
             LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
+            log('>> 1 (a)');
             // pattern (... ???) - SRFI-46
             if (!is_nil(pattern.cdr.cdr)) {
                 if (is_pair(pattern.cdr.cdr)) {
+                    log('>> 1 (b)');
                     // if we have (x ... a b) we need to remove two from the end
                     const list_len = pattern.cdr.cdr.length();
+                    const improper_list = !is_nil(pattern.last_pair().cdr);
                     if (!is_pair(code)) {
                         return false;
                     }
                     let code_len = code.length();
                     let list = code;
-                    while (code_len - 1 > list_len) {
+                    const traling = improper_list ? 1 : 1;
+                    while (code_len - traling > list_len) {
                         list = list.cdr;
                         code_len--;
                     }
                     const rest = list.cdr;
                     list.cdr = nil;
-                    if (!traverse(pattern.cdr.cdr, rest, state)) {
+                    const new_sate = { ...state, trailing: improper_list };
+                    if (!traverse(pattern.cdr.cdr, rest, new_sate)) {
                         return false;
                     }
                 }
@@ -4180,7 +4183,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     !pattern_names.includes(name) && !ellipsis) {
                     throw new Error('syntax: named ellipsis can only appear onces');
                 }
-                log('>> 1');
+                log('>> 1 (next)');
                 if (is_nil(code)) {
                     log('>> 2');
                     if (ellipsis) {
@@ -4211,6 +4214,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 } else {
                     log('>> 6');
                     if (is_pair(code)) {
+                        log('>> 7 ' + ellipsis);
                         // cons (a . b) => (var ... . x)
                         if (!is_pair(code.cdr) && !is_nil(code.cdr)) {
                             log('>> 7 (b)');
@@ -4223,11 +4227,14 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                         }
                         // code as improper list
                         const last_pair = code.last_pair();
+                        log({ last_pair });
                         if (!is_nil(last_pair.cdr)) {
+                            log('>> 7 (c)')
                             if (is_nil(pattern.cdr.cdr)) {
                                 // case (a ...) for (a b . x)
                                 return false;
                             } else {
+                                log('>> 7 (d)');
                                 // case (a ... . b) for (a b . x)
                                 const copy = code.clone();
                                 copy.last_pair().cdr = nil;
@@ -4235,14 +4242,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 return traverse(pattern.cdr.cdr, last_pair.cdr, state);
                             }
                         }
-                        log('>> 7 ' + ellipsis);
                         pattern_names.push(name);
                         if (!bindings['...'].symbols[name]) {
+                            log('>> 7 (e)');
                             bindings['...'].symbols[name] = new Pair(
                                 code,
                                 nil
                             );
                         } else {
+                            log('>> 7 (f)');
                             const node = bindings['...'].symbols[name];
                             bindings['...'].symbols[name] = node.append(
                                 new Pair(
@@ -4322,13 +4330,26 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 code,
                 pattern
             });
-            if (is_nil(code.cdr)) {
+            const rest_pattern = pattern.car instanceof LSymbol &&
+                pattern.cdr instanceof LSymbol;
+            if (trailing && rest_pattern) {
                 log('>> 13 (a)');
+                // handle (x ... y . z)
+                if (!is_nil(code.cdr)) {
+                    return false;
+                }
+                const car = pattern.car.valueOf();
+                const cdr = pattern.cdr.valueOf();
+                bindings.symbols[car] = code.car;
+                bindings.symbols[cdr] = nil;
+                return true;
+                //return is_pair(code.cdr) && code.cdr.length() > 1;
+            }
+            if (is_nil(code.cdr)) {
+                log('>> 13 (b)');
                 // last item in in call using in recursive calls on
                 // last element of the list
                 // case of pattern (p . rest) and code (0)
-                var rest_pattern = pattern.car instanceof LSymbol &&
-                    pattern.cdr instanceof LSymbol;
                 if (rest_pattern) {
                     // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
                     // where <> is symbol
@@ -4352,6 +4373,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 code
             });
             // case (x y) ===> (var0 var1 ... warn) where var1 match nil
+            // traling: true start processing of (var ... x . y)
             if (is_pair(pattern.cdr) &&
                 is_pair(pattern.cdr.cdr) &&
                 pattern.cdr.car instanceof LSymbol &&
@@ -4359,7 +4381,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 is_pair(pattern.cdr.cdr.cdr) &&
                 !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) &&
                 traverse(pattern.car, code.car, state) &&
-                traverse(pattern.cdr.cdr.cdr, code.cdr, state)) {
+                traverse(pattern.cdr.cdr.cdr, code.cdr, {...state, trailing: true })) {
                 const name = pattern.cdr.car.__name__;
                 log({
                     pattern,

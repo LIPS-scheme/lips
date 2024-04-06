@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Apr 2024 22:05:36 +0000
+ * build: Sat, 06 Apr 2024 00:06:45 +0000
  */
 
 'use strict';
@@ -3506,25 +3506,23 @@ function contentLoaded(win, fn) {
   }
 }
 // -------------------------------------------------------------------------
-/* eslint-disable */
 /* c8 ignore next 13 */
 function log(x) {
-  if (is_debug()) {
-    if (is_plain_object(x)) {
-      console.log(map_object(x, function (value) {
-        return toString(value, true);
-      }));
-    } else {
-      var _console;
-      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        args[_key - 1] = arguments[_key];
-      }
-      (_console = console).log.apply(_console, [toString(x, true)].concat(_toConsumableArray(args.map(function (item) {
-        return toString(item, true);
-      }))));
-    }
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+  if (is_plain_object(x) && is_debug(args[0])) {
+    console.log(map_object(x, function (value) {
+      return toString(value, true);
+    }));
+  } else if (is_debug()) {
+    var _console;
+    (_console = console).log.apply(_console, [toString(x, true)].concat(_toConsumableArray(args.map(function (item) {
+      return toString(item, true);
+    }))));
   }
 }
+/* eslint-enable */
 // ----------------------------------------------------------------------
 /* c8 ignore next */
 function is_debug() {
@@ -9105,9 +9103,10 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
   function traverse(pattern, code) {
     var state = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     var _state$ellipsis = state.ellipsis,
-      ellipsis = _state$ellipsis === void 0 ? false : _state$ellipsis;
-      state.trailing;
-      var _state$pattern_names = state.pattern_names,
+      ellipsis = _state$ellipsis === void 0 ? false : _state$ellipsis,
+      _state$trailing = state.trailing,
+      trailing = _state$trailing === void 0 ? false : _state$trailing,
+      _state$pattern_names = state.pattern_names,
       pattern_names = _state$pattern_names === void 0 ? [] : _state$pattern_names;
     log({
       code: code,
@@ -9196,23 +9195,30 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
       }
     }
     if (is_pair(pattern) && is_pair(pattern.cdr) && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
+      log('>> 1 (a)');
       // pattern (... ???) - SRFI-46
       if (!is_nil(pattern.cdr.cdr)) {
         if (is_pair(pattern.cdr.cdr)) {
+          log('>> 1 (b)');
           // if we have (x ... a b) we need to remove two from the end
           var list_len = pattern.cdr.cdr.length();
+          var improper_list = !is_nil(pattern.last_pair().cdr);
           if (!is_pair(code)) {
             return false;
           }
           var code_len = code.length();
           var list = code;
-          while (code_len - 1 > list_len) {
+          var traling = improper_list ? 1 : 1;
+          while (code_len - traling > list_len) {
             list = list.cdr;
             code_len--;
           }
           var _rest5 = list.cdr;
           list.cdr = _nil;
-          if (!traverse(pattern.cdr.cdr, _rest5, state)) {
+          var new_sate = _objectSpread(_objectSpread({}, state), {}, {
+            trailing: improper_list
+          });
+          if (!traverse(pattern.cdr.cdr, _rest5, new_sate)) {
             return false;
           }
         }
@@ -9222,7 +9228,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         if (bindings['...'].symbols[_name3] && !pattern_names.includes(_name3) && !ellipsis) {
           throw new Error('syntax: named ellipsis can only appear onces');
         }
-        log('>> 1');
+        log('>> 1 (next)');
         if (is_nil(code)) {
           log('>> 2');
           if (ellipsis) {
@@ -9253,6 +9259,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         } else {
           log('>> 6');
           if (is_pair(code)) {
+            log('>> 7 ' + ellipsis);
             // cons (a . b) => (var ... . x)
             if (!is_pair(code.cdr) && !is_nil(code.cdr)) {
               log('>> 7 (b)');
@@ -9265,11 +9272,16 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
             }
             // code as improper list
             var last_pair = code.last_pair();
+            log({
+              last_pair: last_pair
+            });
             if (!is_nil(last_pair.cdr)) {
+              log('>> 7 (c)');
               if (is_nil(pattern.cdr.cdr)) {
                 // case (a ...) for (a b . x)
                 return false;
               } else {
+                log('>> 7 (d)');
                 // case (a ... . b) for (a b . x)
                 var copy = code.clone();
                 copy.last_pair().cdr = _nil;
@@ -9277,11 +9289,12 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
                 return traverse(pattern.cdr.cdr, last_pair.cdr, state);
               }
             }
-            log('>> 7 ' + ellipsis);
             pattern_names.push(_name3);
             if (!bindings['...'].symbols[_name3]) {
+              log('>> 7 (e)');
               bindings['...'].symbols[_name3] = new Pair(code, _nil);
             } else {
+              log('>> 7 (f)');
               var _node2 = bindings['...'].symbols[_name3];
               bindings['...'].symbols[_name3] = _node2.append(new Pair(code, _nil));
             }
@@ -9364,12 +9377,25 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         code: code,
         pattern: pattern
       });
-      if (is_nil(code.cdr)) {
+      var rest_pattern = pattern.car instanceof LSymbol && pattern.cdr instanceof LSymbol;
+      if (trailing && rest_pattern) {
         log('>> 13 (a)');
+        // handle (x ... y . z)
+        if (!is_nil(code.cdr)) {
+          return false;
+        }
+        var _car = pattern.car.valueOf();
+        var _cdr = pattern.cdr.valueOf();
+        bindings.symbols[_car] = code.car;
+        bindings.symbols[_cdr] = _nil;
+        return true;
+        //return is_pair(code.cdr) && code.cdr.length() > 1;
+      }
+      if (is_nil(code.cdr)) {
+        log('>> 13 (b)');
         // last item in in call using in recursive calls on
         // last element of the list
         // case of pattern (p . rest) and code (0)
-        var rest_pattern = pattern.car instanceof LSymbol && pattern.cdr instanceof LSymbol;
         if (rest_pattern) {
           // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
           // where <> is symbol
@@ -9393,7 +9419,10 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         code: code
       });
       // case (x y) ===> (var0 var1 ... warn) where var1 match nil
-      if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, state) && traverse(pattern.cdr.cdr.cdr, code.cdr, state)) {
+      // traling: true start processing of (var ... x . y)
+      if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, state) && traverse(pattern.cdr.cdr.cdr, code.cdr, _objectSpread(_objectSpread({}, state), {}, {
+        trailing: true
+      }))) {
         var _name6 = pattern.cdr.car.__name__;
         log({
           pattern: pattern,
@@ -9618,40 +9647,40 @@ function transform_syntax() {
           });
           if (is_pair(item)) {
             log('[t 2 Pair ' + nested);
-            var _car = item.car,
-              _cdr = item.cdr;
+            var _car2 = item.car,
+              _cdr2 = item.cdr;
             var _rest_expr = is_array ? expr.slice(2) : expr.cdr.cdr;
             if (nested) {
-              if (!is_nil(_cdr)) {
+              if (!is_nil(_cdr2)) {
                 log('|| next 1');
-                next(_name7, _cdr);
+                next(_name7, _cdr2);
               }
               if (is_array && _rest_expr.length || !is_nil(_rest_expr) && !is_array) {
                 var _rest7 = transform_ellipsis_expr(_rest_expr, bindings, state, next);
                 if (is_array) {
-                  return _car.concat(_rest7);
-                } else if (is_pair(_car)) {
-                  return _car.append(_rest7);
+                  return _car2.concat(_rest7);
+                } else if (is_pair(_car2)) {
+                  return _car2.append(_rest7);
                 } else {
                   log('UNKNOWN');
                 }
               }
-              return _car;
-            } else if (is_pair(_car)) {
-              if (!is_nil(_car.cdr)) {
+              return _car2;
+            } else if (is_pair(_car2)) {
+              if (!is_nil(_car2.cdr)) {
                 log('|| next 2');
-                next(_name7, new Pair(_car.cdr, _cdr));
+                next(_name7, new Pair(_car2.cdr, _cdr2));
               }
               // wrap with Value to handle undefined
-              return new Value(_car.car);
-            } else if (is_nil(_cdr)) {
-              return _car;
+              return new Value(_car2.car);
+            } else if (is_nil(_cdr2)) {
+              return _car2;
             } else {
               var last_pair = expr.last_pair();
               if (last_pair.cdr instanceof LSymbol) {
                 log('|| next 3');
                 next(_name7, item.last_pair());
-                return _car;
+                return _car2;
               }
             }
           } else if (item instanceof Array) {
@@ -17358,10 +17387,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 05 Apr 2024 22:05:36 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 06 Apr 2024 00:06:45 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 05 Apr 2024 22:05:36 +0000').valueOf();
+  var date = LString('Sat, 06 Apr 2024 00:06:45 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17401,7 +17430,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 05 Apr 2024 22:05:36 +0000';
+var date = 'Sat, 06 Apr 2024 00:06:45 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
