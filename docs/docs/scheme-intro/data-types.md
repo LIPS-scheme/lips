@@ -295,18 +295,6 @@ The result expression will look like this:
 '(1 2 3 4 5 6)
 ```
 
-You can also use quasi quote with vectors:
-
-```scheme
-`#(1 2 ,(+ 1 2))
-```
-
-This will evaluate into vector with 3 elements:
-
-```scheme
-#(1 2 3)
-```
-
 ### Quotation of quotation
 
 If you quote the quotation, you will get expression that change special symbols with S-Expressions:
