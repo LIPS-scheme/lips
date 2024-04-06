@@ -172,7 +172,7 @@ const config: Config = {
           items: [
             {
               label: 'Blog',
-              to: '/blog',
+              to: '/blog/archive',
             },
             {
               label: 'GitHub',
