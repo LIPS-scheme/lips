@@ -4164,8 +4164,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     }
                     let code_len = code.length();
                     let list = code;
-                    const traling = improper_list ? 1 : 1;
-                    while (code_len - traling > list_len) {
+                    const trailing = improper_list ? 1 : 1;
+                    while (code_len - trailing > list_len) {
                         list = list.cdr;
                         code_len--;
                     }
@@ -4373,7 +4373,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 code
             });
             // case (x y) ===> (var0 var1 ... warn) where var1 match nil
-            // traling: true start processing of (var ... x . y)
+            // trailing: true start processing of (var ... x . y)
             if (is_pair(pattern.cdr) &&
                 is_pair(pattern.cdr.cdr) &&
                 pattern.cdr.car instanceof LSymbol &&
