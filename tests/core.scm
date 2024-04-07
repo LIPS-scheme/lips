@@ -148,7 +148,11 @@
         (t.is '|\r| (string->symbol "\r"))
         (t.is '|\s| 's)
         (t.is '|\x3BB;| 'λ)
-        (t.is '|\x9;\x9;| '|\t\t|)))
+        (t.is '|\x9;\x9;| '|\t\t|)
+        ;; found in
+        ;; https://docs.scheme.org/surveys/reader-vertical-bar-concatenated-with-number/
+        (t.is (lips.tokenize "|1|aaa |a|b|c| |foo bar|")
+              #("|1|aaa" "|a|b|c|" "|foo bar|"))))
 
 (test "core: dot comma"
       (lambda (t)

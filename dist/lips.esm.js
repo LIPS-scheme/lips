@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 07 Apr 2024 17:58:33 +0000
+ * build: Sun, 07 Apr 2024 18:57:18 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -4782,6 +4782,7 @@ Lexer.regex_class = Symbol["for"]('regex_class');
 Lexer.character = Symbol["for"]('character');
 Lexer.bracket = Symbol["for"]('bracket');
 Lexer.b_symbol = Symbol["for"]('b_symbol');
+Lexer.b_symbol_ex = Symbol["for"]('b_symbol_ex');
 Lexer.b_comment = Symbol["for"]('b_comment');
 Lexer.i_comment = Symbol["for"]('i_comment');
 Lexer.l_datum = Symbol["for"]('l_datum');
@@ -4812,7 +4813,7 @@ Lexer._rules = [
 // for dot comma `(a .,b)
 [/\./, Lexer.boundary, /,/, null, null],
 // block symbols
-[/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], [/\|/, null, /\S/, Lexer.b_symbol, Lexer.b_symbol], [/\S/, null, Lexer.boundary, Lexer.b_symbol, null]];
+[/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], [/\|/, null, /\S/, Lexer.b_symbol, Lexer.b_symbol_ex], [/\S/, null, Lexer.boundary, Lexer.b_symbol_ex, null]];
 // ----------------------------------------------------------------------
 Lexer._brackets = [[/[()[\]]/, null, null, null, null]];
 // ----------------------------------------------------------------------
@@ -17385,10 +17386,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 07 Apr 2024 17:58:33 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 07 Apr 2024 18:57:18 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 07 Apr 2024 17:58:33 +0000').valueOf();
+  var date = LString('Sun, 07 Apr 2024 18:57:18 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17428,7 +17429,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 07 Apr 2024 17:58:33 +0000';
+var date = 'Sun, 07 Apr 2024 18:57:18 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
