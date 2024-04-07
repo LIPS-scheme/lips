@@ -11,6 +11,7 @@
 * fix transforming `syntax-rules` ellipsis that expand into #void
 * fix improper lists in `syntax-rules` [#360](https://github.com/LIPS-scheme/lips/issues/360)
 * fix handling of REPL in Emacs (`run-scheme`)
+* fix `promise?` predicate
 
 ## 1.0.0-beta.19
 ### Breaking

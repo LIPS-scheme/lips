@@ -225,7 +225,8 @@
   "(promise? obj)
 
    Checks if the value is a promise created with delay or make-promise."
-  (string=? (type obj) "promise"))
+  (and (string=? (type obj) "function")
+       (. obj (Symbol.for "promise"))))
 
 ;; -----------------------------------------------------------------------------
 (define (positive? x)

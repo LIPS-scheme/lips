@@ -148,7 +148,7 @@
 (define make-promise (lambda (proc) "(make-promise fn)\u000A\u000AFunction that creates a promise from a function." (typecheck "make-promise" proc "function") (let ((result-ready? #f) (result #f)) (let ((promise (lambda () (if result-ready? result (let ((x (proc))) (if result-ready? result (begin (set! result-ready? #t) (set! result x) result))))))) (set-obj! promise (Symbol.for "promise") true) (set! promise.toString (lambda () (string-append "#<promise - " (if result-ready? (string-append "forced with " (type result)) "not forced") ">"))) promise))))
 (define-macro (delay expression) "(delay expression)\u000A\u000AWill create a promise from expression that can be forced with (force)." (quasiquote (make-promise (lambda () (unquote expression)))))
 (define (force promise) "(force promise)\u000A\u000AFunction that forces the promise and evaluates the delayed expression." (promise))
-(define (promise? obj) "(promise? obj)\u000A\u000AChecks if the value is a promise created with delay or make-promise." (string=? (type obj) "promise"))
+(define (promise? obj) "(promise? obj)\u000A\u000AChecks if the value is a promise created with delay or make-promise." (and (string=? (type obj) "function") (. obj (Symbol.for "promise"))))
 (define (positive? x) "(positive? x)\u000A\u000AChecks if the number is larger then 0" (typecheck "positive?" x "number") (> x 0))
 (define (negative? x) "(negative? x)\u000A\u000AChecks if the number is smaller then 0" (typecheck "negative?" x "number") (< x 0))
 (define (zero? x) "(zero? x)\u000A\u000AChecks if the number is equal to 0" (typecheck "zero?" x "number") (= x 0))
