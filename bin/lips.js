@@ -123,6 +123,7 @@ function print(result) {
             try {
                 const ret = env.get('repr')(last, true);
                 process.stdout.write('\x1b[K' + ret.toString());
+                return true;
             } catch(e) {
                 print_error(e, options.t || options.trace);
             }
@@ -635,8 +636,7 @@ function run_repl(err, rl) {
                         return result;
                     }).then(function(result) {
                         if (process.stdin.isTTY) {
-                            print(result);
-                            if (newline || is_emacs) {
+                            if (print(result)) {
                                 // readline doesn't work with not ended lines
                                 // it ignore those, so we end them ourselves
                                 process.stdout.write('\n');
