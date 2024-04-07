@@ -12,6 +12,7 @@
 * fix improper lists in `syntax-rules` [#360](https://github.com/LIPS-scheme/lips/issues/360)
 * fix handling of REPL in Emacs (`run-scheme`)
 * fix `promise?` predicate
+* fix handling of `|1|1` and `|a|b|c|` symbols
 
 ## 1.0.0-beta.19
 ### Breaking

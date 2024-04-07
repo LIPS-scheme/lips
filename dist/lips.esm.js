@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 06 Apr 2024 00:06:45 +0000
+ * build: Sun, 07 Apr 2024 17:58:33 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -3908,8 +3908,9 @@ function parse_string(string) {
 }
 // ----------------------------------------------------------------------
 function parse_symbol(arg) {
-  if (arg.match(/^\|.*\|$/)) {
-    arg = arg.replace(/(^\|)|(\|$)/g, '');
+  var re = /(^|[^\\])\|/g;
+  if (arg.match(re)) {
+    arg = arg.replace(re, '$1');
     var chars = {
       t: '\t',
       r: '\r',
@@ -4811,7 +4812,7 @@ Lexer._rules = [
 // for dot comma `(a .,b)
 [/\./, Lexer.boundary, /,/, null, null],
 // block symbols
-[/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]];
+[/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], [/\|/, null, /\S/, Lexer.b_symbol, Lexer.b_symbol], [/\S/, null, Lexer.boundary, Lexer.b_symbol, null]];
 // ----------------------------------------------------------------------
 Lexer._brackets = [[/[()[\]]/, null, null, null, null]];
 // ----------------------------------------------------------------------
@@ -9205,8 +9206,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
           }
           var code_len = code.length();
           var list = code;
-          var traling = improper_list ? 1 : 1;
-          while (code_len - traling > list_len) {
+          var _trailing = improper_list ? 1 : 1;
+          while (code_len - _trailing > list_len) {
             list = list.cdr;
             code_len--;
           }
@@ -9416,7 +9417,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         code: code
       });
       // case (x y) ===> (var0 var1 ... warn) where var1 match nil
-      // traling: true start processing of (var ... x . y)
+      // trailing: true start processing of (var ... x . y)
       if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, state) && traverse(pattern.cdr.cdr.cdr, code.cdr, _objectSpread(_objectSpread({}, state), {}, {
         trailing: true
       }))) {
@@ -17384,10 +17385,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sat, 06 Apr 2024 00:06:45 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 07 Apr 2024 17:58:33 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sat, 06 Apr 2024 00:06:45 +0000').valueOf();
+  var date = LString('Sun, 07 Apr 2024 17:58:33 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17427,7 +17428,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sat, 06 Apr 2024 00:06:45 +0000';
+var date = 'Sun, 07 Apr 2024 17:58:33 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

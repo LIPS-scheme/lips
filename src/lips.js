@@ -504,9 +504,10 @@ function parse_string(string) {
 }
 // ----------------------------------------------------------------------
 function parse_symbol(arg) {
-    if (arg.match(/^\|.*\|$/)) {
-        arg = arg.replace(/(^\|)|(\|$)/g, '');
-        var chars = {
+    const re = /(^|[^\\])\|/g;
+    if (arg.match(re)) {
+        arg = arg.replace(re, '$1');
+        const chars = {
             t: '\t',
             r: '\r',
             n: '\n'
@@ -1371,7 +1372,9 @@ Lexer._rules = [
     // block symbols
     [/\|/, null, null, null, Lexer.b_symbol],
     [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol],
-    [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]
+    [/\|/, null, Lexer.boundary, Lexer.b_symbol, null],
+    [/\|/, null, /\S/, Lexer.b_symbol, Lexer.b_symbol],
+    [/\S/, null, Lexer.boundary, Lexer.b_symbol, null]
 ];
 // ----------------------------------------------------------------------
 Lexer._brackets = [
