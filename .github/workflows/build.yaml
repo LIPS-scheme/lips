@@ -30,7 +30,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
       - name: setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
       - run: npm ci
@@ -39,6 +39,6 @@ jobs:
       - run: make test
       - run: make coverage
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
