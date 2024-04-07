@@ -445,16 +445,22 @@ function is_close(token) {
 // find matching open parentheses. The last token is always
 // a closing parenthesis
 function matched_token(code) {
-    let count = 0;
-    // true to tokenize return tokens with meta data
-    return tokenize(code, true).reverse().find(token => {
-        if (is_open(token.token)) {
-            count--;
-        } else if (is_close(token.token)) {
-            count++;
+    try {
+        let count = 0;
+        // true to tokenize return tokens with meta data
+        return tokenize(code, true).reverse().find(token => {
+            if (is_open(token.token)) {
+                count--;
+            } else if (is_close(token.token)) {
+                count++;
+            }
+            return is_open(token.token) && count === 0;
+        });
+    } catch(e) {
+        if (!(e instanceof Parser.Unterminated)) {
+            throw e;
         }
-        return is_open(token.token) && count === 0;
-    });
+    }
 }
 
 // highlight the open parentheses based on token metadata
@@ -511,7 +517,7 @@ function run_repl(err, rl) {
     let prev_line;
     const is_emacs = process.env.INSIDE_EMACS;
     function is_brackets_mode() {
-        return cmd.match(brackets_re);
+        return !!cmd.match(brackets_re);
     }
     function continue_multiline(code) {
         multiline = true;
@@ -549,23 +555,32 @@ function run_repl(err, rl) {
     function char_before_cursor() {
         return rl.line[rl.cursor - 1];
     }
+    function format_input_code(code) {
+        if (code) {
+            // we remove trailing newline from code
+            code = code.substring(0, code.length - 1);
+            return scheme(code);
+        }
+    }
     rl._writeToOutput = function _writeToOutput(string) {
         try {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
             let code = scheme(string);
-            const was_bracket = is_brackets_mode();
-            if (!was_bracket && !is_emacs) {
-                // we remove trailing newline from cmd
-                let code_above = cmd && scheme(cmd.substring(0, cmd.length - 1));
+            const bracket_mode = cmd.match(brackets_re);
+            const full_copy_paste = bracket_mode?.length == 2;
+            if ((!bracket_mode || full_copy_paste) && !is_emacs) {
+                // clean bracket mode markers
+                const clean_cmd = cmd.replace(brackets_re, '');
+                let code_above = format_input_code(clean_cmd);
                 if (char_before_cursor() === ')') {
                     const substring = rl.line.substring(0, rl.cursor);
                     const input = prefix + substring;
                     const token = matched_token(input);
                     if (token) {
                         code = mark_paren(code, token);
-                    } else if (cmd) {
-                        const input = cmd + substring;
+                    } else if (clean_cmd) {
+                        const input = clean_cmd + substring;
                         // we match paren above the current line
                         // but we need whole code with rl.line
                         // so we need to ignore rl.line
@@ -636,7 +651,7 @@ function run_repl(err, rl) {
                         return result;
                     }).then(function(result) {
                         if (process.stdin.isTTY) {
-                            if (print(result)) {
+                            if (print(result) || newline) {
                                 // readline doesn't work with not ended lines
                                 // it ignore those, so we end them ourselves
                                 process.stdout.write('\n');
