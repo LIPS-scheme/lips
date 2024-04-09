@@ -135,4 +135,4 @@ codespell:
 	@$(CODESPELL) -S $(WORK_TREE)
 
 lint:
-	$(ESLINT) src/lips.js lib/js/bookmark.js
+	$(ESLINT) src/lips.js lib/js/bookmark.js bin/lips.js
