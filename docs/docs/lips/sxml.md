@@ -36,7 +36,7 @@ You can write the same code in LIPS as:
                   "Click me!"))))
 ```
 
-To create instance of this component you use:
+To create an instance of this component, you use:
 
 ```scheme
 (MessageButton (@ (message "LIPS Scheme")))
