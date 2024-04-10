@@ -42,13 +42,13 @@ To create an instance of this component, you use:
 (MessageButton (@ (message "LIPS Scheme")))
 ```
 
-The main element is `sxml` macro that to same transoformation as [JSX
+The main element is `sxml` macro that do the same transoformation as [JSX
 compiler](https://legacy.reactjs.org/docs/introducing-jsx.html) like [Babel](https://babeljs.io/) do.
 
 ## Inserting the Scheme code into SXML
 
-By default symbols in SXML are treated as tags. If you want to put code like with `{ }` in JSX you need to use
-`~` symbol in front of S-Expression:
+By default, symbols in SXML are treated as tags. If you want to put code like with `{ }` in JSX, you
+need to use `~` symbol in front of S-Expression:
 
 ```scheme
 (let ((x 10))
@@ -91,7 +91,7 @@ Because default `pragma->sxml` is `h`.
 (pragma->sxml h)
 ```
 
-Similarly if you want to use SXML and `sxml` macro in LIPS with other libraries that accept JSX, all
+Similarly, if you want to use SXML and `sxml` macro in LIPS with other libraries that accept JSX, all
 you have to do is run `pragma->sxml`. This is macro that define `sxml` macro with proper element
 creation function.
 
