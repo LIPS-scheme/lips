@@ -23,6 +23,8 @@ function MessageButton({ message }) {
 }
 ```
 
+The code defines a simple component that use a button and onClick handler.
+
 You can write the same code in LIPS as:
 
 ```scheme
