@@ -275,6 +275,23 @@ In both platforms you can access global JavaScript objects like normal variables
 ;; ==> "hello, LIPS"
 ```
 
+### Interact with DOM
+
+Here is example how to add button to the page and add onclick handler using browser DOM
+([Document Object Model](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model)) API.
+
+```scheme
+(let ((button (document.createElement "button")))
+  (set! button.innerText "click me!")
+  (set! button.onclick (lambda () (alert "Hello, LIPS Scheme!")))
+  (let ((style button.style))
+    (set! style.position "absolute")
+    (set! style.zIndex 9999)
+    (set! style.top 0)
+    (set! style.left 0))
+  (document.body.appendChild button))
+```
+
 ### Boxing
 LIPS have its own representation for numbers, strings and characters. And when
 interacting with JavaScript the values may get boxed or unboxed automagically.
