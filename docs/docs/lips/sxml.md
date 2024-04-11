@@ -8,7 +8,7 @@ description: "SXML it's what JSX is for JavaScript"
 SXML is a way to define XML or HTML inside Scheme code. In LIPS Scheme, it works like for JSX for libraries
 like [React](https://react.dev/) or [Preact](https://preactjs.com/).
 
-By default with JSX you define code like this:
+By default, with JSX you define code like this:
 
 ```jsx
 function MessageButton({ message }) {
