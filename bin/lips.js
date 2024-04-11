@@ -425,6 +425,10 @@ if (options.version || options.V) {
         prompt: prompt,
         terminal
     });
+    rl.on('close', () => {
+        rl.setPrompt('');
+        process.stdout.write('\n');
+    });
     const historySize = Number(env.LIPS_REPL_HISTORY_SIZE);
     if (!Number.isNaN(historySize) && historySize > 0) {
         rl.historySize = historySize;
