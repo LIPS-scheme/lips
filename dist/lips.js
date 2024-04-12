@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 07 Apr 2024 18:57:18 +0000
+ * build: Fri, 12 Apr 2024 11:21:58 +0000
  */
 
 (function (global, factory) {
@@ -8387,6 +8387,9 @@
       if (type(obj) === 'instance') {
         if (is_lambda(constructor) && constructor.__name__) {
           name = constructor.__name__.valueOf();
+          if (_typeof$1(name) === 'symbol') {
+            name = name.toString().replace(/^Symbol\((?:#:)?([^\)]+)\)$/, '$1');
+          }
         } else if (!is_native_function(constructor)) {
           name = 'instance';
         }
@@ -17393,10 +17396,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 07 Apr 2024 18:57:18 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 12 Apr 2024 11:21:58 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 07 Apr 2024 18:57:18 +0000').valueOf();
+    var date = LString('Fri, 12 Apr 2024 11:21:58 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17436,7 +17439,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 07 Apr 2024 18:57:18 +0000';
+  var date = 'Fri, 12 Apr 2024 11:21:58 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

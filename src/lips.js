@@ -3438,6 +3438,9 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
         if (type(obj) === 'instance') {
             if (is_lambda(constructor) && constructor.__name__) {
                 name = constructor.__name__.valueOf();
+                if (typeof name === 'symbol') {
+                    name = name.toString().replace(/^Symbol\((?:#:)?([^\)]+)\)$/, '$1');
+                }
             } else if (!is_native_function(constructor)) {
                 name = 'instance';
             }

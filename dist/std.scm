@@ -982,6 +982,7 @@
   "(define-class name parent . body)
 
    Defines a class - JavaScript function constructor with prototype.
+   parent needs to be class, constructor function, or #null
 
    usage:
 
@@ -993,40 +994,45 @@
                (newline))))
      (define jack (new Person \"Jack\"))
      (jack.hi) ; prints \"Jack says hi\""
-  (let iter ((functions '()) (constructor '()) (lst body))
-    (if (null? lst)
-        `(begin
-           (define ,name ,(if (null? constructor)
-                              `(lambda ())
-                              ;; we return this to solve issue when constructor
-                              ;; return a promise
-                              ;; ref: https://stackoverflow.com/a/50885340/387194
-                              (append (%class-lambda constructor)
-                                      (list 'this))))
-           (set-obj! ,name (Symbol.for "__class__") true)
-           ,(if (not (null? parent))
-                `(begin
-                   (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
-                   (set-obj! (. ,name 'prototype) 'constructor ,name)))
-           (set-obj! ,name '__name__ ',name)
-           ,@(map (lambda (fn)
-                    `(set-obj! (. ,name 'prototype)
-                               ,(%class-method-name (car fn))
-                               ,(%class-lambda fn)))
-                  functions))
-        (let ((item (car lst)))
-          (if (eq? (car item) 'constructor)
-              (iter functions item (cdr lst))
-              (iter (cons item functions) constructor (cdr lst)))))))
+  (let ((g:parent (gensym)))
+    (let iter ((functions '()) (constructor '()) (lst body))
+      (if (null? lst)
+          `(begin
+             (define ,name ,(if (null? constructor)
+                                `(lambda ())
+                                ;; we return this to solve issue when constructor
+                                ;; return a promise
+                                ;; ref: https://stackoverflow.com/a/50885340/387194
+                                (append (%class-lambda constructor)
+                                        (list 'this))))
+             (set-obj! ,name (Symbol.for "__class__") true)
+             (let ((,g:parent ,parent ))
+               (if (not (null? ,g:parent))
+                   (begin
+                     (set-obj! ,name 'prototype (Object.create (. ,g:parent 'prototype)))
+                     (set-obj! (. ,name 'prototype) 'constructor ,name))))
+             (set-obj! ,name '__name__ ',name)
+             ,@(map (lambda (fn)
+                      `(set-obj! (. ,name 'prototype)
+                                 ,(%class-method-name (car fn))
+                                 ,(%class-lambda fn)))
+                    functions))
+          (let ((item (car lst)))
+            (if (eq? (car item) 'constructor)
+                (iter functions item (cdr lst))
+                (iter (cons item functions) constructor (cdr lst))))))))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax class
   (syntax-rules ()
     ((_)
      (error "class: parent required"))
-    ((_ parent body ...)
-     (let ()
+    ((_ parent-expr body ...)
+     (let ((parent parent-expr))
+       (if (not (or (procedure? parent) (eq? parent #null)))
+           (error "parent class need to be a function or #null"))
        (define-class temp parent body ...)
+       (set-obj! temp "__name__" "anonymous")
        temp)))
   "(class <parent> body ...)
 
