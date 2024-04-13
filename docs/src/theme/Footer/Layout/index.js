@@ -22,7 +22,7 @@ export default function FooterLayout({style, links, logo, copyright}) {
           <div className="footer__bottom text--center">
             {logo && <div className="margin-bottom--sm">{logo}</div>}
             {copyright}
-            <a href="https://notbyai.fyi"><NotByAI /></a>
+            <a href="https://notbyai.fyi" aria-label="Created not by AI"><NotByAI /></a>
           </div>
         )}
       </div>
