@@ -504,9 +504,25 @@ function parse_string(string) {
 }
 // ----------------------------------------------------------------------
 function parse_symbol(arg) {
-    const re = /(^|[^\\])\|/g;
+    const debug = arg.match(/^name/);
+    const re = /(^|.)\|/g;
     if (arg.match(re)) {
-        arg = arg.replace(re, '$1');
+        // handle escaped bar and escaped slash
+        arg = arg.split('|').filter(Boolean).reduce((acc, str) => {
+            let result = '';
+            if (str.match(/^\\+$/)) {
+                if (str.length > 1) {
+                    const count = Math.floor(str.length / 2);
+                    result = '\\'.repeat(count);
+                }
+                if (str.length % 2 !== 0) {
+                    result += '|';
+                }
+            } else {
+                result = str;
+            }
+            return acc + result;
+        });
         const chars = {
             t: '\t',
             r: '\r',
@@ -514,8 +530,8 @@ function parse_symbol(arg) {
         };
         arg = arg.replace(/\\(x[^;]+);/g, function(_, chr) {
             return String.fromCharCode(parseInt('0' + chr, 16));
-        }).replace(/\\(.)/g, function(_, chr) {
-            return chars[chr] || chr;
+        }).replace(/\\([trn])/g, function(_, chr) {
+            return chars[chr];
         });
     }
     return new LSymbol(arg);

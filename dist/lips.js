@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 12 Apr 2024 11:21:58 +0000
+ * build: Sat, 13 Apr 2024 18:43:10 +0000
  */
 
 (function (global, factory) {
@@ -3915,9 +3915,25 @@
   }
   // ----------------------------------------------------------------------
   function parse_symbol(arg) {
-    var re = /(^|[^\\])\|/g;
+    arg.match(/^name/);
+    var re = /(^|.)\|/g;
     if (arg.match(re)) {
-      arg = arg.replace(re, '$1');
+      // handle escaped bar and escaped slash
+      arg = arg.split('|').filter(Boolean).reduce(function (acc, str) {
+        var result = '';
+        if (str.match(/^\\+$/)) {
+          if (str.length > 1) {
+            var count = Math.floor(str.length / 2);
+            result = '\\'.repeat(count);
+          }
+          if (str.length % 2 !== 0) {
+            result += '|';
+          }
+        } else {
+          result = str;
+        }
+        return acc + result;
+      });
       var chars = {
         t: '\t',
         r: '\r',
@@ -3925,8 +3941,8 @@
       };
       arg = arg.replace(/\\(x[^;]+);/g, function (_, chr) {
         return String.fromCharCode(parseInt('0' + chr, 16));
-      }).replace(/\\(.)/g, function (_, chr) {
-        return chars[chr] || chr;
+      }).replace(/\\([trn])/g, function (_, chr) {
+        return chars[chr];
       });
     }
     return new LSymbol(arg);
@@ -17396,10 +17412,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 12 Apr 2024 11:21:58 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sat, 13 Apr 2024 18:43:10 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 12 Apr 2024 11:21:58 +0000').valueOf();
+    var date = LString('Sat, 13 Apr 2024 18:43:10 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17439,7 +17455,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 12 Apr 2024 11:21:58 +0000';
+  var date = 'Sat, 13 Apr 2024 18:43:10 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

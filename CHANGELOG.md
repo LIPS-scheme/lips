@@ -14,6 +14,7 @@
 * fix `promise?` predicate
 * fix handling of `|1|1` and `|a|b|c|` symbols
 * fix repr of anonymous classes [#361](https://github.com/LIPS-scheme/lips/issues/361)
+* fix handling of escape characters in symbols
 
 ## 1.0.0-beta.19
 ### Breaking
