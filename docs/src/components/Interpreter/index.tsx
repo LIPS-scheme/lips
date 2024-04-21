@@ -115,18 +115,18 @@ export default function Interpreter(): JSX.Element {
         <div className="actions-wrapper">
           <ul className="actions">
             <li className="zoom-in icon">
-              <a href="#" onClick={sizeInrement(0.1)}>Zoom In</a>
+              <a href="#" onClick={sizeInrement(0.1)} title="Zoom In">Zoom In</a>
             </li>
             <li className="zoom-out icon">
-              <a href="#" onClick={sizeInrement(-0.1)}>Zoom Out</a>
+              <a href="#" onClick={sizeInrement(-0.1)} title="Zoom Out">Zoom Out</a>
             </li>
             <li className="full-screen">
               <ul>
                 <li className="full-screen icon">
-                  <a href="#" onClick={fullScreen}>Full Screen</a>
+                  <a href="#" onClick={fullScreen} title="Full Screen">Full Screen</a>
                 </li>
                 <li className="exit-full-screen icon">
-                  <a href="#" onClick={exitFullScreen}>Exit Full Screen</a>
+                  <a href="#" onClick={exitFullScreen} title="Exit Full Screen">Exit Full Screen</a>
                 </li>
               </ul>
             </li>
