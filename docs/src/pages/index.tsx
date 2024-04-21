@@ -22,6 +22,7 @@ function HomepageHeader() {
           {siteConfig.title} v.&nbsp;<Version />
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
+        <p className={styles.hidden}>Scheme Language Online REPL</p>
         <Interpreter/>
       </div>
     </header>
