@@ -128,14 +128,12 @@ const config: Config = {
         },
       ],
     },
-    /*
     algolia: {
-      appId: '5NWAQNIDET',
-      apiKey: 'ee3d103e9ce731b709e72350bb1f061f',
+      appId: 'HSV6UC2UY5',
+      apiKey: 'a7e0d09fde450addbb08f7b4af1cee8b',
       indexName: 'lips-js',
       searchPagePath: false,
     },
-    */
     footer: {
       style: 'dark',
       links: [
