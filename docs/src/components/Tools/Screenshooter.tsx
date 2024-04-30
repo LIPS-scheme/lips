@@ -9,7 +9,7 @@ export default function Screenshooter(): JSX.Element {
     <section id="bookmarklet">
       <div className="container">
         <ScreenshotSVG className={styles.svg} role="img" />
-        <Heading as="h3" id="screenshooter">
+        <Heading as="h3">
           <Link to="/screenshooter">Screenshooter</Link>
         </Heading>
         <p>This tool allow you to create nice screenshot of code. The screenshot tool is aware of

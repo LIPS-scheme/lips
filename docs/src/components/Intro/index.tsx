@@ -16,7 +16,7 @@ export default function Intro(): JSX.Element {
         which stands for <strong>LIPS Is Pretty Simple</strong>. Over time the project may no
         longer be that simple in implementation but it always be LIPS.
       </p>
-      <Heading as="h2" className={styles.header}>Features</Heading>
+      <Heading as="h2" id="features" className={styles.header}>Features</Heading>
       <p>Most important features of LIPS:</p>
       <ul>
         <li>Great integration with JavaScript. You can use any JS library out of the box.</li>
