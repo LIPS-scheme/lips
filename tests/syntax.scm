@@ -1626,3 +1626,17 @@
                     (begin (lambda () (throw 'ZONK))))
                 (awhen (assoc 'bar alist) "msg"))
               "msg")))
+
+(test "syntax: improper pattern"
+      (lambda (t)
+        (define-syntax f
+          (syntax-rules ()
+            ((f a ... x . y)
+             (let ((output (vector)))
+               (begin
+                 (begin
+                   (output.push (list a x y)))  ...)
+               output))))
+
+        (t.is (f 10 20 30 'a 'b)
+              #((10 b ()) (20 b ()) (30 b ()) (a b ())))))
