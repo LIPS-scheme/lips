@@ -146,7 +146,7 @@
         (t.is '|\n| (string->symbol "\n"))
         (t.is '|\t\t| (string->symbol "\t\t"))
         (t.is '|\r| (string->symbol "\r"))
-        (t.is '|\s| 's)
+        (t.is '|\s| '\s)
         (t.is '|\x3BB;| 'λ)
         (t.is '|\x9;\x9;| '|\t\t|)
         ;; found in
