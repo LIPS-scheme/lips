@@ -260,6 +260,7 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 | Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
+| Mixing groups of definitions with expressions within bodies | [SRFI-251](https://srfi.schemers.org/srfi-251/) |
 
 ### require manual loading
 

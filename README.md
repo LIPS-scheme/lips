@@ -7,7 +7,7 @@
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.19-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&1416e3a3f27f3c4f628d92d79c81f8f9)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&bfcdb92202326222e8cdaf8c91b1b660)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -260,6 +260,7 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 | Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
+| Mixing groups of definitions with expressions within bodies | [SRFI-251](https://srfi.schemers.org/srfi-251/) |
 
 ### require manual loading
 
