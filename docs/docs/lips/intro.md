@@ -1004,3 +1004,8 @@ loading `.xcb` or `.scm` files.
 
 **NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are treated
 as comments, so you can't compile the code that have those directives.
+
+## Limitations
+
+LISP Scheme currently don't support [continuations](/docs/scheme-intro/continuations) and Tail Call
+Optimizations (TCO).  But they are part of the roadmap for version 1.0.
