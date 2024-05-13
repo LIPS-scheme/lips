@@ -1007,5 +1007,6 @@ as comments, so you can't compile the code that have those directives.
 
 ## Limitations
 
-LISP Scheme currently don't support [continuations](/docs/scheme-intro/continuations) and Tail Call
-Optimizations (TCO).  But they are part of the roadmap for version 1.0.
+LISP Scheme currently don't support [continuations](/docs/scheme-intro/continuations) and [Tail Call
+Optimization](/docs/scheme-intro/core#tail-call-optimization).  But they are part of the roadmap for
+version 1.0.
