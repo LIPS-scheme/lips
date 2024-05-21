@@ -70,7 +70,8 @@ After your changes, you can also check if the website is working when build:
 npm run build && npm run serve
 ```
 
-This is only required when doing changes to the structure of the website.
+This is only required when making bigger changes to the React code of the website.
+The most important is testing the build when making changes to the REPL.
 
 ## Unit tests
 
