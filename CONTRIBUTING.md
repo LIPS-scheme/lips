@@ -25,17 +25,17 @@ Few things to consider when contributing:
 
 ```bash
 git clone git@github.com:<YOUR NAME>/lips.git
+cd lips
 git checkout devel
 ```
 
 Then you install dependencies:
 
 ```bash
-cd lips
 npm install
 ```
 
-Building project is simple, just execute:
+Building a project is simple, just execute:
 
 ```bash
 make
@@ -44,6 +44,33 @@ make
 Make assume Unix like system with standard Unix tools like `sed`, `cp`, `rm`, `cat`.
 Make use [Rollup](https://rollupjs.org/) and [Babel](https://babeljs.io/) for
 creating [UMD](https://github.com/umdjs/umd) file in `./dist` directory.
+
+## Documentation
+
+When you work on documentation you need to work on the docs directory.
+The website/documentation is written in Docusaurus and is a different npm project.
+
+After you clone the repo if your changes are related to the latest version:
+
+```bash
+git checkout master
+cd docs
+npm install
+```
+
+Then to start the website locally use:
+
+```bash
+npm run start
+```
+
+After your changes, you can also check if the website is working when build:
+
+```bash
+npm run build && npm run serve
+```
+
+This is only required when doing changes to the structure of the website.
 
 ## Unit tests
 
