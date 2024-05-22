@@ -8,19 +8,25 @@
 .input {
   width: 100%;
   position: sticky;
-  top: 0;
+  top: 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-grow: 1;
   gap: 10px;
   padding: 5px 5px;
+  height: 80px;
+  background-color: #FFFFFF;
 }
 
 .search input {
   flex-grow: 1;
   font-size: 1.2em;
   padding: 0.2em 0.4em;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  width: 50px;
 }
 .search h2, .search input {
   font-family: monospace;
