@@ -42,3 +42,7 @@
 .search [id] {
   scroll-margin-top: calc(var(--ifm-navbar-height) + .5rem);
 }
+
+html[data-theme=dark] .input{
+  background-color: #1b1b1d;
+} 
