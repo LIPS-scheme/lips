@@ -16,7 +16,7 @@
   gap: 10px;
   padding: 5px 5px;
   height: 80px;
-  background-color: #FFFFFF;
+  background-color: #fff;
 }
 
 .search input {
@@ -26,7 +26,7 @@
   height: 40px;
   border: 1px solid #ccc;
   border-radius: 2px;
-  width: 50px;
+  width: 50px
 }
 .search h2, .search input {
   font-family: monospace;
@@ -42,7 +42,6 @@
 .search [id] {
   scroll-margin-top: calc(var(--ifm-navbar-height) + .5rem);
 }
-
-html[data-theme=dark] .input{
-  background-color: #1b1b1d;
+html[data-theme=dark] .input {
+  background-color: var(--ifm-background-color);
 } 
