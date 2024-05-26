@@ -4686,11 +4686,11 @@ function transform_syntax(options = {}) {
         }
         return expr;
     }
-    function have_binding(biding, skip_nulls) {
-        const values = Object.values(biding);
-        const symbols = Object.getOwnPropertySymbols(biding);
+    function have_binding(binding, skip_nulls) {
+        const values = Object.values(binding);
+        const symbols = Object.getOwnPropertySymbols(binding);
         if (symbols.length) {
-            values.push(...symbols.map(x => biding[x]));
+            values.push(...symbols.map(x => binding[x]));
         }
         return values.length && values.every(x => {
             if (x === null) {
