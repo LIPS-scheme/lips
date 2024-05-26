@@ -132,7 +132,7 @@ This is very useful procedure that return new procedure with swapped first two a
 ```
 
 This function helps in composing functions with functions like `curry`. `unset!` is a function that
-removes the biding of the first appearance of the object. Here we define take inside the current
+removes the binding of the first appearance of the object. Here we define take inside the current
 environment and you can `unset!` it, to get the original value back.
 
 ## Combinations of functions
