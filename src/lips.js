@@ -9372,12 +9372,16 @@ var global_env = new Environment({
         // -----------------------------------------------------------------
         function unquote_splice(pair, unquote_cnt, max_unq) {
             if (unquote_cnt < max_unq) {
+                let cdr = nil;
+                if (!is_nil(pair.cdr)) {
+                    cdr = recur(pair.cdr, unquote_cnt - 1, max_unq);
+                }
                 return new Pair(
                     new Pair(
                         pair.car.car,
                         recur(pair.car.cdr, unquote_cnt, max_unq)
                     ),
-                    nil
+                    cdr
                 );
             }
             var lists = [];
