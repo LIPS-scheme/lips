@@ -15,6 +15,9 @@
 * fix handling of `|1|1` and `|a|b|c|` symbols
 * fix repr of anonymous classes [#361](https://github.com/LIPS-scheme/lips/issues/361)
 * fix handling of escape characters in symbols
+* fix processing list with nested unquote-splicing [#362](https://github.com/LIPS-scheme/lips/issues/362)
+* fix exception during error from eval [#362](https://github.com/LIPS-scheme/lips/issues/362)
+* allow to catch exceptions from eval
 
 ## 1.0.0-beta.19
 ### Breaking

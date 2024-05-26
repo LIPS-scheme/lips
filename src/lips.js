@@ -8147,7 +8147,7 @@ var global_env = new Environment({
         const repr = global_env.get('repr');
         const value = args.map(repr).join(' ');
         port.write.call(global_env, value);
-        global_env.get('newline')(port);
+        global_env.get('newline').call(this, port);
     }, `(display-error . args)
 
         Display an error message on stderr.`),
@@ -8928,19 +8928,13 @@ var global_env = new Environment({
     // ------------------------------------------------------------------
     'eval': doc('eval', function(code, env) {
         env = env || this.get('interaction-environment').call(this);
-        return evaluate(code, {
-            env,
-            dynamic_env: env,
-            error: e => {
-                var error = global_env.get('display-error');
-                error.call(this, e.message);
-                if (e.code) {
-                    var stack = e.code.map((line, i) => {
-                        return `[${i + 1}]: ${line}`;
-                    }).join('\n');
-                    error.call(this, stack);
-                }
-            }
+        return new Promise((resolve, reject) => {
+            const result = evaluate(code, {
+                env,
+                dynamic_env: env,
+                error: reject
+            });
+            resolve(result);
         });
     }, `(eval expr)
         (eval expr environment)

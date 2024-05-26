@@ -751,6 +751,11 @@
       (lambda (t)
         (t.is (replace #/foo/ (lambda () (Promise.resolve "lips")) "foo bar") "lips bar")))
 
+(test "core: should throw proper error"
+      (lambda (t)
+        (t.is (try (eval '(+ x x)) (catch (e) e.message))
+              "Unbound variable `x'")))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean

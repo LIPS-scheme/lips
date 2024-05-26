@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 May 2024 09:19:33 +0000
+ * build: Sun, 26 May 2024 09:43:37 +0000
  */
 
 (function (global, factory) {
@@ -13564,7 +13564,7 @@
       }
       var value = args.map(repr).join(' ');
       port.write.call(global_env, value);
-      global_env.get('newline')(port);
+      global_env.get('newline').call(this, port);
     }, "(display-error . args)\n\n        Display an error message on stderr."),
     // ------------------------------------------------------------------
     '%foldcase-string': doc('%foldcase-string', foldcase_string, "(%foldcase-string string)\n\n         Same as string-foldcase but without typechecking"),
@@ -14356,21 +14356,14 @@
     }, "(parent.frame)\n\n        Returns the parent environment if called from inside a function.\n        If no parent frame can be found it returns nil."),
     // ------------------------------------------------------------------
     'eval': doc('eval', function (code, env) {
-      var _this28 = this;
       env = env || this.get('interaction-environment').call(this);
-      return _evaluate(code, {
-        env: env,
-        dynamic_env: env,
-        error: function error(e) {
-          var error = global_env.get('display-error');
-          error.call(_this28, e.message);
-          if (e.code) {
-            var stack = e.code.map(function (line, i) {
-              return "[".concat(i + 1, "]: ").concat(line);
-            }).join('\n');
-            error.call(_this28, stack);
-          }
-        }
+      return new Promise(function (resolve, reject) {
+        var result = _evaluate(code, {
+          env: env,
+          dynamic_env: env,
+          error: reject
+        });
+        resolve(result);
       });
     }, "(eval expr)\n        (eval expr environment)\n\n        Function that evaluates LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
     // ------------------------------------------------------------------
@@ -15331,7 +15324,7 @@
     }, "(string->number number [radix])\n\n        Function that parses a string into a number."),
     // ------------------------------------------------------------------
     'try': doc(new Macro('try', function (code, _ref41) {
-      var _this29 = this;
+      var _this28 = this;
       var use_dynamic = _ref41.use_dynamic;
         _ref41.error;
       return new Promise(function (resolve, reject) {
@@ -15367,15 +15360,15 @@
           };
         }
         var args = {
-          env: _this29,
+          env: _this28,
           use_dynamic: use_dynamic,
-          dynamic_env: _this29,
+          dynamic_env: _this28,
           error: function error(e) {
             if (e instanceof IgnoreException) {
               throw e;
             }
             if (catch_clause) {
-              var env = _this29.inherit('try');
+              var env = _this28.inherit('try');
               var name = catch_clause.cdr.car.car;
               if (!(name instanceof LSymbol)) {
                 throw new Error('try: invalid syntax: catch require variable name');
@@ -15385,7 +15378,7 @@
               var catch_args = {
                 env: env,
                 use_dynamic: use_dynamic,
-                dynamic_env: _this29,
+                dynamic_env: _this28,
                 error: function error(e) {
                   catch_error = true;
                   reject(e);
@@ -15453,7 +15446,7 @@
     }, "(for-each fn . lists)\n\n        Higher-order function that calls function `fn` on each\n        value of the argument. If you provide more than one list\n        it will take each value from each list and call `fn` function\n        with that many arguments as number of list arguments."),
     // ------------------------------------------------------------------
     map: doc('map', function map(fn) {
-      var _this30 = this;
+      var _this29 = this;
       for (var _len33 = arguments.length, lists = new Array(_len33 > 1 ? _len33 - 1 : 0), _key33 = 1; _key33 < _len33; _key33++) {
         lists[_key33 - 1] = arguments[_key33];
       }
@@ -15462,7 +15455,7 @@
       lists.forEach(function (arg, i) {
         typecheck('map', arg, ['pair', 'nil'], i + 1);
         // detect cycles
-        if (is_pair(arg) && !is_list.call(_this30, arg)) {
+        if (is_pair(arg) && !is_list.call(_this29, arg)) {
           throw new Error("map: argument ".concat(i + 1, " is not a list"));
         }
       });
@@ -15484,7 +15477,7 @@
         use_dynamic: use_dynamic
       });
       return unpromise(result, function (head) {
-        return unpromise(map.call.apply(map, [_this30, fn].concat(_toConsumableArray(lists.map(function (l) {
+        return unpromise(map.call.apply(map, [_this29, fn].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         })))), function (rest) {
           return new Pair(head, rest);
@@ -15566,7 +15559,7 @@
     }, "(pluck . strings)\n\n        If called with a single string it will return a function that when\n        called with an object will return that key from the object.\n        If called with more then one string the returned function will\n        create a new object by copying all properties from the given object."),
     // ------------------------------------------------------------------
     reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-      var _this31 = this;
+      var _this30 = this;
       for (var _len36 = arguments.length, lists = new Array(_len36 > 3 ? _len36 - 3 : 0), _key37 = 3; _key37 < _len36; _key37++) {
         lists[_key37 - 3] = arguments[_key37];
       }
@@ -15580,7 +15573,7 @@
       return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
         return l.car;
       })).concat([init])), function (value) {
-        return reduce.call.apply(reduce, [_this31, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+        return reduce.call.apply(reduce, [_this30, fn, value].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         }))));
       });
@@ -17416,10 +17409,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 26 May 2024 09:19:33 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 26 May 2024 09:43:37 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 26 May 2024 09:19:33 +0000').valueOf();
+    var date = LString('Sun, 26 May 2024 09:43:37 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17459,7 +17452,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 26 May 2024 09:19:33 +0000';
+  var date = 'Sun, 26 May 2024 09:43:37 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
