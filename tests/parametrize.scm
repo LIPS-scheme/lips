@@ -47,7 +47,7 @@
 
 (test "parametrize: force/delay"
       (lambda (t)
-        ;; example taked from SRFI-155
+        ;; example taken from SRFI-155
         (t.is (let ()
                 (define x (make-parameter 1))
                 (define p (delay (x)))

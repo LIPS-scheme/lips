@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 28 Mar 2024 13:33:24 +0000
+ * build: Mon, 27 May 2024 11:41:47 +0000
  */
 
 'use strict';
@@ -9647,12 +9647,12 @@ function transform_syntax() {
     }
     return expr;
   }
-  function have_binding(biding, skip_nulls) {
-    var values = Object.values(biding);
-    var symbols = Object.getOwnPropertySymbols(biding);
+  function have_binding(binding, skip_nulls) {
+    var values = Object.values(binding);
+    var symbols = Object.getOwnPropertySymbols(binding);
     if (symbols.length) {
       values.push.apply(values, _toConsumableArray(symbols.map(function (x) {
-        return biding[x];
+        return binding[x];
       })));
     }
     return values.length && values.every(function (x) {
@@ -17246,10 +17246,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 28 Mar 2024 13:33:24 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 27 May 2024 11:41:47 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 28 Mar 2024 13:33:24 +0000').valueOf();
+  var date = LString('Mon, 27 May 2024 11:41:47 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17289,7 +17289,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = '1.0.0-beta.19';
-var date = 'Thu, 28 Mar 2024 13:33:24 +0000';
+var date = 'Mon, 27 May 2024 11:41:47 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
