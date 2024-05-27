@@ -282,7 +282,7 @@ Here is example how to add button to the page and add onclick handler using brow
 
 ```scheme
 (let ((button (document.createElement "button")))
-  (set! button.innerText "click me!")
+  (set! button.innerHTML "click <strong>me</strong>!")
   (set! button.onclick (lambda () (alert "Hello, LIPS Scheme!")))
   (let ((style button.style))
     (set! style.position "absolute")
