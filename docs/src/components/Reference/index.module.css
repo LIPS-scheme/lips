@@ -1,3 +1,7 @@
+:root {
+  --lips-search-height: 80px;
+}
+
 .search {
   display: inline-flex;
   justify-content: center;
@@ -15,7 +19,7 @@
   flex-grow: 1;
   gap: 10px;
   padding: 5px 5px;
-  height: 80px;
+  height: var(--lips-search-height);
   background-color: #fff;
 }
 
@@ -40,7 +44,7 @@
 }
 
 .search [id] {
-  scroll-margin-top: calc(var(--ifm-navbar-height) + .5rem);
+  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--lips-search-height));
 }
 html[data-theme=dark] .input {
   background-color: var(--ifm-background-color);
