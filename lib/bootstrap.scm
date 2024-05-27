@@ -553,12 +553,24 @@
    Helper macro used by cond.")
 
 ;; -----------------------------------------------------------------------------
+(define (%else-literal? obj)
+  "(%else-literal? obj)
+
+   Checks if object is symbol else."
+  (and (symbol? obj)
+       (or (eq? obj 'else)
+           (eq? (--> (new lips.LString (obj.literal))
+                     (cmp "else")) 0))))
+
+;; -----------------------------------------------------------------------------
 (define-macro (cond . list)
   "(cond (predicate? . body)
-         (predicate? . body))
+         (predicate? . body)
+         (else . body))
 
    (cond (predicate? => procedure)
-         (predicate? => procedure))
+         (predicate? => procedure)
+         (else . body))
 
    Macro for condition checks. For usage instead of nested ifs.
    You can use predicate and any number of expressions. Or symbol =>
@@ -573,21 +585,16 @@
                              (caddr item)
                              (cdr item)))
              (rest (cdr list)))
-        `(let ((,value ,first))
-           (if ,value
-               ,(if fn
-                    `(,expression ,value)
-                    `(begin
-                       ,@expression))
-               ,(if (and (pair? rest)
-                         (let ((x (caar rest)))
-                           (or (eq? x true)
-                               (and (symbol? x)
-                                    (or (eq? x 'else)
-                                        (eq? (--> (new lips.LString (x.literal)) (cmp "else")) 0))))))
-                    `(begin
-                       ,@(cdar rest))
-                    (if (not (null? rest))
+        (if (%else-literal? first)
+            `(begin
+               ,@expression)
+            `(let ((,value ,first))
+               (if ,value
+                   ,(if fn
+                        `(,expression ,value)
+                        `(begin
+                           ,@expression))
+                   ,(if (not (null? rest))
                         `(cond ,@rest))))))
       '()))
 

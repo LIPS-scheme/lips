@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 May 2024 09:43:37 +0000
+ * build: Mon, 27 May 2024 17:01:06 +0000
  */
 
 (function (global, factory) {
@@ -9740,12 +9740,12 @@
       }
       return expr;
     }
-    function have_binding(biding, skip_nulls) {
-      var values = Object.values(biding);
-      var symbols = Object.getOwnPropertySymbols(biding);
+    function have_binding(binding, skip_nulls) {
+      var values = Object.values(binding);
+      var symbols = Object.getOwnPropertySymbols(binding);
       if (symbols.length) {
         values.push.apply(values, _toConsumableArray(symbols.map(function (x) {
-          return biding[x];
+          return binding[x];
         })));
       }
       return values.length && values.every(function (x) {
@@ -17409,10 +17409,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 26 May 2024 09:43:37 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 27 May 2024 17:01:06 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 26 May 2024 09:43:37 +0000').valueOf();
+    var date = LString('Mon, 27 May 2024 17:01:06 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17452,7 +17452,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 26 May 2024 09:43:37 +0000';
+  var date = 'Mon, 27 May 2024 17:01:06 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

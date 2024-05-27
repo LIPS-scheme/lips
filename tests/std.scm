@@ -351,3 +351,11 @@
                          x
                     x"))))
 
+(test "std: cond"
+      (lambda (t)
+        (t.is (cond (else 10)) 10)
+        (t.is (cond ((zero? 0) 10) (else 20)) 10)
+        (t.is (cond ((zero? 10) 10) (else 20)) 20)
+        (t.is (let ((alist '((a . 10) (b . 20) (c . 30))))
+                (cond ((assoc 'b alist) => cdr) (else #f)))
+              20)))
