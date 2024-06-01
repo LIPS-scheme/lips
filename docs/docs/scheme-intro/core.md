@@ -621,6 +621,7 @@ You can use `cond` expression with `=>` syntax to get the value of alist:
                      (else '()))))
   (if result
       (print result)))
+;; ==> 20
 ```
 
 ## Finding element in the list
