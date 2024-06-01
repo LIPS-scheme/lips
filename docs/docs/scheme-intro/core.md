@@ -214,6 +214,25 @@ You can create local variables with `let` syntax:
 This will create two variables `x` and `y` with values `10` and `20` respectively and sum those with
 plus procedure.
 
+There is also additional `let*` expression that allow to return previous value in next expression:
+
+```scheme
+(let* ((x 10) (y (* x x)))
+  (+ x y))
+;; ==> 110
+```
+
+And `letrec` that allows to create local recursive functions (allow reference same binding):
+
+```scheme
+(letrec ((sum (lambda (list)
+                (if (null? list)
+                    0
+                    (+ (car list) (sum (cdr list)))))))
+  (sum '(1 2 3 4)))
+;; ==> 10
+```
+
 ## Conditionals
 
 In Scheme there are 3 ways to define conditionals. The basic expression is `if` statement.
