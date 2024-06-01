@@ -613,6 +613,16 @@ argument.  They use `eq?`, `eqv?`, and `equal?` respectively.
 First call will return pair `(bar . 20)` because its `bar` symbol is present in the alist. And the
 second call will print `#f`.
 
+You can use `cond` expression with `=>` syntax to get the value of alist:
+
+```scheme
+(let* ((alist '((foo . 10) (bar . 20) (baz . 30)))
+       (result (cond ((assoc 'bar alist) => cdr)
+                     (else '()))))
+  (if result
+      (print result)))
+```
+
 ## Finding element in the list
 
 Similar to operation on alist there are 3 functions that find if the element is present in the normal list
