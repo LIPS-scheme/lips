@@ -60,7 +60,10 @@ You can also use `src` attribute to link to source file. Like you normally do wi
 
 ## Node.js
 
-To install LIPS you can use NPM:
+To install LIPS you can use
+[NPM](https://www.freecodecamp.org/news/what-is-npm-a-node-package-manager-tutorial-for-beginners/),
+you first need to
+[install Node.js](https://www.freecodecamp.org/news/how-to-install-node-js-and-npm-on-windows-2/).
 
 ```bash
 npm install -g @jcubic/lips@beta
