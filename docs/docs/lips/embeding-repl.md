@@ -85,7 +85,7 @@ This is the main code that use jQuery Terminal and its features to implement the
 
 ## Include Prism files
 
-[PrismJS](https://prismjs.com/) is a library that you can use for the syntax hightlighting. It has
+[PrismJS](https://prismjs.com/) is a library that you can use for the syntax highlighting. It has
 generic Scheme support, but LIPS tweak that a bit and add support for LIPS Scheme specific syntax
 like literal Regular Expressions, or object literals.
 
@@ -100,7 +100,7 @@ like literal Regular Expressions, or object literals.
 This is the code that use features of jQuery Terminal and main Terminal LIPS code to create the working REPL:
 
 ```javascript
-// Scheme syntax hightlighting
+// Scheme syntax highlighting
 $.terminal.syntax('scheme');
 
 const term = terminal({
@@ -122,7 +122,7 @@ You can also use (help obj)to display help for specific function or macro.
 Use (dir name) to get list of JavaScript properties and (apropos name)
 to display list of matched names in environment.
 `
-// use same hightlight for names in RegEx, so they are in color and have doc strings
+// use same highlight for names in RegEx, so they are in color and have doc strings
 term.echo(intro.replace(/(\((?:env|dir|help|apropos)[^)]*\))/g, function(code) {
     return $.terminal.prism('scheme', code, { echo: true });
 }), {
@@ -130,6 +130,6 @@ term.echo(intro.replace(/(\((?:env|dir|help|apropos)[^)]*\))/g, function(code) {
 });
 ```
 
-## Wroking Demo
+## Working Demo
 
 Here is a working [Codepen REPL Demo](https://codepen.io/jcubic/pen/OJepZbd).
