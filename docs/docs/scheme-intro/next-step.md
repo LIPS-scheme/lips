@@ -3,7 +3,7 @@ sidebar_position: 8
 description: Few resources how to learn more about Scheme
 ---
 
-# What Next
+# What Next?
 
 If you want to learn more about Scheme, these are the resources I recommend:
 
