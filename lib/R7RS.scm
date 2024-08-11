@@ -1551,7 +1551,7 @@
 
    Create new empty library object with empty namespace."
   (let* ((parent (. (current-environment) '__parent__))
-         (lib (let ((lib (--> parent (get name &(:throwError false)))))
+         (lib (let ((lib (--> parent (get name &(:throwError #f)))))
                 (if (null? lib)
                     (new %Library name)
                     lib)))
