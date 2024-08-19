@@ -287,6 +287,10 @@ Since we have full access to JavaScript, we can access the `Date` object to mani
 
 ```scheme
 (define (format-part number)
+  "(format-part number)
+
+   Convert number to string with leading zero. It should be used
+   for minutes, hours, and seconds."
   (--> number (toString) (padStart 2 "0")))
 
 (let ((date (new Date "2024-01-01 12:09:02")))
