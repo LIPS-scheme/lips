@@ -275,6 +275,30 @@ In both platforms you can access global JavaScript objects like normal variables
 ;; ==> "hello, LIPS"
 ```
 
+### Date and Time
+
+Since we have full access to JavaScript, we can access the `Date` object to manipulate date and time.
+
+```scheme
+(--> (new Date "2024-01-01 12:09:2")
+     (getFullYear))
+;; ==> 2024
+```
+
+```scheme
+(define (format-part number)
+  (--> number (toString) (padStart 2 "0")))
+
+(let ((date (new Date "2024-01-01 12:09:02")))
+  (format "~a:~a:~a"
+          (format-part (date.getHours))
+          (format-part (date.getMinutes))
+          (format-part (date.getSeconds))))
+;; ==> "12:09:02"
+```
+
+You can also use Date time libraries like [date-fns](https://date-fns.org/).
+
 ### Interact with DOM
 
 Here is example how to add button to the page and add onclick handler using browser DOM
