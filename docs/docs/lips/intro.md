@@ -241,6 +241,8 @@ The last typecking function is `typecheck-args` that check if all arguments are 
 
 ## Integration with JavaScript
 
+### Dot operator
+
 ### Dot notation
 LIPS allow accessing JavaScript objects with dot notation:
 
@@ -433,8 +435,9 @@ Read more about [function::bind](https://tinyurl.com/ykvb836s) and
 There are two legacy macros that are still part of LIPS, but you don't need
 them most of the time.
 
-* `.` - dot function was a first way to interact with JavaScript, it allowed to
-  get property from an object:
+##### The dot operator
+`.` - dot function was a first way to interact with JavaScript, it allowed to get property from an
+object:
 
 ```scheme
 (. document 'querySelector)
@@ -444,13 +447,18 @@ This returned function querySelector from document object in browser. Note that 
 as first element of the list (it's handled in special way by the parser). In any other place dot is a pair separator,
 see documentation about [Pairs in Scheme](/docs/scheme-intro/data-types#pairs).
 
-* `..` - this is a macro is that simplify usage of `.` procedure:
+
+##### The double dot operator
+
+`..` - this is a macro is that simplify usage of `.` procedure:
 
 ```scheme
 (.. document.querySelector)
 ```
 
-You still sometimes may want to use this instead of `-->` when you want to get
+##### Usage of Legacy `..` and `.` operators
+
+You still sometimes may want to use `.` instead of `-->` when you want to get
 property from an object returned by expression.
 
 In the old version of LIPS, you have to execute code like this:
