@@ -255,7 +255,7 @@ about `let-env` expression check [documentation about LIPS environments](/docs/l
 ## Dynamic Scope
 
 ### Rationale
-Initally the library was created with optional
+Initially the library was created with optional
 [dynamic scope](https://en.wikipedia.org/wiki/Scope_(computer_science)#Dynamic_scope). The reason for it was
 that it was supposed to be used as scriptng language for the Emacs in the browser, probably as a fork
 of [Ymacs](https://lisperator.net/ymacs/). The idea was abandoned but the dynamic scope remained as part
