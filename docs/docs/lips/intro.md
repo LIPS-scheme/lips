@@ -241,8 +241,6 @@ The last typecking function is `typecheck-args` that check if all arguments are 
 
 ## Integration with JavaScript
 
-### Dot operator
-
 ### Dot notation
 LIPS allow accessing JavaScript objects with dot notation:
 
