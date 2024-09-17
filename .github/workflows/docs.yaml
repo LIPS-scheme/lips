@@ -9,6 +9,9 @@ on:
       - docusaurus
       - master
   pull_request:
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yaml"
     branches:
       - master
       - devel

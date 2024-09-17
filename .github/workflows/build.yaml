@@ -15,6 +15,15 @@ on:
       - master
       - devel
   pull_request:
+    paths:
+      - "template/Makefile"
+      - "Makefile"
+      - "scripts/*"
+      - "tests/*"
+      - "bin/*"
+      - "lib/*"
+      - "src/*"
+      - ".github/workflows/build.yaml"
     branches:
       - master
       - devel
