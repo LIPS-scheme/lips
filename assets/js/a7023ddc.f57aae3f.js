@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunknew_docs=self.webpackChunknew_docs||[]).push([[1713],{3457:e=>{e.exports=JSON.parse('[{"label":"scheme","permalink":"/blog/tags/scheme","count":2},{"label":"emacs","permalink":"/blog/tags/emacs","count":1},{"label":"lips","permalink":"/blog/tags/lips","count":1},{"label":"history","permalink":"/blog/tags/history","count":1}]')}}]);

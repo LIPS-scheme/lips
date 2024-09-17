@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunknew_docs=self.webpackChunknew_docs||[]).push([[7472],{5513:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Scheme Regex literals in Emacs","permalink":"/blog/emacs-scheme-regex","unlisted":false},{"title":"LIPS Scheme History","permalink":"/blog/lips-history","unlisted":false}]}')}}]);
