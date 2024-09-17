@@ -8,6 +8,10 @@ on:
     branches:
       - docusaurus
       - master
+  pull_request:
+    branches:
+      - master
+      - devel
 
 permissions:
   contents: write
