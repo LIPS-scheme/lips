@@ -300,7 +300,8 @@ in Web (e.g. in Web REPL) you can use URL:
 * [Brian Lovin](https://brianlovin.com/hn/38819212) (HN clone)
 
 ## Projects that use LIPS
-* [Conzept](https://conze.pt) - Topic exploration system for the 21st century (see also their [Twitter account](https://twitter.com/conzept__) and [Command API Documentation](https://conze.pt/guide/command_api))
+* [Conzept](https://conze.pt) - Topic exploration system for the 21st century (see also their [Twitter account](https://twitter.com/conzept__) and [Command API Documentation](https://conze.pt/guide/command_api)).
+* [Logoi](https://logoi.website/) - a minimalist "superdialect" of the Prolog and Lisp programming languages.
 
 ## Roadmap
 ### 1.0
