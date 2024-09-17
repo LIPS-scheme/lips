@@ -1,23 +1,17 @@
 name: build docs
 run-name: ${{ github.actor }} building documentation 🚀
 on:
-  push:
-    paths:
-      - "docs/**"
-      - ".github/workflows/docs.yaml"
-    branches:
-      - docusaurus
-      - master
-  pull_request:
-    paths:
-      - "docs/**"
-      - ".github/workflows/docs.yaml"
-    branches:
-      - master
-      - devel
-
-
-
+  paths:
+    - "docs/**"
+    - ".github/workflows/docs.yaml"
+    push:
+      branches:
+        - docusaurus
+        - master
+    pull_request:
+      branches:
+        - master
+        - devel
 
 permissions:
   contents: write
