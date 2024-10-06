@@ -26,6 +26,7 @@ export default function FooterLayout({style, links, logo, copyright}) {
           </div>
         )}
       </div>
+      <script defer src="https://api.feedbhack.com/assets/app.js" website-id="6703059dee359a44f772ff78"></script>
       {baseUrl === currentPath && <MoreIcon />}
       <script dangerouslySetInnerHTML={{__html: `
 var owa_baseUrl = 'https://stats.jcubic.pl/';
