@@ -29,20 +29,19 @@ const replReady = () => {
 
 // monkey patch keymap added by LIPS terminal
 function trackCommands(term: JQueryTerminal) {
-  const _paq = globalThis._paq as PiwikTrack
   let command: string;
   term.option('onCommandChange', (cmd: string) => {
     command = cmd;
   });
   const ENTER = term.cmd().keymap('ENTER');
   term.cmd().keymap('ENTER', function(e: KeyboardEvent, orig: () => any) {
+    const _paq = globalThis._paq as PiwikTrack;
     _paq.push(['trackEvent', 'REPL', 'command', command]);
     return ENTER(e, orig);
   });
 }
 
 export default function Interpreter(): JSX.Element {
-  const _paq = globalThis._paq as PiwikTrack
   const [activeSnippet, setActiveSnippet] = useState(0);
   const [size, setSize] = useState(1);
   const ref = useRef<HTMLDivElement>();
@@ -71,6 +70,7 @@ export default function Interpreter(): JSX.Element {
   }, []);
 
   function execSnippet(selector = '.example:visible') {
+    const _paq = globalThis._paq as PiwikTrack;
     const $ = globalThis.jQuery;
     const $snippet = $(selector);
     const code = $snippet.text();
