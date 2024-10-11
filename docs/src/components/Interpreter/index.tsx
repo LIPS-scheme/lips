@@ -29,13 +29,10 @@ const replReady = () => {
 
 // monkey patch keymap added by LIPS terminal
 function trackCommands(term: JQueryTerminal) {
-  let command: string;
-  term.option('onCommandChange', (cmd: string) => {
-    command = cmd;
-  });
   const ENTER = term.cmd().keymap('ENTER');
   term.cmd().keymap('ENTER', function(e: KeyboardEvent, orig: () => any) {
     const _paq = globalThis._paq as PiwikTrack;
+    const command = term.get_command();
     _paq.push(['trackEvent', 'REPL', 'command', command]);
     return ENTER(e, orig);
   });
