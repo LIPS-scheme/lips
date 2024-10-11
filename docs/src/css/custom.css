@@ -36,6 +36,6 @@
 }
 
 body .feedback-btn {
-    right: auto;
-    left: 20px;
+    right: auto !important;
+    left: 20px !important;
 }
