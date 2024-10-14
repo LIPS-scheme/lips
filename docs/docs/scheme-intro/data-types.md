@@ -297,7 +297,7 @@ The result expression will look like this:
 
 ### Quotation of quotation
 
-If you quote the quotation, you will get expression that change special symbols with S-Expressions:
+If you quote the quotation, you will get a single expression where special symbols are replaced with a list:
 
 ```scheme
 ''(1 2 3)
