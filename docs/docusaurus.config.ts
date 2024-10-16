@@ -9,7 +9,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const config: Config = {
   title: 'LIPS Scheme',
-  tagline: 'Powerfull Scheme based Lisp in JavaScript',
+  tagline: 'Powerful Scheme based Lisp in JavaScript',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
