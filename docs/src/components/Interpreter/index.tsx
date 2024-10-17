@@ -16,11 +16,7 @@ export interface TerminalProps extends CSSProperties {
 }
 
 function track(type: string, command: string) {
-  const umami = globalThis.umami as any;
   const _paq = globalThis._paq as PiwikTrack;
-  if (umami) {
-    umami.track('REPL', [type, command]);
-  }
   _paq.push(['trackEvent', 'REPL', type, command]);
 }
 
