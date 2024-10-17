@@ -15,6 +15,15 @@ export interface TerminalProps extends CSSProperties {
   '--size': string;
 }
 
+function track(type: string, command: string) {
+  const umami = globalThis.umami as any;
+  const _paq = globalThis._paq as PiwikTrack;
+  if (umami) {
+    umami.track('REPL', [type, command]);
+  }
+  _paq.push(['trackEvent', 'REPL', type, command]);
+}
+
 type PiwikTrack = Array<Array<string>>;
 export type JQueryTerminal = ReturnType<typeof globalThis.terminal>;
 
@@ -31,9 +40,8 @@ const replReady = () => {
 function trackCommands(term: JQueryTerminal) {
   const ENTER = term.cmd().keymap('ENTER');
   term.cmd().keymap('ENTER', function(e: KeyboardEvent, orig: () => any) {
-    const _paq = globalThis._paq as PiwikTrack;
     const command = term.get_command();
-    _paq.push(['trackEvent', 'REPL', 'command', command]);
+    track('command', command);
     return ENTER(e, orig);
   });
 }
@@ -67,7 +75,6 @@ export default function Interpreter(): JSX.Element {
   }, []);
 
   function execSnippet(selector = '.example:visible') {
-    const _paq = globalThis._paq as PiwikTrack;
     const $ = globalThis.jQuery;
     const $snippet = $(selector);
     const code = $snippet.text();
@@ -75,7 +82,7 @@ export default function Interpreter(): JSX.Element {
     const term = $('.term').terminal();
     term.echo(term.get_prompt(), { formatters: false });
     term.exec(code, true);
-    _paq.push(['trackEvent', 'REPL', 'snippet', index + 1]);
+    track('snippet', index + 1);
     if (typeof screen.orientation === 'undefined') {
       setTimeout(() => term.focus(), 0);
     }

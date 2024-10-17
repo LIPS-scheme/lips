@@ -56,6 +56,7 @@ owa_cmds.push(['trackClicks']);
         _paq.push(['setSiteId', w]);
         g.type='text/javascript';g.async=true;g.defer=true;g.src=i;s.parentNode.insertBefore(g,s);
     })('https://jcubic.piwik.pro/ppms.php','https://jcubic.containers.piwik.pro/ppms.js','018719ec\u002D6793\u002D4a2d\u002D92f9\u002Db8b88a01d43c',document)`}}/>
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="422bfe77-bcfe-4cf8-a923-d496fba1bcc3"></script>
     </footer>
   );
 }
