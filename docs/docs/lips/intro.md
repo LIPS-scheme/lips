@@ -1001,6 +1001,23 @@ You can also use the `Promise` constructor yourself:
 In the above example, we import a regular callback based fs module and use the `Promise` constructor
 abstracted away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
 
+### ES Modules
+
+LIPS Scheme runs in ES Module, but `import` is reserved for experimental R7RS modules. If you want
+to import module that is ESM only. You need to access JavaScript dynamic import. But `global.import` is not defined. If you want to define JavaScript dynamic import, you can use code:
+
+```scheme
+(define import (global.eval "(x) => import(x)"))
+```
+
+You can use this function like this:
+
+```javascript
+(--> (import "fs/promises") (readFile "README.md" "utf8"))
+```
+
+But it will also work with ESM only module that can't be imported with `require`.
+
 ### Finding LIPS Scheme directory
 
 With help from `(require.resolve)` you can get the path of the root directory of LIPS Scheme:
