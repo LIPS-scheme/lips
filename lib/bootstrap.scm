@@ -844,7 +844,7 @@
 (define (%any-null? lst)
   "(%any-null? lst)
 
-   Checks if any of elemets in the list is null."
+   Checks if any of elements in the list is null."
   (if (null? lst)
       false
       (if (null? (car lst))
