@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 27 May 2024 17:01:06 +0000
+ * build: Sun, 27 Oct 2024 15:16:01 +0000
  */
 
 (function (global, factory) {
@@ -15501,18 +15501,6 @@
       }
     }, "(list? obj)\n\n        Predicate that tests if value is a proper linked list structure.\n        The car of each pair can be any value. It returns false on cyclic lists.\""),
     // ------------------------------------------------------------------
-    some: doc('some', function some(fn, list) {
-      typecheck('some', fn, 'function');
-      typecheck('some', list, ['pair', 'nil']);
-      if (is_null(list)) {
-        return false;
-      } else {
-        return unpromise(fn(list.car), function (value) {
-          return value || some(fn, list.cdr);
-        });
-      }
-    }, "(some fn list)\n\n        Higher-order function that calls fn on each element of the list.\n        It stops and returns true when fn returns true for a value.\n        If none of the values give true, some will return false.\n        Analogous to Python any(map(fn, list))."),
-    // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function (fold, fn, init) {
       for (var _len34 = arguments.length, lists = new Array(_len34 > 3 ? _len34 - 3 : 0), _key34 = 3; _key34 < _len34; _key34++) {
         lists[_key34 - 3] = arguments[_key34];
@@ -17409,10 +17397,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 27 May 2024 17:01:06 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 27 Oct 2024 15:16:01 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 27 May 2024 17:01:06 +0000').valueOf();
+    var date = LString('Sun, 27 Oct 2024 15:16:01 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17452,7 +17440,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 27 May 2024 17:01:06 +0000';
+  var date = 'Sun, 27 Oct 2024 15:16:01 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

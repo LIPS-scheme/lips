@@ -836,15 +836,62 @@
     (qsort list predicate)))
 
 ;; -----------------------------------------------------------------------------
-(define (every fn list)
-  "(every fn list)
+(define-macro (%any lists)
+  `(or ,@lists))
 
-   Function that calls fn on each item of the list, if every value returns true
-   it will return true otherwise it return false.
-   Analogous to Python all(map(fn, list))."
-  (if (null? list)
+
+;; -----------------------------------------------------------------------------
+(define (%any-null? lst)
+  "(%any-null? lst)
+
+   Checks if any of elemets in the list is null."
+  (if (null? lst)
+      false
+      (if (null? (car lst))
+          true
+          (%any-null? (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
+(define (%some fn lists)
+  "(%some fn lists)
+
+   version of some without typechecking."
+  (if (or (null? lists) (%any-null? lists))
+      false
+      (if (apply fn (map car lists))
+          true
+          (%some fn (map cdr lists)))))
+
+;; -----------------------------------------------------------------------------
+(define (some fn . lists)
+  "(some fn . lists)
+
+   Higher-order function that calls fn on consecutive elements of the list of lists.
+   It stops and returns true when fn returns true. If none of the values give true,
+   some will return false. Analogous to Python any(map(fn, list))."
+  (typecheck "some" fn "function")
+  (typecheck-args (vector "pair" "nil") "some" lists)
+  (%some fn lists))
+
+;; -----------------------------------------------------------------------------
+(define (%every fn lists)
+  "(%every fn lists)
+
+   version of every without typechecking."
+  (if (or (null? lists) (%any-null? lists))
       true
-      (and (fn (car list)) (every fn (cdr list)))))
+      (and (apply fn (map car lists)) (%every fn (map cdr lists)))))
+
+;; -----------------------------------------------------------------------------
+(define (every fn . lists)
+  "(every fn . lists)
+
+   Higher-order function that calls fn on consecutive item of the list of lists,
+   if every call returns true it will return true otherwise it return false.
+   Analogous to Python all(map(fn, list))."
+  (typecheck "every" fn "function")
+  (typecheck-args (vector "pair" "nil") "every" lists)
+  (%every fn lists))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (promise . body)
@@ -4997,7 +5044,7 @@
 
    Create new empty library object with empty namespace."
   (let* ((parent (. (current-environment) '__parent__))
-         (lib (let ((lib (--> parent (get name &(:throwError false)))))
+         (lib (let ((lib (--> parent (get name &(:throwError #f)))))
                 (if (null? lib)
                     (new %Library name)
                     lib)))

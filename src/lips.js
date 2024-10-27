@@ -10275,23 +10275,6 @@ var global_env = new Environment({
         Predicate that tests if value is a proper linked list structure.
         The car of each pair can be any value. It returns false on cyclic lists."`),
     // ------------------------------------------------------------------
-    some: doc('some', function some(fn, list) {
-        typecheck('some', fn, 'function');
-        typecheck('some', list, ['pair', 'nil']);
-        if (is_null(list)) {
-            return false;
-        } else {
-            return unpromise(fn(list.car), (value) => {
-                return value || some(fn, list.cdr);
-            });
-        }
-    }, `(some fn list)
-
-        Higher-order function that calls fn on each element of the list.
-        It stops and returns true when fn returns true for a value.
-        If none of the values give true, some will return false.
-        Analogous to Python any(map(fn, list)).`),
-    // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function(fold, fn, init, ...lists) {
         typecheck('fold', fn, 'function');
         lists.forEach((arg, i) => {
