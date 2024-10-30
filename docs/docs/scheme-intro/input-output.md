@@ -345,7 +345,8 @@ Some scheme implementations have `with-input-from-string` procedure:
 ;; ==> 10 (1 2 3 4)
 ```
 
-The procedure `with-input-from-string` changes the current-input-port so you can use read without an argument.
+The procedure `with-input-from-string` changes the current-input-port so you can use `read` without 
+an argument.
 
 Another useful procedure that some Scheme implementations have is `read-all`. It read all the
 S-Expressions from a port and return them as a list.
