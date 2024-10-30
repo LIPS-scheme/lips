@@ -1,6 +1,7 @@
 # Function Reference
 
 ## -
+
 ```
 (- n1 n2 ...)
 (- n)
@@ -10,6 +11,7 @@ it will negate the value.
 ```
 
 ## .
+
 ```
 (. obj . args)
 (get obj . args)
@@ -24,7 +26,8 @@ without problem unlike in JavaScript when you use
 pass it as an argument.
 ```
 
-## *
+## \*
+
 ```
 (* . numbers)
 
@@ -32,7 +35,8 @@ Multiplies all numbers passed as arguments. If single value is passed
 it will return that value.
 ```
 
-## **
+## \*\*
+
 ```
 (** a b)
 
@@ -40,6 +44,7 @@ Function that calculates number a to to the power of b.
 ```
 
 ## /
+
 ```
 (/ n1 n2 ...)
 (/ n)
@@ -49,6 +54,7 @@ is passed it will calculate (/ 1 n).
 ```
 
 ## &
+
 ```
 (& a b)
 
@@ -56,6 +62,7 @@ Function that calculates the bitwise and operation.
 ```
 
 ## %
+
 ```
 (% n1 n2)
 
@@ -63,6 +70,7 @@ Function returns the remainder of n1/n2 (modulo).
 ```
 
 ## +
+
 ```
 (+ . numbers)
 
@@ -71,6 +79,7 @@ return that value.
 ```
 
 ## <
+
 ```
 (< x1 x2 ...)
 
@@ -79,6 +88,7 @@ monotonically increasing, i.e. x1 < x2 and x2 < x3 and so on.
 ```
 
 ## <<
+
 ```
 (<< a b)
 
@@ -86,6 +96,7 @@ Function that left shifts the value a by value b bits.
 ```
 
 ## <=
+
 ```
 (<= x1 x2 ...)
 
@@ -94,6 +105,7 @@ monotonically nondecreasing, i.e. x1 <= x2 and x2 <= x3 and so on.
 ```
 
 ## =
+
 ```
 (== x1 x2 ...)
 
@@ -102,6 +114,7 @@ all equal.
 ```
 
 ## ==
+
 ```
 (== x1 x2 ...)
 
@@ -110,6 +123,7 @@ all equal.
 ```
 
 ## >
+
 ```
 (> x1 x2 x3 ...)
 
@@ -118,6 +132,7 @@ monotonically decreasing, i.e. x1 > x2 and x2 > x3 and so on.
 ```
 
 ## >=
+
 ```
 (>= x1 x2 ...)
 
@@ -126,6 +141,7 @@ monotonically nonincreasing, i.e. x1 >= x2 and x2 >= x3 and so on.
 ```
 
 ## >>
+
 ```
 (>> a b)
 
@@ -133,6 +149,7 @@ Function that right shifts the value a by value b bits.
 ```
 
 ## |
+
 ```
 (| a b)
 
@@ -140,6 +157,7 @@ Function that calculates the bitwise or operation.
 ```
 
 ## ~
+
 ```
 (~ number)
 
@@ -147,6 +165,7 @@ Function that calculates the bitwise inverse (flip all the bits).
 ```
 
 ## 1-
+
 ```
 (1- number)
 
@@ -154,6 +173,7 @@ Function that subtracts 1 from the number and return result.
 ```
 
 ## 1+
+
 ```
 (1+ number)
 
@@ -161,6 +181,7 @@ Function that adds 1 to the number and return result.
 ```
 
 ## abs
+
 ```
 (abs number)
 
@@ -168,11 +189,13 @@ Function that returns the absolute value (magnitude) of number.
 ```
 
 ## acos
+
 ```
 #<undefined>
 ```
 
 ## alist->assign
+
 ```
 (alist->assign alist . list-of-alists)
 
@@ -180,6 +203,7 @@ Function that works like Object.assign but for LIPS alists.
 ```
 
 ## alist->object
+
 ```
 (alist->object alist)
 
@@ -187,6 +211,7 @@ Function that converts alist pairs to a JavaScript object.
 ```
 
 ## always
+
 ```
 (always constant)
 
@@ -194,6 +219,7 @@ Higher-order function that returns a new thunk that always returns the given con
 ```
 
 ## angle
+
 ```
 (angle x)
 
@@ -201,6 +227,7 @@ Returns angle of the complex number in polar coordinate system.
 ```
 
 ## append
+
 ```
 (append item ...)
 
@@ -209,6 +236,7 @@ It will always return a new list and not modify its arguments.
 ```
 
 ## append!
+
 ```
 (append! arg1 ...)
 
@@ -218,6 +246,7 @@ lists added as arguments.
 ```
 
 ## apply
+
 ```
 (apply fn list)
 
@@ -225,6 +254,7 @@ Function that calls fn with the list of arguments.
 ```
 
 ## apropos
+
 ```
 (apropos name)
 
@@ -233,6 +263,7 @@ name can be regex, string or symbol.
 ```
 
 ## array->list
+
 ```
 (array->list array)
 
@@ -240,6 +271,7 @@ Function that converts a JavaScript array to a LIPS cons list.
 ```
 
 ## array?
+
 ```
 (array? expression)
 
@@ -247,11 +279,13 @@ Predicate that tests if value is an array.
 ```
 
 ## asin
+
 ```
 #<undefined>
 ```
 
 ## assoc
+
 ```
 (assoc obj alist)
 
@@ -259,6 +293,7 @@ Returns pair from alist that match given key using equal? check.
 ```
 
 ## assq
+
 ```
 (assq obj alist)
 
@@ -266,6 +301,7 @@ Returns pair from a list that matches given key using eq? check.
 ```
 
 ## assv
+
 ```
 (assv obj alist)
 
@@ -273,19 +309,22 @@ Returns pair from alist that match given key using eqv? check.
 ```
 
 ## atan
+
 ```
 #<undefined>
 ```
 
 ## await
+
 ```
 (await value)
 
-Unquotes a quoted promise so it can be automagically evaluated (resolved
+Unquotes a quoted promise so it can be automatically evaluated (resolved
 to its value).
 ```
 
 ## binary
+
 ```
 (binary fn)
 
@@ -293,6 +332,7 @@ Returns a new function with arguments limited to two.
 ```
 
 ## binary-port?
+
 ```
 (binary-port? port)
 
@@ -300,6 +340,7 @@ Function that tests if argument is binary port.
 ```
 
 ## boolean?
+
 ```
 (boolean? x)
 
@@ -307,6 +348,7 @@ Returns true if value is boolean.
 ```
 
 ## boolean=?
+
 ```
 (boolean=? b1 b2 ...)
 
@@ -314,6 +356,7 @@ Checks if all arguments are boolean and if they are the same.
 ```
 
 ## bound?
+
 ```
 (bound? x [env])
 
@@ -322,6 +365,7 @@ if not specified.
 ```
 
 ## buffer->u8vector
+
 ```
 (buffer->u8vector bin)
 
@@ -331,6 +375,7 @@ the result ArrayBuffer or Buffer to u8vector.
 ```
 
 ## bytevector
+
 ```
 (u8vector v1 v2 ...)
 
@@ -338,6 +383,7 @@ Create unsigned 8-bit integer vector (C unsigned char) from give arguments.
 ```
 
 ## bytevector-append
+
 ```
 (bytevector-append v1 ...)
 
@@ -345,6 +391,7 @@ Create new bytevector u8vector that is created from joining each argument.
 ```
 
 ## bytevector-copy
+
 ```
 (bytevector-copy v)
 (bytevector-copy v start)
@@ -355,6 +402,7 @@ whole vector is copied and returned.
 ```
 
 ## bytevector-copy!
+
 ```
 (bytevector-copy! to at from)
 (bytevector-copy! to at from start)
@@ -365,6 +413,7 @@ starting at at.
 ```
 
 ## bytevector-length
+
 ```
 (u8vector-length v)
 
@@ -372,6 +421,7 @@ return length of unsigned 8-bit integer vector (C unsigned char).
 ```
 
 ## bytevector-u8-ref
+
 ```
 (u8vector-ref vector k)
 
@@ -379,6 +429,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## bytevector-u8-set!
+
 ```
 (u8vector-set! vector k)
 
@@ -386,6 +437,7 @@ Function set value of unsigned 8-bit integer vector (C unsigned char) at index k
 ```
 
 ## bytevector?
+
 ```
 (u8vector? x)
 
@@ -393,6 +445,7 @@ Returns #t of argument is unsigned 8-bit integer vector (C unsigned char) otherw
 ```
 
 ## caaaaar
+
 ```
 (caaaaar arg)
 
@@ -400,6 +453,7 @@ Function that calculates (car (car (car (car (car arg)))))
 ```
 
 ## caaaadr
+
 ```
 (caaaadr arg)
 
@@ -407,6 +461,7 @@ Function that calculates (car (car (car (car (cdr arg)))))
 ```
 
 ## caaaar
+
 ```
 (caaaar arg)
 
@@ -414,6 +469,7 @@ Function that calculates (car (car (car (car arg))))
 ```
 
 ## caaadar
+
 ```
 (caaadar arg)
 
@@ -421,6 +477,7 @@ Function that calculates (car (car (car (cdr (car arg)))))
 ```
 
 ## caaaddr
+
 ```
 (caaaddr arg)
 
@@ -428,6 +485,7 @@ Function that calculates (car (car (car (cdr (cdr arg)))))
 ```
 
 ## caaadr
+
 ```
 (caaadr arg)
 
@@ -435,6 +493,7 @@ Function that calculates (car (car (car (cdr arg))))
 ```
 
 ## caaar
+
 ```
 (caaar arg)
 
@@ -442,6 +501,7 @@ Function that calculates (car (car (car arg)))
 ```
 
 ## caadaar
+
 ```
 (caadaar arg)
 
@@ -449,6 +509,7 @@ Function that calculates (car (car (cdr (car (car arg)))))
 ```
 
 ## caadadr
+
 ```
 (caadadr arg)
 
@@ -456,6 +517,7 @@ Function that calculates (car (car (cdr (car (cdr arg)))))
 ```
 
 ## caadar
+
 ```
 (caadar arg)
 
@@ -463,6 +525,7 @@ Function that calculates (car (car (cdr (car arg))))
 ```
 
 ## caaddar
+
 ```
 (caaddar arg)
 
@@ -470,6 +533,7 @@ Function that calculates (car (car (cdr (cdr (car arg)))))
 ```
 
 ## caadddr
+
 ```
 (caadddr arg)
 
@@ -477,6 +541,7 @@ Function that calculates (car (car (cdr (cdr (cdr arg)))))
 ```
 
 ## caaddr
+
 ```
 (caaddr arg)
 
@@ -484,6 +549,7 @@ Function that calculates (car (car (cdr (cdr arg))))
 ```
 
 ## caadr
+
 ```
 (caadr arg)
 
@@ -491,6 +557,7 @@ Function that calculates (car (car (cdr arg)))
 ```
 
 ## caar
+
 ```
 (caar arg)
 
@@ -498,6 +565,7 @@ Function that calculates (car (car arg))
 ```
 
 ## cadaaar
+
 ```
 (cadaaar arg)
 
@@ -505,6 +573,7 @@ Function that calculates (car (cdr (car (car (car arg)))))
 ```
 
 ## cadaadr
+
 ```
 (cadaadr arg)
 
@@ -512,6 +581,7 @@ Function that calculates (car (cdr (car (car (cdr arg)))))
 ```
 
 ## cadaar
+
 ```
 (cadaar arg)
 
@@ -519,6 +589,7 @@ Function that calculates (car (cdr (car (car arg))))
 ```
 
 ## cadadar
+
 ```
 (cadadar arg)
 
@@ -526,6 +597,7 @@ Function that calculates (car (cdr (car (cdr (car arg)))))
 ```
 
 ## cadaddr
+
 ```
 (cadaddr arg)
 
@@ -533,6 +605,7 @@ Function that calculates (car (cdr (car (cdr (cdr arg)))))
 ```
 
 ## cadadr
+
 ```
 (cadadr arg)
 
@@ -540,6 +613,7 @@ Function that calculates (car (cdr (car (cdr arg))))
 ```
 
 ## cadar
+
 ```
 (cadar arg)
 
@@ -547,6 +621,7 @@ Function that calculates (car (cdr (car arg)))
 ```
 
 ## caddaar
+
 ```
 (caddaar arg)
 
@@ -554,6 +629,7 @@ Function that calculates (car (cdr (cdr (car (car arg)))))
 ```
 
 ## caddadr
+
 ```
 (caddadr arg)
 
@@ -561,6 +637,7 @@ Function that calculates (car (cdr (cdr (car (cdr arg)))))
 ```
 
 ## caddar
+
 ```
 (caddar arg)
 
@@ -568,6 +645,7 @@ Function that calculates (car (cdr (cdr (car arg))))
 ```
 
 ## cadddar
+
 ```
 (cadddar arg)
 
@@ -575,6 +653,7 @@ Function that calculates (car (cdr (cdr (cdr (car arg)))))
 ```
 
 ## caddddr
+
 ```
 (caddddr arg)
 
@@ -582,6 +661,7 @@ Function that calculates (car (cdr (cdr (cdr (cdr arg)))))
 ```
 
 ## cadddr
+
 ```
 (cadddr arg)
 
@@ -589,6 +669,7 @@ Function that calculates (car (cdr (cdr (cdr arg))))
 ```
 
 ## caddr
+
 ```
 (caddr arg)
 
@@ -596,6 +677,7 @@ Function that calculates (car (cdr (cdr arg)))
 ```
 
 ## cadr
+
 ```
 (cadr arg)
 
@@ -603,6 +685,7 @@ Function that calculates (car (cdr arg))
 ```
 
 ## call-with-input-file
+
 ```
 (call-with-input-file filename proc)
 
@@ -612,6 +695,7 @@ and it close the port even if user proc throw exception.
 ```
 
 ## call-with-output-file
+
 ```
 (call-with-output-file filename proc)
 
@@ -621,6 +705,7 @@ even if user proc throw exception.
 ```
 
 ## call-with-port
+
 ```
 (call-with-port port proc)
 
@@ -628,6 +713,7 @@ Proc is executed with given port and after it returns, the port is closed.
 ```
 
 ## call-with-values
+
 ```
 (call-with-values producer consumer)
 
@@ -638,6 +724,7 @@ the values are unpacked and the consumer is called with multiple arguments.
 ```
 
 ## car
+
 ```
 (car pair)
 
@@ -645,6 +732,7 @@ This function returns the car (item 1) of the list.
 ```
 
 ## cdaaaar
+
 ```
 (cdaaaar arg)
 
@@ -652,6 +740,7 @@ Function that calculates (cdr (car (car (car (car arg)))))
 ```
 
 ## cdaaadr
+
 ```
 (cdaaadr arg)
 
@@ -659,6 +748,7 @@ Function that calculates (cdr (car (car (car (cdr arg)))))
 ```
 
 ## cdaaar
+
 ```
 (cdaaar arg)
 
@@ -666,6 +756,7 @@ Function that calculates (cdr (car (car (car arg))))
 ```
 
 ## cdaadar
+
 ```
 (cdaadar arg)
 
@@ -673,6 +764,7 @@ Function that calculates (cdr (car (car (cdr (car arg)))))
 ```
 
 ## cdaaddr
+
 ```
 (cdaaddr arg)
 
@@ -680,6 +772,7 @@ Function that calculates (cdr (car (car (cdr (cdr arg)))))
 ```
 
 ## cdaadr
+
 ```
 (cdaadr arg)
 
@@ -687,6 +780,7 @@ Function that calculates (cdr (car (car (cdr arg))))
 ```
 
 ## cdaar
+
 ```
 (cdaar arg)
 
@@ -694,6 +788,7 @@ Function that calculates (cdr (car (car arg)))
 ```
 
 ## cdadaar
+
 ```
 (cdadaar arg)
 
@@ -701,6 +796,7 @@ Function that calculates (cdr (car (cdr (car (car arg)))))
 ```
 
 ## cdadadr
+
 ```
 (cdadadr arg)
 
@@ -708,6 +804,7 @@ Function that calculates (cdr (car (cdr (car (cdr arg)))))
 ```
 
 ## cdadar
+
 ```
 (cdadar arg)
 
@@ -715,6 +812,7 @@ Function that calculates (cdr (car (cdr (car arg))))
 ```
 
 ## cdaddar
+
 ```
 (cdaddar arg)
 
@@ -722,6 +820,7 @@ Function that calculates (cdr (car (cdr (cdr (car arg)))))
 ```
 
 ## cdadddr
+
 ```
 (cdadddr arg)
 
@@ -729,6 +828,7 @@ Function that calculates (cdr (car (cdr (cdr (cdr arg)))))
 ```
 
 ## cdaddr
+
 ```
 (cdaddr arg)
 
@@ -736,6 +836,7 @@ Function that calculates (cdr (car (cdr (cdr arg))))
 ```
 
 ## cdadr
+
 ```
 (cdadr arg)
 
@@ -743,6 +844,7 @@ Function that calculates (cdr (car (cdr arg)))
 ```
 
 ## cdar
+
 ```
 (cdar arg)
 
@@ -750,6 +852,7 @@ Function that calculates (cdr (car arg))
 ```
 
 ## cddaaar
+
 ```
 (cddaaar arg)
 
@@ -757,6 +860,7 @@ Function that calculates (cdr (cdr (car (car (car arg)))))
 ```
 
 ## cddaadr
+
 ```
 (cddaadr arg)
 
@@ -764,6 +868,7 @@ Function that calculates (cdr (cdr (car (car (cdr arg)))))
 ```
 
 ## cddaar
+
 ```
 (cddaar arg)
 
@@ -771,6 +876,7 @@ Function that calculates (cdr (cdr (car (car arg))))
 ```
 
 ## cddadar
+
 ```
 (cddadar arg)
 
@@ -778,6 +884,7 @@ Function that calculates (cdr (cdr (car (cdr (car arg)))))
 ```
 
 ## cddaddr
+
 ```
 (cddaddr arg)
 
@@ -785,6 +892,7 @@ Function that calculates (cdr (cdr (car (cdr (cdr arg)))))
 ```
 
 ## cddadr
+
 ```
 (cddadr arg)
 
@@ -792,6 +900,7 @@ Function that calculates (cdr (cdr (car (cdr arg))))
 ```
 
 ## cddar
+
 ```
 (cddar arg)
 
@@ -799,6 +908,7 @@ Function that calculates (cdr (cdr (car arg)))
 ```
 
 ## cdddaar
+
 ```
 (cdddaar arg)
 
@@ -806,6 +916,7 @@ Function that calculates (cdr (cdr (cdr (car (car arg)))))
 ```
 
 ## cdddadr
+
 ```
 (cdddadr arg)
 
@@ -813,6 +924,7 @@ Function that calculates (cdr (cdr (cdr (car (cdr arg)))))
 ```
 
 ## cdddar
+
 ```
 (cdddar arg)
 
@@ -820,6 +932,7 @@ Function that calculates (cdr (cdr (cdr (car arg))))
 ```
 
 ## cddddar
+
 ```
 (cddddar arg)
 
@@ -827,6 +940,7 @@ Function that calculates (cdr (cdr (cdr (cdr (car arg)))))
 ```
 
 ## cdddddr
+
 ```
 (cdddddr arg)
 
@@ -834,6 +948,7 @@ Function that calculates (cdr (cdr (cdr (cdr (cdr arg)))))
 ```
 
 ## cddddr
+
 ```
 (cddddr arg)
 
@@ -841,6 +956,7 @@ Function that calculates (cdr (cdr (cdr (cdr arg))))
 ```
 
 ## cdddr
+
 ```
 (cdddr arg)
 
@@ -848,6 +964,7 @@ Function that calculates (cdr (cdr (cdr arg)))
 ```
 
 ## cddr
+
 ```
 (cddr arg)
 
@@ -855,6 +972,7 @@ Function that calculates (cdr (cdr arg))
 ```
 
 ## cdr
+
 ```
 (cdr pair)
 
@@ -862,6 +980,7 @@ This function returns the cdr (all but first) of the list.
 ```
 
 ## ceiling
+
 ```
 (ceiling number)
 
@@ -869,6 +988,7 @@ Function that calculates the ceiling of a number.
 ```
 
 ## char->integer
+
 ```
 (char->integer chr)
 
@@ -876,6 +996,7 @@ Returns the codepoint of Unicode character.
 ```
 
 ## char-alphabetic?
+
 ```
 (char-alphabetic? chr)
 
@@ -883,6 +1004,7 @@ Returns true if character is leter of the ASCII alphabet.
 ```
 
 ## char-ci<?
+
 ```
 (char-ci<? chr1 chr2)
 
@@ -890,6 +1012,7 @@ Returns true if second character is smaller then the first one.
 ```
 
 ## char-ci<=?
+
 ```
 (char-ci<? chr1 chr2)
 
@@ -897,6 +1020,7 @@ Returns true if second character is not larger then the first one.
 ```
 
 ## char-ci=?
+
 ```
 (char-ci=? chr1 chr2)
 
@@ -904,6 +1028,7 @@ Checks if two characters are equal.
 ```
 
 ## char-ci>?
+
 ```
 (char-ci<? chr1 chr2)
 
@@ -911,6 +1036,7 @@ Returns true if second character is larger then the first one.
 ```
 
 ## char-ci>=?
+
 ```
 (char-ci<? chr1 chr2)
 
@@ -918,6 +1044,7 @@ Returns true if second character is not smaller then the first one.
 ```
 
 ## char-downcase
+
 ```
 (char-downcase chr)
 
@@ -925,6 +1052,7 @@ Create lowercase version of the character.
 ```
 
 ## char-lower-case?
+
 ```
 (char-upper-case? char)
 
@@ -932,6 +1060,7 @@ Checks if character is lower case.
 ```
 
 ## char-numeric?
+
 ```
 (char-numeric? chr)
 
@@ -939,6 +1068,7 @@ Returns true if character is number.
 ```
 
 ## char-ready?
+
 ```
 (char-ready?)
 (char-ready? port)
@@ -949,6 +1079,7 @@ It return false if port is closed.
 ```
 
 ## char-upcase
+
 ```
 (char-upcase char)
 
@@ -956,6 +1087,7 @@ Create uppercase version of the character.
 ```
 
 ## char-upper-case?
+
 ```
 (char-upper-case? char)
 
@@ -963,6 +1095,7 @@ Checks if character is upper case.
 ```
 
 ## char-whitespace?
+
 ```
 (char-whitespace? chr)
 
@@ -970,6 +1103,7 @@ Returns true if character is whitespace.
 ```
 
 ## char?
+
 ```
 (char? obj)
 
@@ -977,6 +1111,7 @@ Checks if the object is a character.
 ```
 
 ## char<?
+
 ```
 (char<? chr1 chr2)
 
@@ -984,6 +1119,7 @@ Returns true if second character is smaller then the first one.
 ```
 
 ## char<=?
+
 ```
 (char<? chr1 chr2)
 
@@ -991,6 +1127,7 @@ Returns true if second character is not larger then the first one.
 ```
 
 ## char=?
+
 ```
 (char=? chr1 chr2)
 
@@ -998,6 +1135,7 @@ Checks if two characters are equal.
 ```
 
 ## char>?
+
 ```
 (char<? chr1 chr2)
 
@@ -1005,6 +1143,7 @@ Returns true if second character is larger then the first one.
 ```
 
 ## char>=?
+
 ```
 (char<? chr1 chr2)
 
@@ -1012,6 +1151,7 @@ Returns true if second character is not smaller then the first one.
 ```
 
 ## clone
+
 ```
 (clone list)
 
@@ -1020,6 +1160,7 @@ original, so the clone can be safely mutated without affecting the original.
 ```
 
 ## close-input-port
+
 ```
 (close-input-port port)
 
@@ -1028,6 +1169,7 @@ it no longer accept reading from that port.
 ```
 
 ## close-output-port
+
 ```
 (close-output-port port)
 
@@ -1036,6 +1178,7 @@ it no longer accept write to that port.
 ```
 
 ## close-port
+
 ```
 (close-port port)
 
@@ -1043,6 +1186,7 @@ Close input or output port.
 ```
 
 ## command-line
+
 ```
 (command-line)
 
@@ -1050,6 +1194,7 @@ Returns the command line arguments, or an empty list if not running under Node.j
 ```
 
 ## complement
+
 ```
 (complement fn)
 
@@ -1059,6 +1204,7 @@ return false, the result function will return true.
 ```
 
 ## complex?
+
 ```
 (complex? x)
 
@@ -1066,6 +1212,7 @@ Checks if argument x is complex.
 ```
 
 ## compose
+
 ```
 (compose . fns)
 
@@ -1076,6 +1223,7 @@ e.g.:
 ```
 
 ## concat
+
 ```
 (concat . strings)
 
@@ -1083,6 +1231,7 @@ Function that creates a new string by joining its arguments.
 ```
 
 ## cons
+
 ```
 (cons left right)
 
@@ -1092,6 +1241,7 @@ return a dotted pair.
 ```
 
 ## cos
+
 ```
 (cos n)
 
@@ -1099,6 +1249,7 @@ Function that calculates cosine of a number.
 ```
 
 ## current-directory
+
 ```
 (current-directory)
 
@@ -1107,6 +1258,7 @@ the script was executed.
 ```
 
 ## current-environment
+
 ```
 (current-environment)
 
@@ -1114,6 +1266,7 @@ Function that returns the current environment (they're first-class objects!)
 ```
 
 ## current-error-port
+
 ```
 (current-output-port)
 
@@ -1121,6 +1274,7 @@ Returns the default stderr port.
 ```
 
 ## current-input-port
+
 ```
 (current-input-port)
 
@@ -1128,6 +1282,7 @@ Returns the default stdin port.
 ```
 
 ## current-jiffy
+
 ```
 (current-jiffy)
 
@@ -1138,6 +1293,7 @@ January 1, 1970.
 ```
 
 ## current-output-port
+
 ```
 (current-output-port)
 
@@ -1145,6 +1301,7 @@ Returns the default stdout port.
 ```
 
 ## current-second
+
 ```
 (current-second)
 
@@ -1152,6 +1309,7 @@ Functionn return exact integer of the seconds since January 1, 1970
 ```
 
 ## curry
+
 ```
 (curry fn . args)
 
@@ -1168,6 +1326,7 @@ e.g.:
 ```
 
 ## debugger
+
 ```
 (debugger)
 
@@ -1177,6 +1336,7 @@ function does nothing.
 ```
 
 ## defmacro?
+
 ```
 (defmacro? expression)
 
@@ -1184,6 +1344,7 @@ Checks if object is a macro and it's expandable.
 ```
 
 ## degree->radians
+
 ```
 (degree->radians x)
 
@@ -1191,6 +1352,7 @@ Convert degrees to radians.
 ```
 
 ## delete-file
+
 ```
 (delete-file filename)
 
@@ -1198,6 +1360,7 @@ Deletes the file of given name.
 ```
 
 ## denominator
+
 ```
 (denominator n)
 
@@ -1205,6 +1368,7 @@ Return denominator of rational or same number if one is not rational.
 ```
 
 ## digit-value
+
 ```
 (digit-value chr)
 
@@ -1213,6 +1377,7 @@ or #f otherwise.
 ```
 
 ## dir
+
 ```
 (dir obj)
 
@@ -1220,6 +1385,7 @@ Returns all props on the object including those in prototype chain.
 ```
 
 ## display
+
 ```
 (display string [port])
 
@@ -1228,6 +1394,7 @@ the port if given. No newline.
 ```
 
 ## display-error
+
 ```
 (display-error . args)
 
@@ -1235,14 +1402,16 @@ Display an error message on stderr.
 ```
 
 ## dynamic-wind
+
 ```
 (dynamic-wind before thunk after)
 
-Accepts 3 procedures/lambdas and executes before, then thunk, and 
+Accepts 3 procedures/lambdas and executes before, then thunk, and
 always after even if an error occurs in thunk.
 ```
 
 ## empty?
+
 ```
 (empty? object)
 
@@ -1250,6 +1419,7 @@ Function that returns #t if value is nil (an empty list) or undefined.
 ```
 
 ## env
+
 ```
 (env)
 (env obj)
@@ -1259,6 +1429,7 @@ that are bound in the current environment or one of its parents.
 ```
 
 ## environment-bound?
+
 ```
 (environment-bound? env symbol)
 
@@ -1266,6 +1437,7 @@ Checks if symbol is a bound variable similar to bound?.
 ```
 
 ## environment?
+
 ```
 (environment? obj)
 
@@ -1273,6 +1445,7 @@ Checks if object is a LIPS environment.
 ```
 
 ## eof-object
+
 ```
 (eof-object)
 
@@ -1280,6 +1453,7 @@ Procedure returns eof object that indicate end of the port
 ```
 
 ## eof-object?
+
 ```
 (eof-object? arg)
 
@@ -1288,6 +1462,7 @@ port when there are no more data to read.
 ```
 
 ## eq?
+
 ```
 (eq? a b)
 
@@ -1295,6 +1470,7 @@ Function that compares two values if they are identical.
 ```
 
 ## equal?
+
 ```
 (equal? a b)
 
@@ -1303,6 +1479,7 @@ it compares their elements recursively.
 ```
 
 ## eqv?
+
 ```
 (eqv? a b)
 
@@ -1311,6 +1488,7 @@ need to have the same type.
 ```
 
 ## error
+
 ```
 (error message ...)
 
@@ -1319,6 +1497,7 @@ which are called invariants.
 ```
 
 ## error-object-irritants
+
 ```
 (error-object-irritants error-object)
 
@@ -1326,6 +1505,7 @@ Returns a list of the irritants encapsulated by error-object.
 ```
 
 ## error-object-message
+
 ```
 (error-object-message error-object)
 
@@ -1333,6 +1513,7 @@ Returns the message encapsulated by error-object.
 ```
 
 ## error-object?
+
 ```
 (error-object? obj)
 
@@ -1340,6 +1521,7 @@ Checks if object is of Error object thrown by error function.
 ```
 
 ## escape-regex
+
 ```
 (escape-regex string)
 
@@ -1349,6 +1531,7 @@ to match a literal string.
 ```
 
 ## eval
+
 ```
 (eval expr)
 (eval expr environment)
@@ -1358,6 +1541,7 @@ it will be the environment that the code is evaluated in.
 ```
 
 ## even?
+
 ```
 (even? number)
 
@@ -1365,6 +1549,7 @@ Checks if number is even.
 ```
 
 ## every
+
 ```
 (every fn list)
 
@@ -1374,6 +1559,7 @@ Analogous to Python all(map(fn, list)).
 ```
 
 ## exact
+
 ```
 (inexact->exact number)
 
@@ -1381,6 +1567,7 @@ Function that converts real number to exact rational number.
 ```
 
 ## exact->inexact
+
 ```
 (exact->inexact n)
 
@@ -1388,6 +1575,7 @@ Convert exact number to inexact.
 ```
 
 ## exact-integer?
+
 ```
 (exact-integer? n)
 
@@ -1396,11 +1584,13 @@ returns #f.
 ```
 
 ## exact?
+
 ```
 (exact? n)
 ```
 
 ## exp
+
 ```
 (exp n)
 
@@ -1408,6 +1598,7 @@ Function that calculates e raised to the power of n.
 ```
 
 ## expt
+
 ```
 (** a b)
 
@@ -1415,6 +1606,7 @@ Function that calculates number a to to the power of b.
 ```
 
 ## f32vector
+
 ```
 (f32vector v1 v2 ...)
 
@@ -1422,11 +1614,13 @@ Create 32-bit IEEE-754 floating point number vector (C float) from give argument
 ```
 
 ## f32vector->list
+
 ```
 #<undefined>
 ```
 
 ## f32vector-length
+
 ```
 (f32vector-length v)
 
@@ -1434,6 +1628,7 @@ return length of 32-bit IEEE-754 floating point number vector (C float).
 ```
 
 ## f32vector-ref
+
 ```
 (f32vector-ref vector k)
 
@@ -1441,6 +1636,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## f32vector-set!
+
 ```
 (f32vector-set! vector k)
 
@@ -1448,6 +1644,7 @@ Function set value of 32-bit IEEE-754 floating point number vector (C float) at 
 ```
 
 ## f32vector?
+
 ```
 (f32vector? x)
 
@@ -1455,6 +1652,7 @@ Returns #t of argument is 32-bit IEEE-754 floating point number vector (C float)
 ```
 
 ## f64vector
+
 ```
 (f64vector v1 v2 ...)
 
@@ -1462,11 +1660,13 @@ Create 64-bit IEEE-754 floating point number vector (C double) from give argumen
 ```
 
 ## f64vector->list
+
 ```
 #<undefined>
 ```
 
 ## f64vector-length
+
 ```
 (f64vector-length v)
 
@@ -1474,6 +1674,7 @@ return length of 64-bit IEEE-754 floating point number vector (C double).
 ```
 
 ## f64vector-ref
+
 ```
 (f64vector-ref vector k)
 
@@ -1481,6 +1682,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## f64vector-set!
+
 ```
 (f64vector-set! vector k)
 
@@ -1488,6 +1690,7 @@ Function set value of 64-bit IEEE-754 floating point number vector (C double) at
 ```
 
 ## f64vector?
+
 ```
 (f64vector? x)
 
@@ -1495,16 +1698,19 @@ Returns #t of argument is 64-bit IEEE-754 floating point number vector (C double
 ```
 
 ## features
+
 ```
 #<undefined>
 ```
 
 ## file-exists?
+
 ```
 #<undefined>
 ```
 
 ## filter
+
 ```
 (filter fn list)
 (filter regex list)
@@ -1515,6 +1721,7 @@ a truthy value. If called with a regex it will create a matcher function.
 ```
 
 ## find
+
 ```
 (find fn list)
 (find regex list)
@@ -1524,6 +1731,7 @@ If called with a regex it will create a matcher function.
 ```
 
 ## finite?
+
 ```
 (finite? x)
 
@@ -1531,6 +1739,7 @@ Checks if value is finite.
 ```
 
 ## flatten
+
 ```
 (flatten list)
 
@@ -1538,6 +1747,7 @@ Returns a shallow list from tree structure (pairs).
 ```
 
 ## flip
+
 ```
 (flip fn)
 
@@ -1551,6 +1761,7 @@ Example:
 ```
 
 ## floor
+
 ```
 (floor number)
 
@@ -1558,21 +1769,25 @@ Function that calculates the floor of a number.
 ```
 
 ## floor-quotient
+
 ```
 #<undefined>
 ```
 
 ## floor-remainder
+
 ```
 #<undefined>
 ```
 
 ## floor/
+
 ```
 #<undefined>
 ```
 
 ## flush-output
+
 ```
 (flush-output [port])
 
@@ -1581,6 +1796,7 @@ the output device. Otherwise it has no effect. Returns an unspecified value.
 ```
 
 ## flush-output-port
+
 ```
 (flush-output-port port)
 
@@ -1589,6 +1805,7 @@ The function is added, so it don't throw exception when using R7RS code.
 ```
 
 ## fold
+
 ```
 (fold fn init . lists)
 
@@ -1599,6 +1816,7 @@ for: (fold fn 'foo '(a b c) '(x y z))
 ```
 
 ## fold-left
+
 ```
 (fold fn init . lists)
 
@@ -1609,6 +1827,7 @@ for: (fold fn 'foo '(a b c) '(x y z))
 ```
 
 ## fold-right
+
 ```
 (reduce fn init list . lists)
 
@@ -1621,6 +1840,7 @@ for: (reduce fn 'foo '(a b c) '(x y z))
 ```
 
 ## for-each
+
 ```
 (for-each fn . lists)
 
@@ -1631,6 +1851,7 @@ with that many arguments as number of list arguments.
 ```
 
 ## force
+
 ```
 (force promise)
 
@@ -1638,6 +1859,7 @@ Function that forces the promise and evaluates the delayed expression.
 ```
 
 ## format
+
 ```
 (format string n1 n2 ...)
 
@@ -1654,6 +1876,7 @@ will error.
 ```
 
 ## function?
+
 ```
 (function? expression)
 
@@ -1661,6 +1884,7 @@ Predicate that tests if value is a callable function.
 ```
 
 ## gcd
+
 ```
 (gcd n1 n2 ...)
 
@@ -1668,6 +1892,7 @@ Function that returns the greatest common divisor of the arguments.
 ```
 
 ## gensym
+
 ```
 (gensym)
 
@@ -1676,6 +1901,7 @@ to use with macros as meta name.
 ```
 
 ## gensym-interal
+
 ```
 (gensym-interal symbol)
 
@@ -1683,6 +1909,7 @@ Parser extension that creates a new quoted named gensym.
 ```
 
 ## gensym?
+
 ```
 (gensym? value)
 
@@ -1690,6 +1917,7 @@ Returns #t if value is a symbol created by gensym. It returns #f otherwise.
 ```
 
 ## get
+
 ```
 (. obj . args)
 (get obj . args)
@@ -1705,6 +1933,7 @@ pass it as an argument.
 ```
 
 ## get-environment-variable
+
 ```
 (get-environment-variable name)
 
@@ -1713,6 +1942,7 @@ when called in browser.
 ```
 
 ## get-environment-variables
+
 ```
 (get-environment-variables)
 
@@ -1721,6 +1951,7 @@ when called in browser.
 ```
 
 ## get-output-bytevector
+
 ```
 (get-output-string port)
 
@@ -1729,6 +1960,7 @@ to given port it will return empty string.
 ```
 
 ## get-output-string
+
 ```
 (get-output-string port)
 
@@ -1737,6 +1969,7 @@ to given port it will return empty string.
 ```
 
 ## get-resource
+
 ```
 (get-resource url)
 
@@ -1745,6 +1978,7 @@ When called from Node it allow it allows to load JavaScript files only.
 ```
 
 ## http-get
+
 ```
 (http-get url)
 
@@ -1753,6 +1987,7 @@ binary Buffer object.
 ```
 
 ## identity
+
 ```
 (identity n)
 
@@ -1760,6 +1995,7 @@ No-op function. It just returns its argument.
 ```
 
 ## imag-part
+
 ```
 (imag-part n)
 
@@ -1767,6 +2003,7 @@ Return imaginary part of the complex number n.
 ```
 
 ## in
+
 ```
 (in key value)
 
@@ -1775,6 +2012,7 @@ a valid property in the value.
 ```
 
 ## indexed-db?
+
 ```
 (indexed-db?)
 
@@ -1782,6 +2020,7 @@ Function that tests if IndexedDB is available.
 ```
 
 ## inexact
+
 ```
 (exact->inexact n)
 
@@ -1789,6 +2028,7 @@ Convert exact number to inexact.
 ```
 
 ## inexact->exact
+
 ```
 (inexact->exact number)
 
@@ -1796,11 +2036,13 @@ Function that converts real number to exact rational number.
 ```
 
 ## inexact?
+
 ```
 (inexact? n)
 ```
 
 ## infinite?
+
 ```
 (infinite? x)
 
@@ -1808,6 +2050,7 @@ Checks if value is infinite.
 ```
 
 ## input-port-open?
+
 ```
 (input-port-open? port)
 
@@ -1815,6 +2058,7 @@ Checks if argument is input-port and if you can read from it.
 ```
 
 ## input-port?
+
 ```
 (input-port? arg)
 
@@ -1822,6 +2066,7 @@ Returns true if argument is input port.
 ```
 
 ## instanceof
+
 ```
 (instanceof type obj)
 
@@ -1829,6 +2074,7 @@ Predicate that tests if the obj is an instance of type.
 ```
 
 ## integer->char
+
 ```
 (integer->char chr)
 
@@ -1836,6 +2082,7 @@ Function that converts number argument to character.
 ```
 
 ## integer?
+
 ```
 (integer? x)
 
@@ -1843,6 +2090,7 @@ Checks if the argument x is integer.
 ```
 
 ## interaction-environment
+
 ```
 (interaction-environment)
 
@@ -1851,6 +2099,7 @@ when creating new interpreter with lips.Interpreter.
 ```
 
 ## iterator?
+
 ```
 (iterator? x)
 
@@ -1858,11 +2107,13 @@ when creating new interpreter with lips.Interpreter.
 ```
 
 ## jiffies-per-second
+
 ```
 #<undefined>
 ```
 
 ## join
+
 ```
 (join separator list)
 
@@ -1870,6 +2121,7 @@ Function that returns a string by joining elements of the list using separator.
 ```
 
 ## key->string
+
 ```
 (key->string symbol)
 
@@ -1877,6 +2129,7 @@ If symbol is a keyword it converts that to string and removes the colon.
 ```
 
 ## key?
+
 ```
 (key? symbol)
 
@@ -1884,6 +2137,7 @@ Checks if symbol is a keyword (has a colon as first character).
 ```
 
 ## lcm
+
 ```
 (lcm n1 n2 ...)
 
@@ -1891,6 +2145,7 @@ Function that returns the least common multiple of the arguments.
 ```
 
 ## length
+
 ```
 (length expression)
 
@@ -1900,6 +2155,7 @@ length could not be found.
 ```
 
 ## list
+
 ```
 (list . args)
 
@@ -1907,6 +2163,7 @@ Function that creates a new list out of its arguments.
 ```
 
 ## list->array
+
 ```
 (list->array list)
 
@@ -1914,31 +2171,37 @@ Function that converts a LIPS list into a JavaScript array.
 ```
 
 ## list->f32vector
+
 ```
 #<undefined>
 ```
 
 ## list->f64vector
+
 ```
 #<undefined>
 ```
 
 ## list->s16vector
+
 ```
 #<undefined>
 ```
 
 ## list->s32vector
+
 ```
 #<undefined>
 ```
 
 ## list->s8vector
+
 ```
 #<undefined>
 ```
 
 ## list->string
+
 ```
 (list->string _list)
 
@@ -1946,21 +2209,25 @@ Returns a string from a list of characters.
 ```
 
 ## list->u16vector
+
 ```
 #<undefined>
 ```
 
 ## list->u32vector
+
 ```
 #<undefined>
 ```
 
 ## list->u8vector
+
 ```
 #<undefined>
 ```
 
 ## list->vector
+
 ```
 (list->array list)
 
@@ -1968,6 +2235,7 @@ Function that converts a LIPS list into a JavaScript array.
 ```
 
 ## list-copy
+
 ```
 (list-copy obj)
 
@@ -1976,6 +2244,7 @@ of the list are not copied, they are passed as is.
 ```
 
 ## list-match?
+
 ```
 (list-match? predicate list)
 
@@ -1983,6 +2252,7 @@ Checks if consecutive elements of the list match the predicate function.
 ```
 
 ## list-ref
+
 ```
 (list-ref list n)
 
@@ -1990,6 +2260,7 @@ Returns n-th element of a list.
 ```
 
 ## list-tail
+
 ```
 (list-tail list k)
 
@@ -1997,6 +2268,7 @@ Returns the sublist of list obtained by omitting the first k elements.
 ```
 
 ## list?
+
 ```
 (list? obj)
 
@@ -2005,6 +2277,7 @@ The car of each pair can be any value. It returns false on cyclic lists."
 ```
 
 ## load
+
 ```
 (load filename)
 (load filename environment)
@@ -2015,6 +2288,7 @@ will happen in that environment.
 ```
 
 ## log
+
 ```
 (log z)
 
@@ -2024,6 +2298,7 @@ If the value is 0 it return NaN.
 ```
 
 ## macro?
+
 ```
 (macro? expression)
 
@@ -2031,6 +2306,7 @@ Predicate that tests if value is a macro.
 ```
 
 ## magnitude
+
 ```
 (magnitude x)
 
@@ -2038,6 +2314,7 @@ Returns magnitude of the complex number in polar coordinate system.
 ```
 
 ## make-bytevector
+
 ```
 (make-u8vector k fill)
 
@@ -2045,6 +2322,7 @@ Allocate new unsigned 8-bit integer vector (C unsigned char) of length k, with o
 ```
 
 ## make-f32vector
+
 ```
 (make-f32vector k fill)
 
@@ -2052,6 +2330,7 @@ Allocate new 32-bit IEEE-754 floating point number vector (C float) of length k,
 ```
 
 ## make-f64vector
+
 ```
 (make-f64vector k fill)
 
@@ -2059,11 +2338,13 @@ Allocate new 64-bit IEEE-754 floating point number vector (C double) of length k
 ```
 
 ## make-list
+
 ```
 #<undefined>
 ```
 
 ## make-polar
+
 ```
 (make-polar magnitude angle)
 
@@ -2071,6 +2352,7 @@ Create new complex number from polar parameters.
 ```
 
 ## make-promise
+
 ```
 (make-promise fn)
 
@@ -2078,6 +2360,7 @@ Function that creates a promise from a function.
 ```
 
 ## make-rectangular
+
 ```
 (make-rectangular im re)
 
@@ -2085,6 +2368,7 @@ Creates a complex number from imaginary and real part (a+bi form).
 ```
 
 ## make-s16vector
+
 ```
 (make-s16vector k fill)
 
@@ -2092,6 +2376,7 @@ Allocate new signed 16-bit integer vector (C short) of length k, with optional i
 ```
 
 ## make-s32vector
+
 ```
 (make-s32vector k fill)
 
@@ -2099,6 +2384,7 @@ Allocate new signed 32-bit integer vector (C unsigned int) of length k, with opt
 ```
 
 ## make-s8vector
+
 ```
 (make-s8vector k fill)
 
@@ -2106,6 +2392,7 @@ Allocate new signed 8-bit integer vector (C signed char) of length k, with optio
 ```
 
 ## make-string
+
 ```
 (make-string k [char])
 
@@ -2114,6 +2401,7 @@ it's filled with that character.
 ```
 
 ## make-tags
+
 ```
 (make-tags expression)
 
@@ -2121,6 +2409,7 @@ Returns a list structure of code with better syntax then raw LIPS
 ```
 
 ## make-u16vector
+
 ```
 (make-u16vector k fill)
 
@@ -2128,6 +2417,7 @@ Allocate new unsigned 16-bit integer vector (C unsigned short) of length k, with
 ```
 
 ## make-u32vector
+
 ```
 (make-u32vector k fill)
 
@@ -2135,6 +2425,7 @@ Allocate new unsigned 32-bit integer vector (C int) of length k, with optional i
 ```
 
 ## make-u8vector
+
 ```
 (make-u8vector k fill)
 
@@ -2142,6 +2433,7 @@ Allocate new unsigned 8-bit integer vector (C unsigned char) of length k, with o
 ```
 
 ## make-vector
+
 ```
 (make-vector n [fill])
 
@@ -2150,6 +2442,7 @@ all elements of the vector to that value.
 ```
 
 ## map
+
 ```
 (map fn . lists)
 
@@ -2162,6 +2455,7 @@ returned by map.
 ```
 
 ## match
+
 ```
 (match pattern string)
 
@@ -2170,6 +2464,7 @@ no match.
 ```
 
 ## max
+
 ```
 (max n1 n2 ...)
 
@@ -2177,6 +2472,7 @@ Returns the maximum of its arguments.
 ```
 
 ## member
+
 ```
 (member obj list)
 
@@ -2184,6 +2480,7 @@ Returns first object in the list that match using equal? function.
 ```
 
 ## memq
+
 ```
 (memq obj list)
 
@@ -2191,6 +2488,7 @@ Returns first object in the list that match using eq? function.
 ```
 
 ## memv
+
 ```
 (memv obj list)
 
@@ -2198,6 +2496,7 @@ Returns first object in the list that match using eqv? function.
 ```
 
 ## min
+
 ```
 (min n1 n2 ...)
 
@@ -2205,6 +2504,7 @@ Returns the minimum of its arguments.
 ```
 
 ## modulo
+
 ```
 (modulo a b)
 
@@ -2212,6 +2512,7 @@ Returns modulo operation on its argumennts.
 ```
 
 ## n-ary
+
 ```
 (n-ary n fn)
 
@@ -2219,6 +2520,7 @@ Returns a new function that limits the number of arguments to n.
 ```
 
 ## nan?
+
 ```
 (nan? x)
 
@@ -2226,6 +2528,7 @@ Checks if argument x is Not a Number (NaN) value.
 ```
 
 ## native-symbol?
+
 ```
 (native-symbol? object)
 
@@ -2233,6 +2536,7 @@ Checks if value is JavaScript Symbol.
 ```
 
 ## native.number
+
 ```
 (native.number obj)
 
@@ -2240,6 +2544,7 @@ If argument is a number it will convert it to a native number.
 ```
 
 ## negative?
+
 ```
 (negative? x)
 
@@ -2247,6 +2552,7 @@ Checks if the number is smaller then 0
 ```
 
 ## new
+
 ```
 (new obj . args)
 
@@ -2254,6 +2560,7 @@ Function that creates new JavaScript instance of an object.
 ```
 
 ## new-library
+
 ```
 (new-library name)
 
@@ -2261,6 +2568,7 @@ Create new empty library object with empty namespace.
 ```
 
 ## newline
+
 ```
 (newline [port])
 
@@ -2268,6 +2576,7 @@ Write newline character to standard output or given port
 ```
 
 ## not
+
 ```
 (not x)
 
@@ -2275,6 +2584,7 @@ Returns true if value is false and false otherwise.
 ```
 
 ## nth
+
 ```
 (nth index obj)
 
@@ -2283,6 +2593,7 @@ If used with a non-indexable value it will error.
 ```
 
 ## null-environment
+
 ```
 (null-environment)
 
@@ -2290,6 +2601,7 @@ Returns a clean environment with only the standard library.
 ```
 
 ## null?
+
 ```
 (null? expression)
 
@@ -2298,6 +2610,7 @@ Javascript null).
 ```
 
 ## number->string
+
 ```
 (number->string x [radix])
 
@@ -2305,6 +2618,7 @@ Function that converts number to string with optional radix (number base).
 ```
 
 ## number?
+
 ```
 (number? expression)
 
@@ -2312,11 +2626,13 @@ Predicate that tests if value is a number or NaN value.
 ```
 
 ## numbers?
+
 ```
 #<undefined>
 ```
 
 ## numerator
+
 ```
 (numerator n)
 
@@ -2324,6 +2640,7 @@ Return numerator of rational or same number if n is not rational.
 ```
 
 ## object->alist
+
 ```
 (object->alist object)
 
@@ -2331,6 +2648,7 @@ Function that converts a JavaScript object to Alist
 ```
 
 ## object-expander
+
 ```
 (object-expander readonly '(:foo (:bar 10) (:baz (1 2 3))))
 (object-expander readonly '(:foo :bar))
@@ -2341,6 +2659,7 @@ shorthand objects where keys are used for keys and the values.
 ```
 
 ## object?
+
 ```
 (object? expression)
 
@@ -2348,6 +2667,7 @@ Predicate that tests if value is an plain object (not another LIPS type).
 ```
 
 ## odd?
+
 ```
 (odd? number)
 
@@ -2355,6 +2675,7 @@ Checks if number is odd.
 ```
 
 ## once
+
 ```
 (once fn)
 
@@ -2364,6 +2685,7 @@ on subsequent invocations.
 ```
 
 ## open-binary-input-file
+
 ```
 (open-binary-input-file filename)
 
@@ -2372,6 +2694,7 @@ user need to provide global fs variable that is instance of FS interface.
 ```
 
 ## open-binary-output-file
+
 ```
 (open-binary-output-file filename)
 
@@ -2380,6 +2703,7 @@ exists it will throw an Error.
 ```
 
 ## open-input-bytevector
+
 ```
 (open-input-bytevector bytevector)
 
@@ -2387,6 +2711,7 @@ Create new input binary port with given bytevector
 ```
 
 ## open-input-file
+
 ```
 (open-input-file filename)
 
@@ -2395,6 +2720,7 @@ provide global fs variable that is instance of FS interface.
 ```
 
 ## open-input-string
+
 ```
 (open-input-string string)
 
@@ -2403,6 +2729,7 @@ read S-exressions from this port using `read` function.
 ```
 
 ## open-output-bytevector
+
 ```
 (open-output-bytevector)
 
@@ -2412,6 +2739,7 @@ After done with the data the output buffer can be obtained by calling
 ```
 
 ## open-output-file
+
 ```
 (open-output-file filename)
 
@@ -2420,6 +2748,7 @@ exists it will throw an Error.
 ```
 
 ## open-output-string
+
 ```
 (open-output-string)
 
@@ -2428,6 +2757,7 @@ and after finish get the whole string using `get-output-string`.
 ```
 
 ## output-port-open?
+
 ```
 (output-port-open? port)
 
@@ -2435,6 +2765,7 @@ Checks if argument is output-port and if you can write to it.
 ```
 
 ## output-port?
+
 ```
 (output-port? arg)
 
@@ -2442,6 +2773,7 @@ Returns true if argument is output port.
 ```
 
 ## pair-map
+
 ```
 (pair-map fn list)
 
@@ -2450,6 +2782,7 @@ values returned from function fn. It works likes map but take two items from the
 ```
 
 ## pair?
+
 ```
 (pair? expression)
 
@@ -2457,6 +2790,7 @@ Predicate that tests if value is a pair or list structure.
 ```
 
 ## parent.frame
+
 ```
 (parent.frame)
 
@@ -2465,6 +2799,7 @@ If no parent frame can be found it returns nil.
 ```
 
 ## parent.frames
+
 ```
 (parent.frames)
 
@@ -2472,6 +2807,7 @@ Returns the list of environments from parent frames (lambda function calls)
 ```
 
 ## peek-char
+
 ```
 (peek-char port)
 
@@ -2481,6 +2817,7 @@ returns an EOF.
 ```
 
 ## peek-u8
+
 ```
 (peek-u8)
 (peek-u8 port)
@@ -2490,6 +2827,7 @@ it return eof object.
 ```
 
 ## pipe
+
 ```
 (pipe . fns)
 
@@ -2500,6 +2838,7 @@ e.g.:
 ```
 
 ## plain-object?
+
 ```
 (plain-object? x)
 
@@ -2507,6 +2846,7 @@ Checks if value is a plain JavaScript object created using the object macro.
 ```
 
 ## pluck
+
 ```
 (pluck . strings)
 
@@ -2517,6 +2857,7 @@ create a new object by copying all properties from the given object.
 ```
 
 ## port?
+
 ```
 (port? x)
 
@@ -2524,6 +2865,7 @@ Returns true if the argument is an input or output port object.
 ```
 
 ## positive?
+
 ```
 (positive? x)
 
@@ -2531,6 +2873,7 @@ Checks if the number is larger then 0
 ```
 
 ## pprint
+
 ```
 (pprint expression)
 
@@ -2540,6 +2883,7 @@ input.
 ```
 
 ## pretty-format
+
 ```
 (pretty-format pair)
 
@@ -2547,6 +2891,7 @@ Returns a pretty printed string from pair expression.
 ```
 
 ## print
+
 ```
 (print . args)
 
@@ -2557,6 +2902,7 @@ calls `(newline)` after printing each input.
 ```
 
 ## procedure?
+
 ```
 (function? expression)
 
@@ -2564,6 +2910,7 @@ Predicate that tests if value is a callable function.
 ```
 
 ## promise?
+
 ```
 (promise? obj)
 
@@ -2571,6 +2918,7 @@ Checks if the value is a promise created with delay or make-promise.
 ```
 
 ## promisify
+
 ```
 (promisify fn)
 
@@ -2579,6 +2927,7 @@ Function tested only with fs module.
 ```
 
 ## prototype?
+
 ```
 (prototype? obj)
 
@@ -2587,6 +2936,7 @@ i.e. calling (new) with it will not throw '<x> is not a constructor'.
 ```
 
 ## qsort
+
 ```
 (qsort list predicate)
 
@@ -2594,6 +2944,7 @@ Sorts the list using the quick sort algorithm according to predicate.
 ```
 
 ## quoted-symbol?
+
 ```
 (quoted-symbol? code)
 
@@ -2610,6 +2961,7 @@ usage:
 ```
 
 ## quotient
+
 ```
 (quotient a b)
 
@@ -2617,11 +2969,13 @@ Return quotient from division as integer.
 ```
 
 ## quotient&remainder
+
 ```
 #<undefined>
 ```
 
 ## radians->degree
+
 ```
 (radians->degree x)
 
@@ -2629,6 +2983,7 @@ Convert radians to degrees.
 ```
 
 ## raise
+
 ```
 (raise obj)
 
@@ -2636,6 +2991,7 @@ Throws the object verbatim (no wrapping an a new Error).
 ```
 
 ## random
+
 ```
 (random)
 (random seed)
@@ -2644,6 +3000,7 @@ Function that generates new random real number using Knuth algorithm.
 ```
 
 ## range
+
 ```
 (range stop)
 (range start stop)
@@ -2655,6 +3012,7 @@ the step needs to be negative otherwise it will hang in an infinite loop.
 ```
 
 ## rational?
+
 ```
 (rational? x)
 
@@ -2662,6 +3020,7 @@ Checks if the value is rational.
 ```
 
 ## rationalize
+
 ```
 (rationalize number tolerance)
 
@@ -2670,6 +3029,7 @@ than the tolerance.
 ```
 
 ## read
+
 ```
 (read [string])
 
@@ -2683,6 +3043,7 @@ together with `eval` to evaluate code from a string.
 ```
 
 ## read-bytevector
+
 ```
 (read-bytevector k)
 (read-bytevector k port)
@@ -2693,6 +3054,7 @@ return the only bytes that are available
 ```
 
 ## read-bytevector!
+
 ```
 (read-bytevector! bytevector)
 (read-bytevector! bytevector port)
@@ -2705,6 +3067,7 @@ the end or end the vector if no end is specified.
 ```
 
 ## read-char
+
 ```
 (read-char port)
 
@@ -2713,6 +3076,7 @@ input port.
 ```
 
 ## read-line
+
 ```
 (read-char port)
 
@@ -2721,6 +3085,7 @@ port.
 ```
 
 ## read-string
+
 ```
 (read-string k)
 (read-string k port)
@@ -2733,6 +3098,7 @@ an end-of-file object is returned.
 ```
 
 ## read-u8
+
 ```
 (read-u8)
 (read-u8 port)
@@ -2742,6 +3108,7 @@ it return eof object.
 ```
 
 ## real-part
+
 ```
 (real-part n)
 
@@ -2749,6 +3116,7 @@ Return real part of the complex number n.
 ```
 
 ## real?
+
 ```
 (real? x)
 
@@ -2756,6 +3124,7 @@ Checks if the argument x is real.
 ```
 
 ## reduce
+
 ```
 (reduce fn init list . lists)
 
@@ -2768,6 +3137,7 @@ for: (reduce fn 'foo '(a b c) '(x y z))
 ```
 
 ## regex?
+
 ```
 (regex? x)
 
@@ -2775,13 +3145,15 @@ Returns true if value is a regular expression, or false otherwise.
 ```
 
 ## remainder
+
 ```
 (% n1 n2)
 
 Function returns the remainder of n1/n2 (modulo).
 ```
 
-## remainder__
+## remainder\_\_
+
 ```
 (modulo a b)
 
@@ -2789,6 +3161,7 @@ Returns remainder from division operation.
 ```
 
 ## replace
+
 ```
 (replace pattern replacement string)
 
@@ -2798,6 +3171,7 @@ String.replace().
 ```
 
 ## repr
+
 ```
 (repr obj)
 
@@ -2805,6 +3179,7 @@ Function that returns a LIPS code representation of the object as a string.
 ```
 
 ## require
+
 ```
 (require module)
 
@@ -2812,6 +3187,7 @@ Function used inside Node.js to import a module.
 ```
 
 ## require.resolve
+
 ```
 (require.resolve path)
 
@@ -2821,6 +3197,7 @@ Only available when LIPS is running under Node.js.
 ```
 
 ## reset
+
 ```
 (reset)
 
@@ -2828,11 +3205,13 @@ Function resets the environment and removes all user defined variables.
 ```
 
 ## response->buffer
+
 ```
 #<undefined>
 ```
 
 ## response->content
+
 ```
 (response->text binary res)
 
@@ -2844,11 +3223,13 @@ whole buffer to u8vector, because LIPS doesn't have TCO.
 ```
 
 ## response->text
+
 ```
 #<undefined>
 ```
 
 ## reverse
+
 ```
 (reverse list)
 
@@ -2857,6 +3238,7 @@ or array it will error.
 ```
 
 ## round
+
 ```
 (round number)
 
@@ -2864,6 +3246,7 @@ Function that calculates the round of a number.
 ```
 
 ## s16vector
+
 ```
 (s16vector v1 v2 ...)
 
@@ -2871,11 +3254,13 @@ Create signed 16-bit integer vector (C short) from give arguments.
 ```
 
 ## s16vector->list
+
 ```
 #<undefined>
 ```
 
 ## s16vector-length
+
 ```
 (s16vector-length v)
 
@@ -2883,6 +3268,7 @@ return length of signed 16-bit integer vector (C short).
 ```
 
 ## s16vector-ref
+
 ```
 (s16vector-ref vector k)
 
@@ -2890,6 +3276,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## s16vector-set!
+
 ```
 (s16vector-set! vector k)
 
@@ -2897,6 +3284,7 @@ Function set value of signed 16-bit integer vector (C short) at index k. If inde
 ```
 
 ## s16vector?
+
 ```
 (s16vector? x)
 
@@ -2904,6 +3292,7 @@ Returns #t of argument is signed 16-bit integer vector (C short) otherwise it re
 ```
 
 ## s32vector
+
 ```
 (s32vector v1 v2 ...)
 
@@ -2911,11 +3300,13 @@ Create signed 32-bit integer vector (C unsigned int) from give arguments.
 ```
 
 ## s32vector->list
+
 ```
 #<undefined>
 ```
 
 ## s32vector-length
+
 ```
 (s32vector-length v)
 
@@ -2923,6 +3314,7 @@ return length of signed 32-bit integer vector (C unsigned int).
 ```
 
 ## s32vector-ref
+
 ```
 (s32vector-ref vector k)
 
@@ -2930,6 +3322,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## s32vector-set!
+
 ```
 (s32vector-set! vector k)
 
@@ -2937,6 +3330,7 @@ Function set value of signed 32-bit integer vector (C unsigned int) at index k. 
 ```
 
 ## s32vector?
+
 ```
 (s32vector? x)
 
@@ -2944,6 +3338,7 @@ Returns #t of argument is signed 32-bit integer vector (C unsigned int) otherwis
 ```
 
 ## s8vector
+
 ```
 (s8vector v1 v2 ...)
 
@@ -2951,11 +3346,13 @@ Create signed 8-bit integer vector (C signed char) from give arguments.
 ```
 
 ## s8vector->list
+
 ```
 #<undefined>
 ```
 
 ## s8vector-length
+
 ```
 (s8vector-length v)
 
@@ -2963,6 +3360,7 @@ return length of signed 8-bit integer vector (C signed char).
 ```
 
 ## s8vector-ref
+
 ```
 (s8vector-ref vector k)
 
@@ -2970,6 +3368,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## s8vector-set!
+
 ```
 (s8vector-set! vector k)
 
@@ -2977,6 +3376,7 @@ Function set value of signed 8-bit integer vector (C signed char) at index k. If
 ```
 
 ## s8vector?
+
 ```
 (s8vector? x)
 
@@ -2984,6 +3384,7 @@ Returns #t of argument is signed 8-bit integer vector (C signed char) otherwise 
 ```
 
 ## scheme-report-environment
+
 ```
 (scheme-report-environment version)
 
@@ -2992,6 +3393,7 @@ Only argument 5 is supported that create environment for R5RS.
 ```
 
 ## search
+
 ```
 (search pattern string)
 
@@ -2999,6 +3401,7 @@ Function that returns the first found index of the pattern inside a string.
 ```
 
 ## set-car!
+
 ```
 (set-car! obj value)
 
@@ -3007,6 +3410,7 @@ The old value is lost.
 ```
 
 ## set-cdr!
+
 ```
 (set-cdr! obj value)
 
@@ -3015,6 +3419,7 @@ It will destroy the list. The old tail is lost.
 ```
 
 ## set-current-directory!
+
 ```
 (set-current-directory! string)
 
@@ -3022,6 +3427,7 @@ Changes the current working directory to provided string.
 ```
 
 ## set-obj!
+
 ```
 (set-obj! obj key value)
 (set-obj! obj key value props)
@@ -3031,6 +3437,7 @@ passed to Object.defineProperty.
 ```
 
 ## set-repr!
+
 ```
 (add-repr! type fn)
 
@@ -3044,6 +3451,7 @@ e.g.: (lambda (obj q) (string-append "<" (repr obj q) ">"))
 ```
 
 ## set-special!
+
 ```
 (set-special! symbol name [type])
 
@@ -3058,6 +3466,7 @@ by # that defines vectors.
 ```
 
 ## sin
+
 ```
 (sin n)
 
@@ -3065,6 +3474,7 @@ Function that calculates sine of a number.
 ```
 
 ## single
+
 ```
 (single list)
 
@@ -3072,6 +3482,7 @@ Checks if argument is list with one element.
 ```
 
 ## some
+
 ```
 (some fn list)
 
@@ -3082,6 +3493,7 @@ Analogous to Python any(map(fn, list)).
 ```
 
 ## sort
+
 ```
 (sort list [predicate])
 
@@ -3090,6 +3502,7 @@ it will use <= and sort in increasing order.
 ```
 
 ## split
+
 ```
 (split separator string)
 
@@ -3098,6 +3511,7 @@ be a string or regular expression.
 ```
 
 ## sqrt
+
 ```
 (sqrt number)
 
@@ -3105,6 +3519,7 @@ Function that returns the square root of the number.
 ```
 
 ## square
+
 ```
 (square z)
 
@@ -3112,6 +3527,7 @@ Returns the square of z. This is equivalent to (* z z).
 ```
 
 ## string
+
 ```
 (string chr1 chr2 ...)
 
@@ -3120,6 +3536,7 @@ needs to be a character object.
 ```
 
 ## string->list
+
 ```
 (string->list string)
 
@@ -3127,6 +3544,7 @@ Returns a list of characters created from string.
 ```
 
 ## string->number
+
 ```
 (string->number number [radix])
 
@@ -3134,6 +3552,7 @@ Function that parses a string into a number.
 ```
 
 ## string->symbol
+
 ```
 (string->symbol string)
 
@@ -3141,6 +3560,7 @@ Function that converts a string to a LIPS symbol.
 ```
 
 ## string->utf8
+
 ```
 (string->utf8 string)
 (string->utf8 string start)
@@ -3151,6 +3571,7 @@ The start and end is the range of the input string for the conversion.
 ```
 
 ## string->vector
+
 ```
 (string->list string)
 (string->list string start)
@@ -3161,6 +3582,7 @@ start of the string, if no end is specified it convert to the end of the string.
 ```
 
 ## string-append
+
 ```
 (concat . strings)
 
@@ -3168,6 +3590,7 @@ Function that creates a new string by joining its arguments.
 ```
 
 ## string-ci<?
+
 ```
 (string-ci<? string1 string2)
 
@@ -3175,6 +3598,7 @@ Returns true if the second string is smaller than the first one, ignoring case.
 ```
 
 ## string-ci<=?
+
 ```
 (string-ci<? string1 string2)
 
@@ -3182,6 +3606,7 @@ Returns true if the second string is not larger than the first one, ignoring cas
 ```
 
 ## string-ci=?
+
 ```
 (string-ci=? string1 string2)
 
@@ -3189,6 +3614,7 @@ Checks if two strings are equal, ignoring case.
 ```
 
 ## string-ci>?
+
 ```
 (string-ci<? string1 string2)
 
@@ -3196,6 +3622,7 @@ Returns true if the second string is larger than the first one, ignoring case.
 ```
 
 ## string-ci>=?
+
 ```
 (string-ci>=? string1 string2)
 
@@ -3203,6 +3630,7 @@ Returns true if second character is not smaller than the first one, ignoring cas
 ```
 
 ## string-copy
+
 ```
 (string-copy x)
 
@@ -3210,6 +3638,7 @@ Creates a new string based on given argument.
 ```
 
 ## string-fill!
+
 ```
 (string-fill! symbol char)
 
@@ -3217,6 +3646,7 @@ Function that destructively fills the string with given character.
 ```
 
 ## string-join
+
 ```
 (join separator list)
 
@@ -3224,6 +3654,7 @@ Function that returns a string by joining elements of the list using separator.
 ```
 
 ## string-length
+
 ```
 (string-length string)
 
@@ -3231,6 +3662,7 @@ Returns the length of the string.
 ```
 
 ## string-map
+
 ```
 (string-map fn string1 stringr2 ...)
 
@@ -3239,6 +3671,7 @@ of the strings, similar to map for lists.
 ```
 
 ## string-ref
+
 ```
 (string-ref string k)
 
@@ -3246,6 +3679,7 @@ Returns character inside string at given zero-based index.
 ```
 
 ## string-split
+
 ```
 (split separator string)
 
@@ -3254,6 +3688,7 @@ be a string or regular expression.
 ```
 
 ## string?
+
 ```
 (string? expression)
 
@@ -3261,6 +3696,7 @@ Predicate that tests if value is a string.
 ```
 
 ## string<?
+
 ```
 (string<? string1 string2)
 
@@ -3268,6 +3704,7 @@ Returns true if the second string is smaller than the first one.
 ```
 
 ## string<=?
+
 ```
 (string<? string1 string2)
 
@@ -3275,6 +3712,7 @@ Returns true if the second string is not larger than the first one.
 ```
 
 ## string=?
+
 ```
 (string=? string1 string2)
 
@@ -3282,6 +3720,7 @@ Checks if two strings are equal.
 ```
 
 ## string>?
+
 ```
 (string<? string1 string2)
 
@@ -3289,6 +3728,7 @@ Returns true if the second string is larger than the first one.
 ```
 
 ## string>=?
+
 ```
 (string<? string1 string2)
 
@@ -3296,6 +3736,7 @@ Returns true if second character is not smaller then the first one.
 ```
 
 ## substring
+
 ```
 (substring string start end)
 
@@ -3304,6 +3745,7 @@ with end.
 ```
 
 ## sxml-unquote
+
 ```
 (sxml-unquote expression) or ~expression
 
@@ -3312,11 +3754,13 @@ with quasiquote.
 ```
 
 ## sxml-unquote-mapper
+
 ```
 #<undefined>
 ```
 
 ## symbol->string
+
 ```
 (symbol->string symbol)
 
@@ -3324,6 +3768,7 @@ Function that converts a LIPS symbol to a string.
 ```
 
 ## symbol-append
+
 ```
 (symbol-append s1 s2 ...)
 
@@ -3331,6 +3776,7 @@ Function that creates a new symbol from symbols passed as arguments.
 ```
 
 ## symbol?
+
 ```
 (symbol? expression)
 
@@ -3338,6 +3784,7 @@ Predicate that tests if value is a LIPS symbol.
 ```
 
 ## symbol=?
+
 ```
 (symbol=? s1 s2 ...)
 
@@ -3345,6 +3792,7 @@ Checks if each value is symbol and it's the same according to string=? predicate
 ```
 
 ## take
+
 ```
 (take n list)
 
@@ -3352,6 +3800,7 @@ Returns n first values of the list.
 ```
 
 ## tan
+
 ```
 (tan n)
 
@@ -3359,6 +3808,7 @@ Function that calculates tangent of a number.
 ```
 
 ## textual-port?
+
 ```
 (textual-port? port)
 
@@ -3366,6 +3816,7 @@ Function that tests if argument is string port.
 ```
 
 ## throw
+
 ```
 (throw string)
 
@@ -3373,6 +3824,7 @@ Throws a new exception.
 ```
 
 ## tree->array
+
 ```
 (tree->array list)
 
@@ -3380,6 +3832,7 @@ Function that converts a LIPS cons tree structure into a JavaScript array.
 ```
 
 ## tree-map
+
 ```
 (tree-map fn tree)
 
@@ -3387,6 +3840,7 @@ Tree version of map. fn is invoked on every leaf.
 ```
 
 ## truncate
+
 ```
 (truncate n)
 
@@ -3394,21 +3848,25 @@ Function that returns the integer part (floor) of a real number.
 ```
 
 ## truncate-quotient
+
 ```
 #<undefined>
 ```
 
 ## truncate-remainder
+
 ```
 #<undefined>
 ```
 
 ## truncate/
+
 ```
 #<undefined>
 ```
 
 ## type
+
 ```
 (type object)
 
@@ -3416,6 +3874,7 @@ Function that returns the type of an object as string.
 ```
 
 ## typecheck
+
 ```
 (typecheck label value type [position])
 
@@ -3425,6 +3884,7 @@ proper error message for the nth argument of function calls.
 ```
 
 ## typecheck-args
+
 ```
 (typecheck-args args type)
 
@@ -3432,6 +3892,7 @@ Function that makes sure that all items in the array are of same type.
 ```
 
 ## typed-array?
+
 ```
 (typed-array? o)
 
@@ -3439,6 +3900,7 @@ Function that tests if the arguments is a JavaScript typed array (Scheme byte ve
 ```
 
 ## u16vector
+
 ```
 (u16vector v1 v2 ...)
 
@@ -3446,11 +3908,13 @@ Create unsigned 16-bit integer vector (C unsigned short) from give arguments.
 ```
 
 ## u16vector->list
+
 ```
 #<undefined>
 ```
 
 ## u16vector-length
+
 ```
 (u16vector-length v)
 
@@ -3458,6 +3922,7 @@ return length of unsigned 16-bit integer vector (C unsigned short).
 ```
 
 ## u16vector-ref
+
 ```
 (u16vector-ref vector k)
 
@@ -3465,6 +3930,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## u16vector-set!
+
 ```
 (u16vector-set! vector k)
 
@@ -3472,6 +3938,7 @@ Function set value of unsigned 16-bit integer vector (C unsigned short) at index
 ```
 
 ## u16vector?
+
 ```
 (u16vector? x)
 
@@ -3479,6 +3946,7 @@ Returns #t of argument is unsigned 16-bit integer vector (C unsigned short) othe
 ```
 
 ## u32vector
+
 ```
 (u32vector v1 v2 ...)
 
@@ -3486,11 +3954,13 @@ Create unsigned 32-bit integer vector (C int) from give arguments.
 ```
 
 ## u32vector->list
+
 ```
 #<undefined>
 ```
 
 ## u32vector-length
+
 ```
 (u32vector-length v)
 
@@ -3498,6 +3968,7 @@ return length of unsigned 32-bit integer vector (C int).
 ```
 
 ## u32vector-ref
+
 ```
 (u32vector-ref vector k)
 
@@ -3505,6 +3976,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## u32vector-set!
+
 ```
 (u32vector-set! vector k)
 
@@ -3512,6 +3984,7 @@ Function set value of unsigned 32-bit integer vector (C int) at index k. If inde
 ```
 
 ## u32vector?
+
 ```
 (u32vector? x)
 
@@ -3519,6 +3992,7 @@ Returns #t of argument is unsigned 32-bit integer vector (C int) otherwise it re
 ```
 
 ## u8-ready?
+
 ```
 (u8-ready?)
 (u8-ready? port)
@@ -3529,6 +4003,7 @@ guaranteed not to hang. If the port is at end of file then u8-ready? returns #t.
 ```
 
 ## u8vector
+
 ```
 (u8vector v1 v2 ...)
 
@@ -3536,11 +4011,13 @@ Create unsigned 8-bit integer vector (C unsigned char) from give arguments.
 ```
 
 ## u8vector->list
+
 ```
 #<undefined>
 ```
 
 ## u8vector-length
+
 ```
 (u8vector-length v)
 
@@ -3548,6 +4025,7 @@ return length of unsigned 8-bit integer vector (C unsigned char).
 ```
 
 ## u8vector-ref
+
 ```
 (u8vector-ref vector k)
 
@@ -3555,6 +4033,7 @@ Returns value from vector at index k. If index is out of range it throw exceptio
 ```
 
 ## u8vector-set!
+
 ```
 (u8vector-set! vector k)
 
@@ -3562,6 +4041,7 @@ Function set value of unsigned 8-bit integer vector (C unsigned char) at index k
 ```
 
 ## u8vector?
+
 ```
 (u8vector? x)
 
@@ -3569,6 +4049,7 @@ Returns #t of argument is unsigned 8-bit integer vector (C unsigned char) otherw
 ```
 
 ## unary
+
 ```
 (unary fn)
 
@@ -3576,6 +4057,7 @@ Returns a new function with arguments limited to one.
 ```
 
 ## unbind
+
 ```
 (unbind fn)
 
@@ -3584,6 +4066,7 @@ can get properties from the actual function object.
 ```
 
 ## unfold
+
 ```
 (unfold fn init)
 
@@ -3593,6 +4076,7 @@ passed to the function. If the function returns false it ends the loop.
 ```
 
 ## unquote
+
 ```
 (unquote code) or ,code
 
@@ -3601,6 +4085,7 @@ substitutes the value into quasiquote's result.
 ```
 
 ## unquote-splicing
+
 ```
 (unquote-splicing code) or ,@code
 
@@ -3610,6 +4095,7 @@ expression, the computed value must be a pair.
 ```
 
 ## unset-repr!
+
 ```
 (unset-repr! type)
 
@@ -3618,6 +4104,7 @@ added by add-repr! function.
 ```
 
 ## unset-special!
+
 ```
 (unset-special! name)
 
@@ -3626,6 +4113,7 @@ name must be a string.
 ```
 
 ## utf8->string
+
 ```
 (utf8->string u8vector)
 (utf8->string u8vector start)
@@ -3636,6 +4124,7 @@ The start and end is the range of the input byte vector for the conversion.
 ```
 
 ## value
+
 ```
 (value obj)
 
@@ -3643,6 +4132,7 @@ Function that unwraps LNumbers and converts nil to undefined.
 ```
 
 ## values
+
 ```
 (values a1 a2 ...)
 
@@ -3651,6 +4141,7 @@ Values object that can be used in the call-with-values function.
 ```
 
 ## values-ref
+
 ```
 (values-ref values n)
 
@@ -3658,16 +4149,19 @@ Returns n value of values object which is result of value function.
 ```
 
 ## vector->f32vector
+
 ```
 #<undefined>
 ```
 
 ## vector->f64vector
+
 ```
 #<undefined>
 ```
 
 ## vector->list
+
 ```
 (vector->list vector)
 (vector->list vector start)
@@ -3678,21 +4172,25 @@ start of the vector, if no end is specified it convert to the end of the vector.
 ```
 
 ## vector->s16vector
+
 ```
 #<undefined>
 ```
 
 ## vector->s32vector
+
 ```
 #<undefined>
 ```
 
 ## vector->s8vector
+
 ```
 #<undefined>
 ```
 
 ## vector->string
+
 ```
 (vector->string vector)
 (vector->string vector start)
@@ -3704,21 +4202,25 @@ string to the end.
 ```
 
 ## vector->u16vector
+
 ```
 #<undefined>
 ```
 
 ## vector->u32vector
+
 ```
 #<undefined>
 ```
 
 ## vector->u8vector
+
 ```
 #<undefined>
 ```
 
 ## vector-append
+
 ```
 (vector-append v1 v2 ...)
 
@@ -3726,6 +4228,7 @@ Returns new vector by combining it's arguments that should be vectors.
 ```
 
 ## vector-fill!
+
 ```
 (vector-fill! vector fill)
 (vector-fill! vector fill start)
@@ -3736,6 +4239,7 @@ at 0. If end is not given it fill till the end if the vector.
 ```
 
 ## vector-length
+
 ```
 (vector-length vec)
 
@@ -3743,6 +4247,7 @@ Returns length of the vector. It errors if the argument is not a vector.
 ```
 
 ## vector-map
+
 ```
 (vector-map fn vector1 vector2 ...)
 
@@ -3751,6 +4256,7 @@ of the vectors, similar to map for lists.
 ```
 
 ## vector-ref
+
 ```
 (vector-ref vec n)
 
@@ -3758,6 +4264,7 @@ Returns nth element of the vector vec.
 ```
 
 ## vector-set!
+
 ```
 (vector-set! vec n value)
 
@@ -3765,6 +4272,7 @@ Function that sets nth item of the vector to value.
 ```
 
 ## vector?
+
 ```
 (vector? n)
 
@@ -3772,6 +4280,7 @@ Returns true if value is vector and false if not.
 ```
 
 ## with-exception-handler
+
 ```
 (with-exception-handler handler thunk)
 
@@ -3780,6 +4289,7 @@ it call handler procedure.
 ```
 
 ## with-input-from-file
+
 ```
 (with-input-from-file string thunk)
 
@@ -3789,6 +4299,7 @@ is closed.
 ```
 
 ## with-input-from-port
+
 ```
 (with-input-from-port port thunk)
 
@@ -3798,6 +4309,7 @@ is closed.
 ```
 
 ## with-input-from-string
+
 ```
 (with-input-from-string string thunk)
 
@@ -3807,11 +4319,13 @@ is closed.
 ```
 
 ## with-output-to-file
+
 ```
 #<undefined>
 ```
 
 ## write
+
 ```
 (write obj [port])
 
@@ -3820,6 +4334,7 @@ wrap in quotes.
 ```
 
 ## write-bytevector
+
 ```
 (write-bytevector bytevector)
 (write-bytevector bytevector port)
@@ -3828,6 +4343,7 @@ Write byte vector into binary output port.
 ```
 
 ## write-char
+
 ```
 (write-char string)
 (write-char string port)
@@ -3837,6 +4353,7 @@ to the given textual output port and returns an unspecified value.
 ```
 
 ## write-string
+
 ```
 (write-string string)
 (write-string string port)
@@ -3848,6 +4365,7 @@ to the textual output port.
 ```
 
 ## write-u8
+
 ```
 (write-u8 byte)
 (write-u8 byte port)
@@ -3856,6 +4374,7 @@ Write byte into binary output port.
 ```
 
 ## Y
+
 ```
 (Y f)
 
@@ -3870,9 +4389,9 @@ Write byte into binary output port.
 ```
 
 ## zero?
+
 ```
 (zero? x)
 
 Checks if the number is equal to 0
 ```
-

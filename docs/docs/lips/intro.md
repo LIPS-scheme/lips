@@ -6,6 +6,7 @@ description: Core LIPS features added on top of Scheme, related to JavaScript
 # Core features
 
 ## Special constants
+
 LIPS define `#null` and `#void` as Parser constants so they can be used inside quoted expressions:
 
 ```scheme
@@ -30,14 +31,16 @@ but in LIPS it's JavaScript undefined. `#void` is not false value.
 ```
 
 ## Numerical tower
+
 LIPS support full numerical tower (not yet 100% unit tested):
 
-* integers - using BitInt
-* floats - using JavaScript numbers
-* rationals
-* complex numbers (that can use integers, floats, or rationals)
+- integers - using BitInt
+- floats - using JavaScript numbers
+- rationals
+- complex numbers (that can use integers, floats, or rationals)
 
 ## Print procedure
+
 LIPS define helper `print` procedure that display all its arguments with newline after each element.
 
 ```scheme
@@ -48,6 +51,7 @@ LIPS define helper `print` procedure that display all its arguments with newline
 ```
 
 ## Emoji
+
 LIPS fully supports all Unicode characters, including emoji:
 
 ```scheme
@@ -67,15 +71,18 @@ You can also use them as part of symbols (e.g. as variables name):
 ```
 
 ## Macros
+
 LIPS define both Lisp macros and Scheme hygienic macros (`syntax-rules`).
 
 It also implements:
-* [SRFI-46](https://srfi.schemers.org/srfi-46/) which allows changing the ellipsis symbol for nested syntax-rules.
-* [SRFI-139](https://srfi.schemers.org/srfi-139/) which allows defining
+
+- [SRFI-46](https://srfi.schemers.org/srfi-46/) which allows changing the ellipsis symbol for nested syntax-rules.
+- [SRFI-139](https://srfi.schemers.org/srfi-139/) which allows defining
   [anaphoric syntax-rules macros](/docs/scheme-intro/macros#anaphoric-hygienic-macros).
-* [SRFI-147](https://srfi.schemers.org/srfi-147/) which allows defining a new syntax-rules macros to define syntax-rules macros.
+- [SRFI-147](https://srfi.schemers.org/srfi-147/) which allows defining a new syntax-rules macros to define syntax-rules macros.
 
 ### Gensyms
+
 With lisp macros you can use [gensyms](/docs/scheme-intro/macros#gensyms), they are special Scheme
 symbols that use JavaScript symbols behind the scene, so they are proven to be unique. Additionally
 you can use named gensym if you pass string as first argument:
@@ -117,6 +124,7 @@ But you can also use the second arguments:
 Read more about [LIPS environments](/docs/lips/environments).
 
 ## Procedures
+
 Procedures in LIPS have access additional objects `arguments`, but the have nothing to do with JavaScript.
 arguments is an array/vector with calling arguments and it have an object callee which points to the same
 procedure. So you can create recursive functions with anonymous lambda:
@@ -158,6 +166,7 @@ It return number of number arguments the rest (dot notation) arguments are ignor
 ```
 
 ## Doc strings
+
 Procedures, macros, and variables can have doc strings.
 
 ```scheme
@@ -242,13 +251,16 @@ The last typecking function is `typecheck-args` that check if all arguments are 
 ## Integration with JavaScript
 
 ### Dot notation
+
 LIPS allow accessing JavaScript objects with dot notation:
 
 ```scheme
 document.querySelector
 ;; ==> #<procedure(native)>
 ```
+
 ### Mutating object properties
+
 You can use dot notation with `set!` to change the value:
 
 ```scheme
@@ -321,8 +333,9 @@ Here is example how to add button to the page and add onclick handler using brow
 ```
 
 ### Boxing
+
 LIPS have its own representation for numbers, strings and characters. And when
-interacting with JavaScript the values may get boxed or unboxed automagically.
+interacting with JavaScript the values may get boxed or unboxed automatically.
 
 You should not confuse boxing with boxes ([SRFI-111](https://srfi.schemers.org/srfi-111/) and
 [SRFI-195](https://srfi.schemers.org/srfi-195)). LIPS boxing are part of implementation of Scheme
@@ -341,11 +354,13 @@ Example is `Array::push` using with native LIPS types:
   (print v))
 ;; ==> #(0.5)
 ```
+
 As you can see the rational number got unboxed and converted into JavaScript float numbers.
 Unboxing always can make you loose some information because LIPS types needs to be converted into native JavaScript
 data types. And JavaScript doesn't have a notion of rationals, there are only floating point numbers, and big ints.
 
 ### Procedures
+
 LIPS Scheme procedures are JavaScript functions, so you can call them from JavaScript.
 
 ```scheme
@@ -359,7 +374,7 @@ console.log(greet());
 // ==> {__string__: 'hello, LIPS'}
 ```
 
-Note that the value was not automagically unboxed because we are no longer in LIPS Scheme code and LIPS can't access native
+Note that the value was not automatically unboxed because we are no longer in LIPS Scheme code and LIPS can't access native
 JavaScript. So to get the real a string you need to call `valueoOf()`:
 
 ```javascript
@@ -368,6 +383,7 @@ console.log(greet().valueOf());
 ```
 
 #### Procedure arity
+
 LIPS don't check the number of argumnents when calling a procedure:
 
 ```scheme
@@ -393,6 +409,7 @@ The same as with JavaScript if you don't pass an argument it will be undefined. 
 ```
 
 ### Helper macros and functions
+
 The most useful macro in LIPS (for interacting with JavaScript) is `-->` it acts like a chain of
 method calls in JavaScript
 
@@ -405,7 +422,7 @@ You can chain methods that return arrays or string and call a method of them. Th
 is the same as JavaScript:
 
 ```javascript
-"this is string".split(' ').reverse().join(' ');
+"this is string".split(" ").reverse().join(" ");
 ```
 
 With --> you can also gab property of a function:
@@ -430,10 +447,12 @@ Read more about [function::bind](https://tinyurl.com/ykvb836s) and
 [function::call](https://tinyurl.com/yc6j7fdh) on [MDN](https://developer.mozilla.org/en-US/).
 
 #### Legacy macros and functions
+
 There are two legacy macros that are still part of LIPS, but you don't need
 them most of the time.
 
 ##### The dot operator
+
 `.` - dot function was a first way to interact with JavaScript, it allowed to get property from an
 object:
 
@@ -444,7 +463,6 @@ object:
 This returned function querySelector from document object in browser. Note that dot a function can only appear
 as first element of the list (it's handled in special way by the parser). In any other place dot is a pair separator,
 see documentation about [Pairs in Scheme](/docs/scheme-intro/data-types#pairs).
-
 
 ##### The double dot operator
 
@@ -499,6 +517,7 @@ reference to the DOM node.
 ```
 
 ### Scheme functions
+
 Scheme functions (lambda's) are JavaScript functions, so you can call them from JavaScript.
 
 ```scheme
@@ -511,6 +530,7 @@ If you define function like this, in browser REPL, you can call it from JavaScri
 **TODO** Screenshot
 
 ### JavaScript functions
+
 You can call JavaScript functions from Scheme, the same as you call Scheme procedures:
 
 ```scheme
@@ -538,7 +558,7 @@ This is classic issue with functions that accept more than one argument. You hav
 in JavaScript:
 
 ```javascript
-["1", "2", "3"].map(parseInt)
+["1", "2", "3"].map(parseInt);
 // ==> [1, NaN, NaN]
 ```
 
@@ -569,9 +589,9 @@ Since some code may be `async` and your code may break.
 
 Example of procedures that are not wise to use are:
 
-* `Array::forEach` - this function accepts a callaback but because it doesn't return
+- `Array::forEach` - this function accepts a callaback but because it doesn't return
   anything, LIPS can't automatically await the response, and your code may execute out of order.
-* `String::replace` - this function can accept optional callback and if `lambda` is async
+- `String::replace` - this function can accept optional callback and if `lambda` is async
   you will end up with `[object Promise]` in output string. Any macro or function can return
   a promise in LIPS, and if any of the expression inside a function return a Promise, the whole
   function return a Promise and become async. Here is example code that demonstrate the problem:
@@ -591,6 +611,7 @@ Instead of `Array::replace` you should use LIPS Scheme `replace` procedure that 
 ```
 
 ### Regular Expressions
+
 LIPS define regular expressions it uses native JavaScript regular expressions.
 At first, the syntax looked like in JavaScript. It was problematic for the parser
 so you were not able to put space after `/` to distinguish from divide procedure.
@@ -598,6 +619,7 @@ Later, the syntax was renamed into form that start with hash `#/[0-9]/`. The sam
 syntax is used by [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) implementation. But LIPS supports more flags (same as JavaScript).
 
 ### Vectors
+
 In LIPS Scheme vectors are JavaScript arrays. So you can execute methods on them with `-->` macro:
 
 ```scheme
@@ -606,6 +628,7 @@ In LIPS Scheme vectors are JavaScript arrays. So you can execute methods on them
 ```
 
 ### Object literals
+
 In LIPS you can define object literals with `&`
 [syntax extension](/docs/lips/extension#syntax-extensions):
 
@@ -720,7 +743,8 @@ It creates two writtable slots, the rest of the props are read only:
 ;; ==> Cannot assign to read only property 'z' of object '#<Object>'
 ```
 
-### Automagic async/await
+### automatic async/await
+
 LIPS do automatic async/await so it waits for any promise before evaluating
 next expression.
 
@@ -748,7 +772,7 @@ text.match(/<h1>([^>]+)<\/h1>/)[1];
 ### Promise quotation
 
 Sometimes you need to process promises as values, for this LIPS support quotation
-of promises. You escape automagic async/await realm and get access to promise as value:
+of promises. You escape automatic async/await realm and get access to promise as value:
 to quote a promise you use `'>`
 [syntax extension](/docs/lips/extension#syntax-extensions). To again get into
 automatic async/await you can use `(await)` procedure
@@ -763,7 +787,7 @@ automatic async/await you can use `(await)` procedure
 ;; ==> Scheme is Super Fun
 ```
 
-**NOTE** Inside `then` lambda promises are still automagically resolved.
+**NOTE** Inside `then` lambda promises are still automatically resolved.
 
 ```scheme
 (--> '>(Promise.resolve "hello")
@@ -773,6 +797,7 @@ automatic async/await you can use `(await)` procedure
 ```
 
 ### Promises vs delay expression
+
 Don't confuse JavaScript promises with `delay` expressions. Their representation looks similar:
 
 ```scheme
@@ -794,6 +819,7 @@ You can check if a value is a promise by quoting the expression and using `promi
 ```
 
 ### Exceptions
+
 LIPS Scheme use javascript exception system. To throw an exception you use:
 
 ```scheme
@@ -854,6 +880,7 @@ LIPS also define R<sup>7</sup>RS guard `procedure` that is just a macro that use
 ```
 
 ### JavaScript Generars and iterators
+
 Right now there is no way to define JavaScript generators inside LIPS. You can create iterator using
 [iteration prorocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols),
 But to have yield keyword you need [continuations](/docs/scheme-intro/continuations), they are part of the
@@ -972,7 +999,7 @@ In Node.js, you can load JavaScript modules with `require`:
 ;; ==> "hello LIPS"
 ```
 
-In above code, you can see example of [automagic async/await](#automagic-asyncawait).
+In above code, you can see example of [automatic async/await](#automatic-asyncawait).
 
 If you have to use callback based API in Node, use
 [promisify function](https://nodejs.org/api/util.html#utilpromisifyoriginal) from Module util.
@@ -1059,5 +1086,5 @@ as comments, so you can't compile the code that have those directives.
 ## Limitations
 
 LISP Scheme currently don't support [continuations](/docs/scheme-intro/continuations) and [Tail Call
-Optimization](/docs/scheme-intro/core#tail-call-optimization).  But they are part of the roadmap for
+Optimization](/docs/scheme-intro/core#tail-call-optimization). But they are part of the roadmap for
 version 1.0.

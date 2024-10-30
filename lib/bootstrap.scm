@@ -822,7 +822,7 @@
 (define (await value)
   "(await value)
 
-   Unquotes a quoted promise so it can be automagically evaluated (resolved
+   Unquotes a quoted promise so it can be ically evaluated (resolved
    to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)

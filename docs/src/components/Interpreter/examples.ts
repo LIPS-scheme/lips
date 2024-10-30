@@ -41,12 +41,12 @@ const examples = [
 ;; ==> ("John" "Paul" "Ringo" "George")`
   },
   {
-    description: 'LIPS do automagic async/await. It resolve all promises by default, but you can quote a promise and handle it like in JavaScript.',
+    description: 'LIPS do automatic async/await. It resolve all promises by default, but you can quote a promise and handle it like in JavaScript.',
     code: `;; JavaScript regular expression literal
 (define re #/<h1>([^>]+)<\\/h1>/)
 ;; --> is a macro that allow chaining
 ;; of JavaScript methods calls
-;; no need to use Promises because of automagic
+;; no need to use Promises because of automatic
 ;; promise resolving
 (let ((msg (--> (fetch "https://scheme.org.pl/test/")
                 (text)
