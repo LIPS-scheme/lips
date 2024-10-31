@@ -22,7 +22,7 @@ A classic, one of the authors of the book is the author of Scheme language.
 ![SICP Cover](./img/SICP-cover.jpg)<br/>
 <small><a href="https://commons.wikimedia.org/wiki/File:SICP_cover.jpg">Harold Abelson and Gerald Jay Sussman with Julie Sussman — MIT Press</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>, Wikimedia Commons</small>
 
-I also recommend video lectures, with two versions available. The original by Abelson and Sussman from 1986 is highly recommended.
+I also recommend video lectures. There are two versions. I recommend original by Abelson and Sussman from 1986.
 
 [![SICP MIT Lectures](./img/SICP-lectures.jpg)](https://www.youtube.com/playlist?list=PLB63C06FAF154F047)
 
@@ -38,7 +38,7 @@ There are also more recent lectures from 2010 at [Berkeley](https://www.berkeley
 
 ## Lisp Macros
 
-For more on Lisp macros, these two books are highly recommended:
+If you want to learn more about lisp macros, there are two great books:
 
 * [On Lisp](https://www.paulgraham.com/onlisp.html) by [Paul Graham](https://www.paulgraham.com)
 
