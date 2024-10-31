@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.2.0">
 <title data-rh="true">Data Types | LIPS Scheme</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" name="twitter:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" property="og:url" content="https://lips.js.org/docs/scheme-intro/data-types"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Data Types | LIPS Scheme"><meta data-rh="true" name="description" content="All different data types you can have in Scheme"><meta data-rh="true" property="og:description" content="All different data types you can have in Scheme"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://lips.js.org/docs/scheme-intro/data-types"><link data-rh="true" rel="alternate" href="https://lips.js.org/docs/scheme-intro/data-types" hreflang="en"><link data-rh="true" rel="alternate" href="https://lips.js.org/docs/scheme-intro/data-types" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://HSV6UC2UY5-dsn.algolia.net" crossorigin="anonymous"><link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="LIPS Scheme blog RSS Feed"><link rel="stylesheet" href="/assets/css/styles.55f96077.css">
-<script src="/assets/js/runtime~main.5b38b51b.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2eea74cd.js" defer="defer"></script>
 <script src="/assets/js/main.11af7cda.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -16,11 +16,11 @@ implementation do support it.</p>
 <p>Basic numbers are:</p>
 <ul>
 <li>Integers, e.g. <code>10</code>, <code>20</code>, or <code>1000</code></li>
-<li>floats, e.g. <code>1.2</code>, <code>1e-2</code> (you can use <a href="https://en.wikipedia.org/wiki/Scientific_notation" target="_blank" rel="noopener noreferrer">scientific notation</a>)</li>
-<li>rationals e.g. <code>1/2</code>, <code>3/4</code>, or <code>1/10</code></li>
-<li>complex numbers <code>10+10i</code>, <code>1/2+1/2i</code></li>
+<li>Floats, e.g. <code>1.2</code>, <code>1e-2</code> (you can use <a href="https://en.wikipedia.org/wiki/Scientific_notation" target="_blank" rel="noopener noreferrer">scientific notation</a>)</li>
+<li>Rationals e.g. <code>1/2</code>, <code>3/4</code>, or <code>1/10</code></li>
+<li>Complex numbers <code>10+10i</code>, <code>1/2+1/2i</code></li>
 </ul>
-<p>There is also notion of exactness in those numbers. Inexact numbers are floats, the rest of the
+<p>There is also a notion of exactness in these numbers. Inexact numbers are floats, the rest of the
 numbers are exact because they don&#x27;t give any rounding errors like floats do (this is how
 <a href="https://en.wikipedia.org/wiki/IEEE_754" target="_blank" rel="noopener noreferrer">IEEE 754</a> standard for floating numbers work).</p>
 <p>There are also special constant <code>+nan.0</code>, <code>-nan.0</code>, <code>+inf.0</code>, and <code>-inf.0</code>. Positive and negative
@@ -117,7 +117,7 @@ when printed:</p>
 </span></code></pre><div class="buttonGroup_6DOT"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_FhaS" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_phi_"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_FfTR"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <p>To get the first element of the list you use procedure <code>car</code> and to get the rest of the list you use
 <code>cdr</code>.  So <code>car</code> and <code>cdr</code> returns first and second element of the Pair (cons cell).</p>
-<p>Scheme used <code>car</code> and <code>cdr</code> for historical reasons. The first lisp interpreter was using address
+<p>Scheme uses <code>car</code> and <code>cdr</code> for historical reasons. The first lisp interpreter was using address
 registers of <a href="https://en.wikipedia.org/wiki/IBM_704" target="_blank" rel="noopener noreferrer">IBM 704</a> mainframe computer.</p>
 <ul>
 <li><code>car</code> stands for <strong>Contents of the Address part of Register</strong></li>
