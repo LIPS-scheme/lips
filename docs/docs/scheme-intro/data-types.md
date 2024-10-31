@@ -46,9 +46,9 @@ The first argument is a string and the second one is the base of the number. In 
 
 ## Boolean values
 
-Scheme defines two boolean constants, `#f` and `#t`. However, the R<sup>7</sup>RS specification treats
-only`#f` as false, with everything else evaluating as true. The specification also defines `#true` 
-and `#false` aliases. Some Scheme also defines `true` and `false` without hash.
+Scheme define two boolean constants `#f` and `#t` but note that the only false value, according to
+R<sup>7</sup>RS specification, should be `#f`. The specification also defines `#true` and `#false`
+aliases. Some Scheme also defines `true` and `false` without hash.
 
 ## Strings
 Strings in Scheme use only double quote symbols. They can be multiline. If you want to add double
