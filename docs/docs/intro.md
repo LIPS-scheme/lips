@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Browser
 
-When using LIPS Scheme interpreter in browser you need to include the main script file.
+When using the LIPS Scheme interpreter in a browser, you need to include the main script file.
 
 ```html
 <script src="https://unpkg.com/@jcubic/lips@beta/dist/lips.min.js"></script>
@@ -18,7 +18,7 @@ or [jsDelivr](https://www.jsdelivr.com/) that is somewhat faster:
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"></script>
 ```
 
-After adding script tag with main file, you can use Scheme code inside script tag:
+After adding the script tag with the main file, you can use Scheme code within a script tag.
 
 ### Running Scheme Code Inline
 
@@ -161,7 +161,7 @@ package before execution.
 
 ### Node.js project
 
-Afeter you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
+After you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
 instead of JavaScript, using everything Node.js provides. See documentation about [Integration with
 JavaScript](/docs/lips/intro#integration-with-javascript).
 
@@ -328,7 +328,7 @@ exec('(define (foo) (* x x)) (let ((x 10)) (print (foo)))', { use_dynamic: true 
 
 ## Editor support
 
-Note that Scheme is popular language and editors usually support its syntax. But also not every editor
+Note that Scheme is a popular language and editors usually support its syntax. But also not every editor
 may support literal regular expressions that are part of LIPS. If your editor doesn't support them,
 you can report an issue if the project is Open Source. Literal Regular Expressions are also part
 of [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) and
