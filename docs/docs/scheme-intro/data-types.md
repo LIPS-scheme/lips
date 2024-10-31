@@ -59,7 +59,7 @@ Escape character used by Terminal emulators to add formatting (like colors).
 
 ## Characters
 
-Single characters can be defined as a distinct data type.
+You can define single character as data type
 
 ```scheme
 #\A
