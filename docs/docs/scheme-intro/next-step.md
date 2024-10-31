@@ -5,7 +5,7 @@ description: Few resources how to learn more about Scheme
 
 # What Next?
 
-If you want to learn more about Scheme, these are the resources I recommend:
+If you want to learn more about Scheme, here are some recommended resources:
 
 ## Scheme
 
@@ -26,7 +26,7 @@ I also recommend video lectures. There are two versions. I recommend original by
 
 [![SICP MIT Lectures](./img/SICP-lectures.jpg)](https://www.youtube.com/playlist?list=PLB63C06FAF154F047)
 
-This is an [official website of the lectures](https://groups.csail.mit.edu/mac/classes/6.001/abelson-sussman-lectures/).
+Here is the [official website of the lectures](https://groups.csail.mit.edu/mac/classes/6.001/abelson-sussman-lectures/).
 
 They are not very good quality, but they are great, and you should have no problems in seeing the
 code on the blackboard.
@@ -66,7 +66,7 @@ Nieper-Wißkirchen](https://github.com/mnieper).
 * [An Advanced Syntax-Rules Primer for the Mildly Insane](https://www.eighty-twenty.org/~tonyg/Darcs/macromod/doc/reference/petrofsky/petrofsky-advanced-syntax-rules-primer-for-the-mildly-insane.txt) by Al Petrofsky.
 * Oleg Kiselyov part of the website contains [advanced usage of Scheme maros](https://okmij.org/ftp/Scheme/macros.html).
 
-You can also lookup resources from this Reddit posts:
+You can also find additional resources in these Reddit posts:
 * [Collection of Links About Scheme Macros](https://www.reddit.com/r/scheme/comments/3chowf/collection_of_links_about_scheme_macros/)
 
 ## More Resources
