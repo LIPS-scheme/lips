@@ -14,11 +14,11 @@ implementation do support it.
 Basic numbers are:
 
 * Integers, e.g. `10`, `20`, or `1000`
-* floats, e.g. `1.2`, `1e-2` (you can use [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation))
-* rationals e.g. `1/2`, `3/4`, or `1/10`
-* complex numbers `10+10i`, `1/2+1/2i`
+* Floats, e.g. `1.2`, `1e-2` (you can use [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation))
+* Rationals e.g. `1/2`, `3/4`, or `1/10`
+* Complex numbers `10+10i`, `1/2+1/2i`
 
-There is also notion of exactness in those numbers. Inexact numbers are floats, the rest of the
+There is also a notion of exactness in these numbers. Inexact numbers are floats, the rest of the
 numbers are exact because they don't give any rounding errors like floats do (this is how
 [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754) standard for floating numbers work).
 
@@ -46,9 +46,9 @@ The first argument is a string and the second one is the base of the number. In 
 
 ## Boolean values
 
-Scheme define two boolean constants `#f` and `#t` but note that the only false value, according to
-R<sup>7</sup>RS specification, should be `#f`. The specification also defines `#true` and `#false`
-aliases. Some Scheme also defines `true` and `false` without hash.
+Scheme defines two boolean constants, `#f` and `#t`. However, the R<sup>7</sup>RS specification treats
+only`#f` as false, with everything else evaluating as true. The specification also defines `#true` 
+and `#false` aliases. Some Scheme also defines `true` and `false` without hash.
 
 ## Strings
 Strings in Scheme use only double quote symbols. They can be multiline. If you want to add double
@@ -59,7 +59,7 @@ Escape character used by Terminal emulators to add formatting (like colors).
 
 ## Characters
 
-You can define single character as data type
+Single characters can be defined as a distinct data type.
 
 ```scheme
 #\A
@@ -176,7 +176,7 @@ To create the same list, you can use `list` procedure:
 To get the first element of the list you use procedure `car` and to get the rest of the list you use
 `cdr`.  So `car` and `cdr` returns first and second element of the Pair (cons cell).
 
-Scheme used `car` and `cdr` for historical reasons. The first lisp interpreter was using address
+Scheme uses `car` and `cdr` for historical reasons. The first lisp interpreter was using address
 registers of [IBM 704](https://en.wikipedia.org/wiki/IBM_704) mainframe computer.
 
 * `car` stands for **Contents of the Address part of Register**
