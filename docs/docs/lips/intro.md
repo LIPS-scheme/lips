@@ -1007,13 +1007,13 @@ LIPS Scheme runs in ES Module, but `import` is reserved for experimental R7RS mo
 to import module that is ESM only. You need to access JavaScript dynamic import. But `global.import` is not defined. If you want to define JavaScript dynamic import, you can use code:
 
 ```scheme
-(define import (global.eval "(x) => import(x)"))
+(define $:import (global.eval "(x) => import(x)"))
 ```
 
 You can use this function like this:
 
 ```javascript
-(--> (import "fs/promises") (readFile "README.md" "utf8"))
+(--> ($:import "fs/promises") (readFile "README.md" "utf8"))
 ```
 
 But it will also work with ESM only module that can't be imported with `require`.
