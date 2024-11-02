@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 27 Oct 2024 15:16:01 +0000
+ * build: Sat, 02 Nov 2024 19:25:04 +0000
  */
 
 (function (global, factory) {
@@ -10432,8 +10432,7 @@
             return pair.cdr.car;
           });
         }
-        var args_name = gensym('args');
-        return Pair.fromArray([LSymbol('let'), [[args_name, Pair(LSymbol('list'), args)]], [LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], [LSymbol('apply'), code.car, args_name]]]);
+        return new Pair(Pair.fromArray([LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], code.car]), args);
       } else if (macro_expand) {
         // Macro.defmacro are special macros that should return lips code
         // here we use evaluate, so we need to check special flag set by
@@ -17397,10 +17396,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 27 Oct 2024 15:16:01 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sat, 02 Nov 2024 19:25:04 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 27 Oct 2024 15:16:01 +0000').valueOf();
+    var date = LString('Sat, 02 Nov 2024 19:25:04 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17440,7 +17439,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 27 Oct 2024 15:16:01 +0000';
+  var date = 'Sat, 02 Nov 2024 19:25:04 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

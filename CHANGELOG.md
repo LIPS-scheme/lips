@@ -19,6 +19,7 @@
 * fix exception during error from eval [#362](https://github.com/LIPS-scheme/lips/issues/362)
 * allow to catch exceptions from eval
 * fix else keyword as only expression in cond [#366](https://github.com/LIPS-scheme/lips/issues/366)
+* fix clash of variable named `list` in named `let` [#398](https://github.com/LIPS-scheme/lips/issues/398)
 
 ## 1.0.0-beta.19
 ### Breaking
