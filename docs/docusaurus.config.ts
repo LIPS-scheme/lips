@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import marked from 'marked';
 
-import renderSocialCard from './src/utils';
+import renderSocialCards from './src/utils';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -55,17 +55,9 @@ const config: Config = {
             copyright: `Copyright © ${new Date().getFullYear()} Jakub T. Jankiewicz`,
             title: 'LIPS Scheme blog',
             description: 'LIPS Scheme blog RSS Feed',
-            createFeedItems: async ({ blogPosts,...params }) => {
+            createFeedItems: async ({ blogPosts, ...params }) => {
               if (isProd) {
-                await Promise.all(blogPosts.map(blogPost => {
-                  const author = blogPost.metadata.authors[0];
-                  const slug = blogPost.metadata.permalink.replace(/^.*\//, '');
-                  const title = blogPost.metadata.title;
-                  const fullname = author.name;
-                  const avatar = author.imageURL;
-                  const date = blogPost.metadata.date;
-                  return renderSocialCard({ title, fullname, avatar, slug, date: new Date(date) });
-                }));
+                 await renderSocialCards(blogPosts);
               }
               const feedItems = await params.defaultCreateFeedItems({ blogPosts, ...params });
               feedItems.forEach((feedItem,index) => {
