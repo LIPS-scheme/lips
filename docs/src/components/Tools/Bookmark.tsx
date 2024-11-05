@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import Heading from '@theme/Heading';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
 
 import styles from './styles.module.css';
 const BookmarkSVG = require('@site/static/img/bookmarklet.svg').default;
 
 export default function Bookmark(): JSX.Element {
   const ref = useRef<HTMLAnchorElement>();
+  useBrokenLinks().collectAnchor('bookmark');
   useEffect(() => {
     const url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/bookmark.js';
     fetch(url).then(function(res) {
