@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunknew_docs=self.webpackChunknew_docs||[]).push([[360],{7986:a=>{a.exports=JSON.parse('{"tag":{"label":"emacs","permalink":"/blog/tags/emacs","allTagsPath":"/blog/tags","count":1,"unlisted":false},"listMetadata":{"permalink":"/blog/tags/emacs","page":1,"postsPerPage":10,"totalPages":1,"totalCount":1,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
