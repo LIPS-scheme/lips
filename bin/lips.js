@@ -421,7 +421,7 @@ if (options.version || options.V) {
     var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS);
     rl = readline.createInterface({
         input: process.stdin,
-        output: process.stdout,
+        output: buffer(process.stdout),
         prompt: prompt,
         terminal
     });
@@ -444,6 +444,40 @@ function is_open(token) {
 
 function is_close(token) {
     return [')', ']'].includes(token);
+}
+
+// buffer Proxy to prevent flicker when Node writes to stdout
+function buffer(stream) {
+    const fname = '/home/kuba/lips__debug.log';
+    const buffer = [];
+    function log(data) {
+        return;
+        fs.appendFile(fname, data + '\n', function (err) {
+            if (err) throw err;
+        });
+    }
+    return new Proxy(stream, {
+        get(target, prop) {
+            if (prop === 'write') {
+                return function(data, ...args) {
+                    log(data);
+                    if (data.match(/\x1b\[(?:1G|0J)|(^(?:lips>|\.\.\.) )/)) {
+                        buffer.push(data);
+                        log('buffer :::');
+                    } else if (buffer.length) {
+                        const payload = buffer.join('') + data;
+                        buffer.length = 0;
+                        log(`flush ::: ${payload}`);
+                        target.write(payload, ...args);
+                    } else {
+                        log('write :::');
+                        target.write(data, ...args);
+                    }
+                }
+            }
+            return target[prop];
+        }
+    });
 }
 
 // find matching open parentheses. The last token is always
