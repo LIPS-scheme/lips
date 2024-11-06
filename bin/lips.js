@@ -67,8 +67,13 @@ function log_error(message) {
     message = message.split('\n').map(line => {
         return `${date}: ${line}`;
     }).join('\n');
-    fs.appendFileSync(path.join(os.homedir(), 'lips.error.log'), message + '\n');
+    fs.appendFileSync(home_file('lips.error.log'), message + '\n');
 }
+
+function home_file(filename) {
+    return path.join(os.homedir(), filename);
+}
+
 // -----------------------------------------------------------------------------
 function debug(message) {
     console.log(message);
@@ -446,15 +451,19 @@ function is_close(token) {
     return [')', ']'].includes(token);
 }
 
+function debug(message) {
+    const fname = home_file('lips__debug.log');
+    fs.appendFile(fname, message + '\n', function (err) {
+        if (err) throw err;
+    });
+}
+
 // buffer Proxy to prevent flicker when Node writes to stdout
 function buffer(stream) {
-    const fname = '/home/kuba/lips__debug.log';
     const buffer = [];
     function log(data) {
         return;
-        fs.appendFile(fname, data + '\n', function (err) {
-            if (err) throw err;
-        });
+        debug(data);
     }
     return new Proxy(stream, {
         get(target, prop) {
