@@ -424,15 +424,18 @@ if (options.version || options.V) {
     var prompt = 'lips> ';
     var continue_prompt = '... ';
     var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS);
+    const buffer = make_buffer(process.stdout);
     rl = readline.createInterface({
         input: process.stdin,
-        output: buffer(process.stdout),
+        output: buffer,
         prompt: prompt,
         terminal
     });
     rl.on('close', () => {
-        rl.setPrompt('');
-        process.stdout.write('\n');
+        setTimeout(() => {
+            rl.setPrompt('');
+            buffer.flush('\n');
+        }, 10);
     });
     const historySize = Number(env.LIPS_REPL_HISTORY_SIZE);
     if (!Number.isNaN(historySize) && historySize > 0) {
@@ -451,7 +454,7 @@ function is_close(token) {
     return [')', ']'].includes(token);
 }
 
-function debug(message) {
+function debug_log(message) {
     const fname = home_file('lips__debug.log');
     fs.appendFile(fname, message + '\n', function (err) {
         if (err) throw err;
@@ -459,28 +462,36 @@ function debug(message) {
 }
 
 // buffer Proxy to prevent flicker when Node writes to stdout
-function buffer(stream) {
+function make_buffer(stream) {
     const buffer = [];
     function log(data) {
         return;
-        debug(data);
+        debug_log(data);
+    }
+    function flush(data, ...args) {
+        if (buffer.length) {
+            const payload = buffer.join('') + data;
+            buffer.length = 0;
+            log(`flush ::: ${payload}`);
+            stream.write(payload, ...args);
+        } else {
+            log('write :::');
+            stream.write(data, ...args);
+        }
     }
     return new Proxy(stream, {
         get(target, prop) {
+            if (prop === 'flush') {
+                return flush;
+            }
             if (prop === 'write') {
                 return function(data, ...args) {
                     log(data);
                     if (data.match(/\x1b\[(?:1G|0J)|(^(?:lips>|\.\.\.) )/)) {
                         buffer.push(data);
                         log('buffer :::');
-                    } else if (buffer.length) {
-                        const payload = buffer.join('') + data;
-                        buffer.length = 0;
-                        log(`flush ::: ${payload}`);
-                        target.write(payload, ...args);
                     } else {
-                        log('write :::');
-                        target.write(data, ...args);
+                        flush(data, ...args);
                     }
                 }
             }
