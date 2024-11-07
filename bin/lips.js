@@ -558,7 +558,7 @@ function ansi_rewrite_above(ansi_code) {
     const lines = ansi_code.split('\n');
     const stdout = lines.map((line, i) => {
         const prefix = i === 0 ? prompt : continue_prompt;
-        return prefix + line + '\x1b[K';
+        return prefix + line;
     }).join('\x1b[E') + '\x1b[E';
     const len = lines.length;
     // overwrite all lines to get rid of any artifacts left my stdin
@@ -630,11 +630,27 @@ function run_repl(err, rl) {
         function should_update() {
             return (token || prev_token) && code_above && !string.match(/^[\n\r]+$/);
         }
-        let token, code_above;
+        function refresh() {
+            // this always need to be executed inside rl._writeToOutput
+            // even if nothing changes, this make sure that the input
+            // stay intact while editing the command line
+            rl.output.write(code);
+        }
+        function finalize() {
+            if (should_update()) {
+                setTimeout(() => {
+                    // overwrite lines above the cursor this is side effect
+                    process.stdout.write('\x1b7' + ansi_rewrite_above(code_above) + '\x1b8');
+                }, 0);
+            }
+            refresh();
+            prev_token = token;
+        }
+        let token, code_above, code;
         try {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
-            let code = scheme(string);
+            code = scheme(string);
             const bracket_mode = cmd.match(brackets_re);
             const full_copy_paste = bracket_mode?.length == 2;
             if ((!bracket_mode || full_copy_paste) && !is_emacs) {
@@ -660,16 +676,8 @@ function run_repl(err, rl) {
                         }
                     }
                 }
-                if (should_update()) {
-                    // overwrite lines above the cursor this is side effect
-                    process.stdout.write('\x1b[?25l' + ansi_rewrite_above(code_above));
-                }
-                prev_token = token;
             }
-            // this always need to be executed inside rl._writeToOutput
-            // even if nothing changes, this make sure that the input
-            // stay intact while editing the command line
-            rl.output.write(code + '\x1b[?25h');
+            finalize();
         } catch(e) {
             console.error(e);
         }
