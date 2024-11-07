@@ -217,8 +217,9 @@ function log(message) {
 }
 
 // -----------------------------------------------------------------------------
-var strace;
-var rl;
+let strace;
+let rl;
+let buffer;
 var newline;
 const moduleURL = new URL(import.meta.url);
 const __dirname = path.dirname(moduleURL.pathname);
@@ -424,7 +425,7 @@ if (options.version || options.V) {
     var prompt = 'lips> ';
     var continue_prompt = '... ';
     var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS);
-    const buffer = make_buffer(process.stdout);
+    buffer = make_buffer(process.stdout);
     rl = readline.createInterface({
         input: process.stdin,
         output: buffer,
@@ -454,20 +455,24 @@ function is_close(token) {
     return [')', ']'].includes(token);
 }
 
-function debug_log(message) {
-    const fname = home_file('lips__debug.log');
-    fs.appendFile(fname, message + '\n', function (err) {
-        if (err) throw err;
-    });
+function debug_log(filename) {
+    return (message) => {
+        const payload = message.replace(/\n/g, '\\n') + '\n';
+        fs.appendFile(filename, payload, function (err) {
+            if (err) throw err;
+        });
+    };
 }
 
 // buffer Proxy to prevent flicker when Node writes to stdout
 function make_buffer(stream) {
+    const DEBUG = false;
     const buffer = [];
-    function log(data) {
-        return;
-        debug_log(data);
+    const fname = home_file('lips__debug.log');
+    if (DEBUG) {
+        fs.truncate(fname, 0, () => {});
     }
+    const log = DEBUG ? debug_log(fname) : () => {};
     function flush(data, ...args) {
         if (buffer.length) {
             const payload = buffer.join('') + data;
@@ -553,12 +558,12 @@ function ansi_rewrite_above(ansi_code) {
     const lines = ansi_code.split('\n');
     const stdout = lines.map((line, i) => {
         const prefix = i === 0 ? prompt : continue_prompt;
-        return '\x1b[K' + prefix + line;
-    }).join('\n');
+        return prefix + line + '\x1b[K';
+    }).join('\x1b[E') + '\x1b[E';
     const len = lines.length;
     // overwrite all lines to get rid of any artifacts left my stdin
     // mostly because of parenthesis matching
-    return `\x1b[${len}F${stdout}\n`;
+    return `\x1b[${len}F${stdout}`;
 }
 
 function run_repl(err, rl) {
@@ -620,7 +625,12 @@ function run_repl(err, rl) {
             return scheme(code);
         }
     }
+    let prev_token;
     rl._writeToOutput = function _writeToOutput(string) {
+        function should_update() {
+            return (token || prev_token) && code_above && !string.match(/^[\n\r]+$/);
+        }
+        let token, code_above;
         try {
             const prefix = multiline ? continue_prompt : prompt;
             const current_line = prefix + rl.line;
@@ -630,11 +640,11 @@ function run_repl(err, rl) {
             if ((!bracket_mode || full_copy_paste) && !is_emacs) {
                 // clean bracket mode markers
                 const clean_cmd = cmd.replace(brackets_re, '');
-                let code_above = format_input_code(clean_cmd);
+                code_above = format_input_code(clean_cmd);
                 if (char_before_cursor() === ')') {
                     const substring = rl.line.substring(0, rl.cursor);
                     const input = prefix + substring;
-                    const token = matched_token(input);
+                    token = matched_token(input);
                     if (token) {
                         code = mark_paren(code, token);
                     } else if (clean_cmd) {
@@ -642,7 +652,7 @@ function run_repl(err, rl) {
                         // we match paren above the current line
                         // but we need whole code with rl.line
                         // so we need to ignore rl.line
-                        const token = matched_token(input);
+                        token = matched_token(input);
                         if (token) {
                             // code_above don't include the current line that
                             // is added after user press enter
@@ -650,16 +660,16 @@ function run_repl(err, rl) {
                         }
                     }
                 }
-                // ignore the process when user press enter
-                if (code_above && !string.match(/^[\n\r]+$/)) {
+                if (should_update()) {
                     // overwrite lines above the cursor this is side effect
-                    process.stdout.write(ansi_rewrite_above(code_above));
+                    process.stdout.write('\x1b[?25l' + ansi_rewrite_above(code_above));
                 }
+                prev_token = token;
             }
             // this always need to be executed inside rl._writeToOutput
             // even if nothing changes, this make sure that the input
             // stay intact while editing the command line
-            rl.output.write(code);
+            rl.output.write(code + '\x1b[?25h');
         } catch(e) {
             console.error(e);
         }
