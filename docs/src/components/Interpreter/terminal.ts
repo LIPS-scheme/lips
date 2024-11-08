@@ -2,6 +2,7 @@ let original: string;
 
 export function initTerminal() {
   const $ = globalThis.$;
+
   $.terminal.syntax('scheme');
   const $term = $('.term');
   if (!original) {
@@ -14,6 +15,7 @@ export function initTerminal() {
     name: 'demo',
     lips: globalThis.lips
   });
+
   term.tooltips($('.example'), ($node: any) => $node.text(), function($node: any) {
     const offset = $node.offset();
     const top = offset.top;
@@ -35,6 +37,8 @@ to display list of matched names in environment.`
   }), {
     formatters: false
   });
+
+  return term;
 };
 
 export function destroyTerminal() {

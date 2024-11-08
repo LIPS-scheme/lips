@@ -103,22 +103,24 @@ call stack environments.
 
 ```scheme
 (define (foo)
-  (define x 10)
+  (define x 20)
   (bar))
 
 (define (bar)
-  (define x 20)
+  (define x 30)
   (baz))
 
 (define (baz)
    (for-each (lambda (env)
                 (let-env env
                   (print x)))
-     ;; car is top level environment
-     (cdr (parent.frames))))
+     (parent.frames)))
+
+(define x 10)
 (foo)
 ;; ==> 10
 ;; ==> 20
+;; ==> 30
 ```
 
 You can mix lexical scope chain with frames:

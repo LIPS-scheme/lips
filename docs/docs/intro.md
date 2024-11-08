@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Browser
 
-When using LIPS Scheme interpreter in browser you need to include the main script file.
+When using the LIPS Scheme interpreter in a browser, you need to include the main script file.
 
 ```html
 <script src="https://unpkg.com/@jcubic/lips@beta/dist/lips.min.js"></script>
@@ -18,7 +18,7 @@ or [jsDelivr](https://www.jsdelivr.com/) that is somewhat faster:
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"></script>
 ```
 
-After adding script tag with main file, you can use Scheme code inside script tag:
+After adding the script tag with the main file, you can use Scheme code within a script tag.
 
 ### Running Scheme Code Inline
 
@@ -60,21 +60,24 @@ You can also use `src` attribute to link to source file. Like you normally do wi
 
 ## Node.js
 
-To install LIPS you can use NPM:
+To install LIPS you can use
+[NPM](https://www.freecodecamp.org/news/what-is-npm-a-node-package-manager-tutorial-for-beginners/),
+you first need to
+[install Node.js](https://www.freecodecamp.org/news/how-to-install-node-js-and-npm-on-windows-2/).
 
 ```bash
 npm install -g @jcubic/lips@beta
 ```
 
-You should use beta, because the so call stable version is really old and outdated. Because of so many
-breaking changes no new stable version was released and instead 1.0 beta started.
+You should use beta, because the so call stable version is really old and outdated. Because of so
+many breaking changes no new stable version was released and instead 1.0 beta started.
 
 If LIPS is installed globally just use `lips` command to start the REPL:
 
 ![LIPS REPL session in Terminal](/img/screencast.gif)
 
-By default, splash screen is shown you can hide it with option `-q`. If you're using bash you can create an
-alias:
+By default, splash screen is shown you can hide it with option `-q` (for quiet). If you're using
+bash you can create an alias:
 
 ```bash
 alias lips='lips -q'
@@ -148,7 +151,7 @@ export $PATH=".:$PATH"
 If you prefer to install lips locally instead of globally you can use this shebang:
 
 ```scheme
-#!/usr/bin/env -S npx @jcubic/lips
+#!/usr/bin/env -S npx @jcubic/lips@beta
 (let ((what "World"))
   (print (string-append "Hello " what)))
 ```
@@ -158,7 +161,7 @@ package before execution.
 
 ### Node.js project
 
-Afeter you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
+After you have installed LIPS you can create a new Node.js project and write LIPS Scheme code
 instead of JavaScript, using everything Node.js provides. See documentation about [Integration with
 JavaScript](/docs/lips/intro#integration-with-javascript).
 
@@ -249,9 +252,83 @@ await interpreter.exec(`(let-env lips.env.__parent__
 `lips.env` is user environment and `__parent__` is real top level global environment.  To see more
 about `let-env` expression check [documentation about LIPS environments](/docs/lips/environments).
 
+## Dynamic Scope
+
+### Rationale
+Initially the library was created with optional
+[dynamic scope](https://en.wikipedia.org/wiki/Scope_(computer_science)#Dynamic_scope). The reason for it was
+that it was supposed to be used as scriptng language for the Emacs in the browser, probably as a fork
+of [Ymacs](https://lisperator.net/ymacs/). The idea was abandoned but the dynamic scope remained as part
+of the library.
+
+### REPL
+
+To enable dynamic scope in the Node REPL, you execute it with `-d` or `--dynamic` option.
+
+```
+$ lips -d
+  __ __                          __
+ / / \ \       _    _  ___  ___  \ \
+| |   \ \     | |  | || . \/ __>  | |
+| |    > \    | |_ | ||  _/\__ \  | |
+| |   / ^ \   |___||_||_|  <___/  | |
+ \_\ /_/ \_\                     /_/   dynamic scope
+
+LIPS Interpreter {{VER}} (2024-08-29) <https://lips.js.org>
+Copyright (c) 2018-2024 Jakub T. Jankiewicz
+
+Type (env) to see environment with functions macros and variables. You can also
+use (help name) to display help for specific function or macro, (apropos name)
+to display list of matched names in environment and (dir object) to list
+properties of an object.
+
+lips>
+```
+
+The greeting will indicate that this is a dynamic scope. When using with a `-q` flag (for quiet),
+there are no feedback that this is dynamic scope.
+
+You can combine `-d` or `--dynamic` option with other flags:
+
+```bash
+lips -d -e '(define (foo) (* x x)) (let ((x 10)) (print (foo)))'
+```
+
+### Script
+
+You can use the flag when creating scripts:
+
+```scheme
+#!/usr/bin/env -S lips -d
+
+(define (foo)
+  (* x x))
+
+(let ((x 10))
+  (print (foo)))
+```
+
+### Interpreter
+
+When using `Interpreter` class you can use:
+
+```javascript
+interpreter.exec('code', { use_dynamic: true });
+```
+
+### exec
+
+When using `lips.exec` you can also use option `use_dynamic`:
+
+```javascript
+import { exec } from '@jcubic/lips';
+
+exec('(define (foo) (* x x)) (let ((x 10)) (print (foo)))', { use_dynamic: true });
+```
+
 ## Editor support
 
-Note that Scheme is popular language and editors usually support its syntax. But also not every editor
+Note that Scheme is a popular language and editors usually support its syntax. But also not every editor
 may support literal regular expressions that are part of LIPS. If your editor doesn't support them,
 you can report an issue if the project is Open Source. Literal Regular Expressions are also part
 of [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) and

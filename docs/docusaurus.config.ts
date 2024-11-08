@@ -3,13 +3,13 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import marked from 'marked';
 
-import renderSocialCard from './src/utils';
+import renderSocialCards from './src/utils';
 
 const isProd = process.env.NODE_ENV === 'production';
 
 const config: Config = {
   title: 'LIPS Scheme',
-  tagline: 'Powerfull Scheme based Lisp in JavaScript',
+  tagline: 'Powerful Scheme based Lisp in JavaScript',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -55,17 +55,9 @@ const config: Config = {
             copyright: `Copyright © ${new Date().getFullYear()} Jakub T. Jankiewicz`,
             title: 'LIPS Scheme blog',
             description: 'LIPS Scheme blog RSS Feed',
-            createFeedItems: async ({ blogPosts,...params }) => {
+            createFeedItems: async ({ blogPosts, ...params }) => {
               if (isProd) {
-                await Promise.all(blogPosts.map(blogPost => {
-                  const author = blogPost.metadata.authors[0];
-                  const slug = blogPost.metadata.permalink.replace(/^.*\//, '');
-                  const title = blogPost.metadata.title;
-                  const fullname = author.name;
-                  const avatar = author.imageURL;
-                  const date = blogPost.metadata.date;
-                  return renderSocialCard({ title, fullname, avatar, slug, date: new Date(date) });
-                }));
+                 await renderSocialCards(blogPosts);
               }
               const feedItems = await params.defaultCreateFeedItems({ blogPosts, ...params });
               feedItems.forEach((feedItem,index) => {
@@ -181,7 +173,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright (c) 2018-${new Date().getFullYear()} <a href="https://jakub.jankiewicz.org">Jakub T. Jankiewicz</a><br/>Website content licenses with <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> unless noted otherwise.`,
+      copyright: `Copyright (c) 2018-${new Date().getFullYear()} <a href="https://jakub.jankiewicz.org">Jakub T. Jankiewicz</a><br/>Website content licensed with <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> unless noted otherwise.`,
     },
     prism: {
       theme: prismThemes.github,

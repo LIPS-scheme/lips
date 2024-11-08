@@ -34,3 +34,8 @@
 .hero.hero--primary {
     position: initial;
 }
+
+body .feedback-btn {
+    right: auto !important;
+    left: 20px !important;
+}

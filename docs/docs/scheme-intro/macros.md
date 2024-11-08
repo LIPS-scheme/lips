@@ -85,6 +85,12 @@ Macros can be nested, so one expression can expand into something you don't expe
 you have a function called `macroexpand-1` that should expand macro one time. Which in turn should
 expand just your macro.
 
+:::tip
+
+Before you read the next section, it's recommended to read about [quasiquote syntax](/docs/scheme-intro/data-types#quasiquote) first.
+
+:::
+
 ### New Control Flow Constructs
 
 With macros, you can define new control flow (e.g. like `if` statements). Here is an example of

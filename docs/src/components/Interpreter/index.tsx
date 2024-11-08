@@ -15,6 +15,14 @@ export interface TerminalProps extends CSSProperties {
   '--size': string;
 }
 
+function track(type: string, command: string) {
+  const _paq = globalThis._paq as PiwikTrack;
+  _paq.push(['trackEvent', 'REPL', type, command]);
+}
+
+type PiwikTrack = Array<Array<string>>;
+export type JQueryTerminal = ReturnType<typeof globalThis.terminal>;
+
 const replReady = () => {
     return (
         globalThis.jQuery &&
@@ -22,6 +30,16 @@ const replReady = () => {
         globalThis.terminal &&
         globalThis.lips
     );
+}
+
+// monkey patch keymap added by LIPS terminal
+function trackCommands(term: JQueryTerminal) {
+  const ENTER = term.cmd().keymap('ENTER');
+  term.cmd().keymap('ENTER', function(e: KeyboardEvent, orig: () => any) {
+    const command = term.get_command();
+    track('command', command);
+    return ENTER(e, orig);
+  });
 }
 
 export default function Interpreter(): JSX.Element {
@@ -43,7 +61,8 @@ export default function Interpreter(): JSX.Element {
   useLayoutEffect(() => {
     (function loop() {
       if (replReady() && styleReady()) {
-        initTerminal();
+        const term = initTerminal();
+        trackCommands(term);
       } else {
         setTimeout(loop, 100);
       }
@@ -53,10 +72,13 @@ export default function Interpreter(): JSX.Element {
 
   function execSnippet(selector = '.example:visible') {
     const $ = globalThis.jQuery;
-    const code = $(selector).text();
+    const $snippet = $(selector);
+    const code = $snippet.text();
+    const index = $snippet.closest('li').index();
     const term = $('.term').terminal();
     term.echo(term.get_prompt(), { formatters: false });
     term.exec(code, true);
+    track('snippet', index + 1);
     if (typeof screen.orientation === 'undefined') {
       setTimeout(() => term.focus(), 0);
     }

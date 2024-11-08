@@ -275,6 +275,34 @@ In both platforms you can access global JavaScript objects like normal variables
 ;; ==> "hello, LIPS"
 ```
 
+### Date and Time
+
+Since we have full access to JavaScript, we can access the `Date` object to manipulate date and time.
+
+```scheme
+(--> (new Date "2024-01-01 12:09:2")
+     (getFullYear))
+;; ==> 2024
+```
+
+```scheme
+(define (format-part number)
+  "(format-part number)
+
+   Convert number to string with leading zero. It should be used
+   for minutes, hours, and seconds."
+  (--> number (toString) (padStart 2 "0")))
+
+(let ((date (new Date "2024-01-01 12:09:02")))
+  (format "~a:~a:~a"
+          (format-part (date.getHours))
+          (format-part (date.getMinutes))
+          (format-part (date.getSeconds))))
+;; ==> "12:09:02"
+```
+
+You can also use Date time libraries like [date-fns](https://date-fns.org/).
+
 ### Interact with DOM
 
 Here is example how to add button to the page and add onclick handler using browser DOM
@@ -282,7 +310,7 @@ Here is example how to add button to the page and add onclick handler using brow
 
 ```scheme
 (let ((button (document.createElement "button")))
-  (set! button.innerText "click me!")
+  (set! button.innerHTML "click <strong>me</strong>!")
   (set! button.onclick (lambda () (alert "Hello, LIPS Scheme!")))
   (let ((style button.style))
     (set! style.position "absolute")
@@ -405,8 +433,9 @@ Read more about [function::bind](https://tinyurl.com/ykvb836s) and
 There are two legacy macros that are still part of LIPS, but you don't need
 them most of the time.
 
-* `.` - dot function was a first way to interact with JavaScript, it allowed to
-  get property from an object:
+##### The dot operator
+`.` - dot function was a first way to interact with JavaScript, it allowed to get property from an
+object:
 
 ```scheme
 (. document 'querySelector)
@@ -416,13 +445,18 @@ This returned function querySelector from document object in browser. Note that 
 as first element of the list (it's handled in special way by the parser). In any other place dot is a pair separator,
 see documentation about [Pairs in Scheme](/docs/scheme-intro/data-types#pairs).
 
-* `..` - this is a macro is that simplify usage of `.` procedure:
+
+##### The double dot operator
+
+`..` - this is a macro is that simplify usage of `.` procedure:
 
 ```scheme
 (.. document.querySelector)
 ```
 
-You still sometimes may want to use this instead of `-->` when you want to get
+##### Usage of Legacy `..` and `.` operators
+
+You still sometimes may want to use `.` instead of `-->` when you want to get
 property from an object returned by expression.
 
 In the old version of LIPS, you have to execute code like this:
@@ -696,7 +730,7 @@ next expression.
 ```
 
 This simplifies code when using promises, for instance using
-[fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+[fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) (AJAX).
 
 ```scheme
 (--> (fetch "https://scheme.org.pl/test/") (text) (match #/<h1>([^>]+)<\/h1>/) 1)
@@ -967,6 +1001,23 @@ You can also use the `Promise` constructor yourself:
 In the above example, we import a regular callback based fs module and use the `Promise` constructor
 abstracted away with a [lisp macro](/docs/scheme-intro/macros#lisp-macros).
 
+### ES Modules
+
+LIPS Scheme runs in ES Module, but `import` is reserved for experimental R7RS modules. If you want
+to import module that is ESM only. You need to access JavaScript dynamic import. But `global.import` is not defined. If you want to define JavaScript dynamic import, you can use code:
+
+```scheme
+(define $:import (global.eval "(x) => import(x)"))
+```
+
+You can use this function like this:
+
+```javascript
+(--> ($:import "fs/promises") (readFile "README.md" "utf8"))
+```
+
+But it will also work with ESM only module that can't be imported with `require`.
+
 ### Finding LIPS Scheme directory
 
 With help from `(require.resolve)` you can get the path of the root directory of LIPS Scheme:
@@ -1002,6 +1053,7 @@ $ lips -c file.xcb
 Will create `file.xcb` in same directory. For smaller files it make not have a difference when
 loading `.xcb` or `.scm` files.
 
+<<<<<<< HEAD
 **NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are
 treated as comments, so you can't compile the code that have those directives.
 
@@ -1019,3 +1071,13 @@ Library. You can use this syntax in Node based REPL (NPM executable).  The same 
 with the web. But note that the root directory reply on the path of the LIPS Scheme script file. So
 you if you bundle the code with Webpack or Rollup, LIPS may not find the root URL and may not be
 able to load the proper file.
+=======
+**NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are treated
+as comments, so you can't compile the code that have those directives.
+
+## Limitations
+
+LISP Scheme currently don't support [continuations](/docs/scheme-intro/continuations) and [Tail Call
+Optimization](/docs/scheme-intro/core#tail-call-optimization).  But they are part of the roadmap for
+version 1.0.
+>>>>>>> origin/master

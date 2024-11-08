@@ -18,8 +18,8 @@ There is also a function that write single character `(write-char x)`
 
 ## Standard input
 
-The standard input is a way to get stuff from the user. Scheme provide one function for this which
-is `read`. The function wait for the user to type something and return single
+The standard input is a way to get stuff from the user. Scheme provides one function for this which
+is `read`. The function waits for the user to type something and return single
 [S-Expression](/docs/scheme-intro/what-is-lisp#s-expressions).
 
 Example:
@@ -345,7 +345,7 @@ Some scheme implementations have `with-input-from-string` procedure:
 ;; ==> 10 (1 2 3 4)
 ```
 
-Procedure `with-input-from-string` changes the current-input-port so you can use `read` without an
+The procedure `with-input-from-string` changes the current-input-port so you can use `read` without an
 argument.
 
 Another useful procedure that some Scheme implementations have is `read-all`. It read all the

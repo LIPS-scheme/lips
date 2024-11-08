@@ -26,6 +26,7 @@ export default function FooterLayout({style, links, logo, copyright}) {
           </div>
         )}
       </div>
+      <script defer src="https://api.feedbhack.com/assets/app.js" website-id="6703059dee359a44f772ff78"></script>
       {baseUrl === currentPath && <MoreIcon />}
       <script dangerouslySetInnerHTML={{__html: `
 var owa_baseUrl = 'https://stats.jcubic.pl/';
@@ -41,6 +42,20 @@ owa_cmds.push(['trackClicks']);
     _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
     var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
 }());`}}/>
+      <script dangerouslySetInnerHTML={{__html: `
+     var _paq = _paq || [];
+    _paq.push(['setTrackingSource', 'jstc_tm']);
+    _paq.push(['enableLinkTracking']);
+    _paq.push(['setIpTracking', true]);
+    _paq.push(['setDomains', ['lips.js.org']]);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableJSErrorTracking']);
+    (function(p,i,w,ik) {
+        var g=ik.createElement('script'),s=ik.getElementsByTagName('script')[0];
+        _paq.push(['setTrackerUrl', p]);
+        _paq.push(['setSiteId', w]);
+        g.type='text/javascript';g.async=true;g.defer=true;g.src=i;s.parentNode.insertBefore(g,s);
+    })('https://jcubic.piwik.pro/ppms.php','https://jcubic.containers.piwik.pro/ppms.js','018719ec\u002D6793\u002D4a2d\u002D92f9\u002Db8b88a01d43c',document)`}}/>
     </footer>
   );
 }

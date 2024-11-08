@@ -21,14 +21,17 @@ and `<slot>` is an expression: (e.g.: `(/ 1 10)`)
 (+ 1 2 (/ 1 10))
 ```
 
-then continuation for expression `(/ 1 10)` is `(+ 1 2 <slot>)`. Scheme is unique because it allows
-to access continuations. They are first class objects like numbers or functions.
+then continuation for expression `(/ 1 10)` is `(+ 1 2 <slot>)`. Continuations is the next
+expression that needs to be evaluated.
+
+Scheme is unique because it allows to access continuations. They are first class objects like
+numbers or functions.
 
 ## Accessing current continuation
 
-To access the current continuation for expression, you use `call-with-current-continuation` or its
-abbreviation `call/cc`. The procedure `call/cc` accept a single procedure that get the continuation as
-first argument:
+To access the current continuation for expression, you need to use `call-with-current-continuation`
+or its abbreviation `call/cc`. The procedure `call/cc` accept a single procedure that get the
+continuation as first argument:
 
 ```scheme
 (call/cc (lambda (c)
@@ -56,7 +59,7 @@ You can save continuation inside a variable and call it later like a procedure.
 ```
 
 Here when you call a continuation `k` with value 10 it restores the state in `(+ 1 <slot>)` and
-execute that expression again with a value `10`.
+execute that expression again with a value `10` (expression `(+ 1 10)`).
 
 The continuation act like a procedure and return `#t` with `procedure?` predicate:
 
@@ -82,7 +85,7 @@ expression, but with continuations you can add one.
                         (loop (cdr lst))))))))
 ```
 
-You can even create abstrcation with anaphoric macro:
+You can even create abstraction with anaphoric macro:
 
 ```scheme
 (define-macro (alambda args . body)
@@ -107,7 +110,7 @@ and you can use this macro like normal `lambda`, but you have anaphoric `return`
 ;; ==> #t
 ```
 
-Here for-each always iterates over all elements, but with early exit it will return immediately when
+Here for-each always iterates over all elements, but with early exit, it will return immediately when
 found a value.
 
 ## Loops
@@ -130,7 +133,7 @@ You can create loops with continuations:
 ;; ==> (1 2 3 4 5 6 7 8 9 10)
 ```
 
-The first continuation creates an early exit, like in the previous example. But the second call/cc use
+The first continuation creates an early exit, like in the previous example. But the second `call/cc` use
 identity function (it return continuation). Which means that the continuation is saved in a loop
 variable. And each time it's called with `loop` as an argument, it's again assigned that
 continuation to loop variable. This is required for the next loop.

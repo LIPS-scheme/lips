@@ -4,6 +4,7 @@ import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
 import { Liquid } from 'liquidjs';
 import crypto from 'crypto';
+import { type CreateFeedItemsFn } from '@docusaurus/plugin-content-blog';
 
 const liquid = new Liquid();
 
@@ -21,16 +22,13 @@ async function path_exists(path: string) {
 }
 
 type RenderOptions = {
+  browser: Awaited<ReturnType<typeof puppeteer.launch>>;
   title: string;
   fullname: string;
   avatar: string;
   slug: string;
   date: Date
 };
-
-const browser = puppeteer.launch({
-  headless: true
-});
 
 function formatDate(lang: string, date: Date) {
   const options = { year: 'numeric', month: 'short', day: 'numeric' } as const;
@@ -44,7 +42,7 @@ function mktemp(suffix: string) {
   return path.join(os.tmpdir(), `${prefix}-${suffix}`);
 }
 
-export default async function render({ title, fullname, avatar, slug, date }: RenderOptions) {
+export async function render({ title, browser, fullname, avatar, slug, date }: RenderOptions) {
   const output_svg = await liquid.render(await svg, {
     fullname,
     title,
@@ -58,7 +56,7 @@ export default async function render({ title, fullname, avatar, slug, date }: Re
     await fs.mkdir(directory, { recursive: true });
   }
   const filename = `${directory}${slug}.png`;
-  const page = await (await browser).newPage();
+  const page = await browser.newPage();
   await page.setViewport({
     height: 630,
     width: 1200
@@ -73,4 +71,29 @@ export default async function render({ title, fullname, avatar, slug, date }: Re
 
   console.log(`[Docusaurs] Writing ${filename}`);
   await page.close();
+}
+
+type BlogPosts = Parameters<CreateFeedItemsFn>[0]['blogPosts'];
+
+export default async function renderBlogArticles(posts: BlogPosts) {
+    const browser = await puppeteer.launch({
+        headless: true
+    });
+    for (const post of posts) {
+        const author = post.metadata.authors[0];
+        const slug = post.metadata.permalink.replace(/^.*\//, '');
+        const title = post.metadata.title;
+        const fullname = author.name;
+        const avatar = author.imageURL;
+        const date = post.metadata.date;
+        await render({
+            browser,
+            title,
+            fullname,
+            avatar,
+            slug,
+            date: new Date(date)
+        });
+    }
+    await browser.close();
 }

@@ -5,7 +5,7 @@ const examples = [
 **NOTE**: you can hover over Scheme symbols and get tooltip with documentation.`,
     code: `;; &() is object literal used with quasiquote
 (let ((obj \`&(:name "LIPS Scheme"
-                :version ,lips.version)))
+              :version ,lips.version)))
   ;; you can access JavaScript properties
   ;; with dot notation, print is display + newline
   (print (string-append obj.name
