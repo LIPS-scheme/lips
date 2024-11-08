@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "template/Makefile"
+      - "package.json"
+      - "package-lock.json"
       - "Makefile"
       - "scripts/*"
       - "tests/*"
