@@ -210,6 +210,10 @@ body.full-screen .term {
     transition: transform 100ms linear;
     z-index: 100;
 }
+.run[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 .run:active {
     transform: translate(-100%, 1px);
 }

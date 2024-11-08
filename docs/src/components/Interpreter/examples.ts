@@ -137,9 +137,13 @@ const examples = [
 ;; but the return value is ignored so the terminal
 ;; is not paused when it find a Promise from
 ;; Terminal typing animation
-(ignore
-  (term.css "--background" "#2E2E2E")
-  (term.echo "This is LIPS Scheme" &(:typing #t)))`
+(ignore (term.animation
+          (lambda ()
+            (let (($button ($ ".run")))
+              ($button.attr "disabled" #t)
+              (term.css "--background" "#2E2E2E")
+              (term.echo "This is LIPS Scheme" &(:typing #t))
+              ($button.removeAttr "disabled")))))`
   },
   {
     description: 'Dynamic variables with R7RS parameterize',
