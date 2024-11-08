@@ -1,6 +1,10 @@
 import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-fs.readFile('../package.json', 'utf8').then(json => {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+fs.readFile(path.join(__dirname, '../package.json'), 'utf8').then(json => {
   const { version } = JSON.parse(json);
-  return fs.writeFile('version.json', JSON.stringify(version));
+  return fs.writeFile(path.join(__dirname, 'version.json'), JSON.stringify(version));
 });

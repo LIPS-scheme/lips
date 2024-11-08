@@ -39,7 +39,7 @@ define ver_date
 	-e "s/{{YEAR}}/${YEAR}/" $(1) || $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" $(1)
 endef
 
-ALL: Makefile package.json .$(VERSION) assets/classDiagram.svg dist/base.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb docs/reference.json
+ALL: Makefile package.json .$(VERSION) assets/classDiagram.svg dist/base.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb docs/reference.json docs/version.json
 
 dist/banner.js: src/banner.js src/lips.js .$(VERSION)
 	$(CP) src/banner.js dist/banner.js
@@ -48,6 +48,9 @@ dist/banner.js: src/banner.js src/lips.js .$(VERSION)
 dist/base.js: src/lips.js .$(VERSION)
 	$(SED) '/\/\*\*@license/,/\*\//d' < src/lips.js > dist/base.js
 	$(call ver_date,dist/base.js)
+
+docs/version.json: ./docs/version.mjs .$(VERSION)
+	$(NODE) ./docs/version.mjs
 
 dist/lips.js dist/lips.esm.js dist/lips.cjs: dist/banner.js dist/base.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
