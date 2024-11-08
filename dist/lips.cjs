@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. DEV
+ *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.20
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,63 +31,12 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 08 Nov 2024 13:26:12 +0000
+ * build: Fri, 08 Nov 2024 13:38:41 +0000
  */
 
 'use strict';
 
 var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
-function _classApplyDescriptorGet(receiver, descriptor) {
-  if (descriptor.get) {
-    return descriptor.get.call(receiver);
-  }
-  return descriptor.value;
-}
-
-function _classExtractFieldDescriptor(receiver, privateMap, action) {
-  if (!privateMap.has(receiver)) {
-    throw new TypeError("attempted to " + action + " private field on non-instance");
-  }
-  return privateMap.get(receiver);
-}
-
-function _classPrivateFieldGet(receiver, privateMap) {
-  var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get");
-  return _classApplyDescriptorGet(receiver, descriptor);
-}
-
-function _classApplyDescriptorSet(receiver, descriptor, value) {
-  if (descriptor.set) {
-    descriptor.set.call(receiver, value);
-  } else {
-    if (!descriptor.writable) {
-      throw new TypeError("attempted to set read only private field");
-    }
-    descriptor.value = value;
-  }
-}
-
-function _classPrivateFieldSet(receiver, privateMap, value) {
-  var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set");
-  _classApplyDescriptorSet(receiver, descriptor, value);
-  return value;
-}
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-  return self;
-}
-
-function _setPrototypeOf(o, p) {
-  _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
-    o.__proto__ = p;
-    return o;
-  };
-  return _setPrototypeOf(o, p);
-}
-
 function _isNativeReflectConstruct$1() {
   try {
     var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
@@ -95,6 +44,12 @@ function _isNativeReflectConstruct$1() {
   return (_isNativeReflectConstruct$1 = function _isNativeReflectConstruct() {
     return !!t;
   })();
+}
+
+function _setPrototypeOf(t, e) {
+  return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) {
+    return t.__proto__ = e, t;
+  }, _setPrototypeOf(t, e);
 }
 
 function _construct(t, e, r) {
@@ -105,39 +60,38 @@ function _construct(t, e, r) {
   return r && _setPrototypeOf(p, r.prototype), p;
 }
 
-function _readOnlyError(name) {
-  throw new TypeError("\"" + name + "\" is read-only");
+function _readOnlyError(r) {
+  throw new TypeError('"' + r + '" is read-only');
 }
 
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
+function _arrayWithHoles(r) {
+  if (Array.isArray(r)) return r;
 }
 
-function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+function _iterableToArray(r) {
+  if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r);
 }
 
-function _arrayLikeToArray$1(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-  return arr2;
+function _arrayLikeToArray$1(r, a) {
+  (null == a || a > r.length) && (a = r.length);
+  for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+  return n;
 }
 
-function _unsupportedIterableToArray$1(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray$1(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen);
+function _unsupportedIterableToArray$1(r, a) {
+  if (r) {
+    if ("string" == typeof r) return _arrayLikeToArray$1(r, a);
+    var t = {}.toString.call(r).slice(8, -1);
+    return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray$1(r, a) : void 0;
+  }
 }
 
 function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
-function _toArray(arr) {
-  return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableRest();
+function _toArray(r) {
+  return _arrayWithHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray$1(r) || _nonIterableRest();
 }
 
 function _typeof$1(o) {
@@ -150,109 +104,95 @@ function _typeof$1(o) {
   }, _typeof$1(o);
 }
 
-function _possibleConstructorReturn(self, call) {
-  if (call && (_typeof$1(call) === "object" || typeof call === "function")) {
-    return call;
-  } else if (call !== void 0) {
-    throw new TypeError("Derived constructors may only return object or undefined");
-  }
-  return _assertThisInitialized(self);
+function _assertThisInitialized(e) {
+  if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  return e;
 }
 
-function _getPrototypeOf(o) {
-  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-    return o.__proto__ || Object.getPrototypeOf(o);
-  };
-  return _getPrototypeOf(o);
+function _possibleConstructorReturn(t, e) {
+  if (e && ("object" == _typeof$1(e) || "function" == typeof e)) return e;
+  if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined");
+  return _assertThisInitialized(t);
 }
 
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function");
-  }
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
+function _getPrototypeOf(t) {
+  return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) {
+    return t.__proto__ || Object.getPrototypeOf(t);
+  }, _getPrototypeOf(t);
+}
+
+function _inherits(t, e) {
+  if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function");
+  t.prototype = Object.create(e && e.prototype, {
     constructor: {
-      value: subClass,
-      writable: true,
-      configurable: true
+      value: t,
+      writable: !0,
+      configurable: !0
     }
-  });
-  Object.defineProperty(subClass, "prototype", {
-    writable: false
-  });
-  if (superClass) _setPrototypeOf(subClass, superClass);
+  }), Object.defineProperty(t, "prototype", {
+    writable: !1
+  }), e && _setPrototypeOf(t, e);
 }
 
-function _isNativeFunction(fn) {
+function _isNativeFunction(t) {
   try {
-    return Function.toString.call(fn).indexOf("[native code]") !== -1;
-  } catch (e) {
-    return typeof fn === "function";
+    return -1 !== Function.toString.call(t).indexOf("[native code]");
+  } catch (n) {
+    return "function" == typeof t;
   }
 }
 
-function _wrapNativeSuper(Class) {
-  var _cache = typeof Map === "function" ? new Map() : undefined;
-  _wrapNativeSuper = function _wrapNativeSuper(Class) {
-    if (Class === null || !_isNativeFunction(Class)) return Class;
-    if (typeof Class !== "function") {
-      throw new TypeError("Super expression must either be null or a function");
-    }
-    if (typeof _cache !== "undefined") {
-      if (_cache.has(Class)) return _cache.get(Class);
-      _cache.set(Class, Wrapper);
+function _wrapNativeSuper(t) {
+  var r = "function" == typeof Map ? new Map() : void 0;
+  return _wrapNativeSuper = function _wrapNativeSuper(t) {
+    if (null === t || !_isNativeFunction(t)) return t;
+    if ("function" != typeof t) throw new TypeError("Super expression must either be null or a function");
+    if (void 0 !== r) {
+      if (r.has(t)) return r.get(t);
+      r.set(t, Wrapper);
     }
     function Wrapper() {
-      return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+      return _construct(t, arguments, _getPrototypeOf(this).constructor);
     }
-    Wrapper.prototype = Object.create(Class.prototype, {
+    return Wrapper.prototype = Object.create(t.prototype, {
       constructor: {
         value: Wrapper,
-        enumerable: false,
-        writable: true,
-        configurable: true
+        enumerable: !1,
+        writable: !0,
+        configurable: !0
       }
-    });
-    return _setPrototypeOf(Wrapper, Class);
-  };
-  return _wrapNativeSuper(Class);
+    }), _setPrototypeOf(Wrapper, t);
+  }, _wrapNativeSuper(t);
 }
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+function asyncGeneratorStep(n, t, e, r, o, a, c) {
   try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
+    var i = n[a](c),
+      u = i.value;
+  } catch (n) {
+    return void e(n);
   }
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
+  i.done ? t(u) : Promise.resolve(u).then(r, o);
 }
-function _asyncToGenerator(fn) {
+function _asyncToGenerator(n) {
   return function () {
-    var self = this,
-      args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+    var t = this,
+      e = arguments;
+    return new Promise(function (r, o) {
+      var a = n.apply(t, e);
+      function _next(n) {
+        asyncGeneratorStep(a, r, o, _next, _throw, "next", n);
       }
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      function _throw(n) {
+        asyncGeneratorStep(a, r, o, _next, _throw, "throw", n);
       }
-      _next(undefined);
+      _next(void 0);
     });
   };
 }
 
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
+function _classCallCheck(a, n) {
+  if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
 }
 
 function toPrimitive(t, r) {
@@ -268,69 +208,50 @@ function toPrimitive(t, r) {
 
 function toPropertyKey(t) {
   var i = toPrimitive(t, "string");
-  return "symbol" == _typeof$1(i) ? i : String(i);
+  return "symbol" == _typeof$1(i) ? i : i + "";
 }
 
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, toPropertyKey(descriptor.key), descriptor);
+function _defineProperties(e, r) {
+  for (var t = 0; t < r.length; t++) {
+    var o = r[t];
+    o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, toPropertyKey(o.key), o);
   }
 }
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  Object.defineProperty(Constructor, "prototype", {
-    writable: false
-  });
-  return Constructor;
+function _createClass(e, r, t) {
+  return r && _defineProperties(e.prototype, r), Object.defineProperty(e, "prototype", {
+    writable: !1
+  }), e;
 }
 
-function _defineProperty(obj, key, value) {
-  key = toPropertyKey(key);
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
+function _defineProperty(e, r, t) {
+  return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+    value: t,
+    enumerable: !0,
+    configurable: !0,
+    writable: !0
+  }) : e[r] = t, e;
+}
+
+function _objectWithoutPropertiesLoose(r, e) {
+  if (null == r) return {};
+  var t = {};
+  for (var n in r) if ({}.hasOwnProperty.call(r, n)) {
+    if (e.includes(n)) continue;
+    t[n] = r[n];
   }
-  return obj;
+  return t;
 }
 
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-  return target;
-}
-
-function _objectWithoutProperties(source, excluded) {
-  if (source == null) return {};
-  var target = _objectWithoutPropertiesLoose(source, excluded);
-  var key, i;
+function _objectWithoutProperties(e, t) {
+  if (null == e) return {};
+  var o,
+    r,
+    i = _objectWithoutPropertiesLoose(e, t);
   if (Object.getOwnPropertySymbols) {
-    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-    for (i = 0; i < sourceSymbolKeys.length; i++) {
-      key = sourceSymbolKeys[i];
-      if (excluded.indexOf(key) >= 0) continue;
-      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-      target[key] = source[key];
-    }
+    var s = Object.getOwnPropertySymbols(e);
+    for (r = 0; r < s.length; r++) o = s[r], t.includes(o) || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
   }
-  return target;
+  return i;
 }
 
 function _iterableToArrayLimit(r, l) {
@@ -361,30 +282,35 @@ function _iterableToArrayLimit(r, l) {
   }
 }
 
-function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$1(arr, i) || _nonIterableRest();
+function _slicedToArray(r, e) {
+  return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray$1(r, e) || _nonIterableRest();
 }
 
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return _arrayLikeToArray$1(arr);
+function _arrayWithoutHoles(r) {
+  if (Array.isArray(r)) return _arrayLikeToArray$1(r);
 }
 
 function _nonIterableSpread() {
   throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableSpread();
+function _toConsumableArray(r) {
+  return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray$1(r) || _nonIterableSpread();
 }
 
-function _OverloadYield(t, e) {
-  this.v = t, this.k = e;
+function _OverloadYield(e, d) {
+  this.v = e, this.k = d;
 }
 
 function _awaitAsyncGenerator(e) {
   return new _OverloadYield(e, 0);
 }
 
+function _wrapAsyncGenerator(e) {
+  return function () {
+    return new AsyncGenerator(e.apply(this, arguments));
+  };
+}
 function AsyncGenerator(e) {
   var r, t;
   function resume(r, t) {
@@ -448,12 +374,6 @@ AsyncGenerator.prototype["function" == typeof Symbol && Symbol.asyncIterator || 
   return this._invoke("return", e);
 };
 
-function _wrapAsyncGenerator(fn) {
-  return function () {
-    return new AsyncGenerator(fn.apply(this, arguments));
-  };
-}
-
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
@@ -462,346 +382,365 @@ var regeneratorRuntime$1 = {exports: {}};
 
 var _typeof = {exports: {}};
 
-(function (module) {
-	function _typeof(o) {
-	  "@babel/helpers - typeof";
+var hasRequired_typeof;
 
-	  return (module.exports = _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
-	    return typeof o;
-	  } : function (o) {
-	    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-	  }, module.exports.__esModule = true, module.exports["default"] = module.exports), _typeof(o);
-	}
-	module.exports = _typeof, module.exports.__esModule = true, module.exports["default"] = module.exports; 
-} (_typeof));
+function require_typeof () {
+	if (hasRequired_typeof) return _typeof.exports;
+	hasRequired_typeof = 1;
+	(function (module) {
+		function _typeof(o) {
+		  "@babel/helpers - typeof";
 
-var _typeofExports = _typeof.exports;
-
-(function (module) {
-	var _typeof = _typeofExports["default"];
-	function _regeneratorRuntime() {
-	  module.exports = _regeneratorRuntime = function _regeneratorRuntime() {
-	    return e;
-	  }, module.exports.__esModule = true, module.exports["default"] = module.exports;
-	  var t,
-	    e = {},
-	    r = Object.prototype,
-	    n = r.hasOwnProperty,
-	    o = Object.defineProperty || function (t, e, r) {
-	      t[e] = r.value;
-	    },
-	    i = "function" == typeof Symbol ? Symbol : {},
-	    a = i.iterator || "@@iterator",
-	    c = i.asyncIterator || "@@asyncIterator",
-	    u = i.toStringTag || "@@toStringTag";
-	  function define(t, e, r) {
-	    return Object.defineProperty(t, e, {
-	      value: r,
-	      enumerable: !0,
-	      configurable: !0,
-	      writable: !0
-	    }), t[e];
-	  }
-	  try {
-	    define({}, "");
-	  } catch (t) {
-	    define = function define(t, e, r) {
-	      return t[e] = r;
-	    };
-	  }
-	  function wrap(t, e, r, n) {
-	    var i = e && e.prototype instanceof Generator ? e : Generator,
-	      a = Object.create(i.prototype),
-	      c = new Context(n || []);
-	    return o(a, "_invoke", {
-	      value: makeInvokeMethod(t, r, c)
-	    }), a;
-	  }
-	  function tryCatch(t, e, r) {
-	    try {
-	      return {
-	        type: "normal",
-	        arg: t.call(e, r)
-	      };
-	    } catch (t) {
-	      return {
-	        type: "throw",
-	        arg: t
-	      };
-	    }
-	  }
-	  e.wrap = wrap;
-	  var h = "suspendedStart",
-	    l = "suspendedYield",
-	    f = "executing",
-	    s = "completed",
-	    y = {};
-	  function Generator() {}
-	  function GeneratorFunction() {}
-	  function GeneratorFunctionPrototype() {}
-	  var p = {};
-	  define(p, a, function () {
-	    return this;
-	  });
-	  var d = Object.getPrototypeOf,
-	    v = d && d(d(values([])));
-	  v && v !== r && n.call(v, a) && (p = v);
-	  var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p);
-	  function defineIteratorMethods(t) {
-	    ["next", "throw", "return"].forEach(function (e) {
-	      define(t, e, function (t) {
-	        return this._invoke(e, t);
-	      });
-	    });
-	  }
-	  function AsyncIterator(t, e) {
-	    function invoke(r, o, i, a) {
-	      var c = tryCatch(t[r], t, o);
-	      if ("throw" !== c.type) {
-	        var u = c.arg,
-	          h = u.value;
-	        return h && "object" == _typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) {
-	          invoke("next", t, i, a);
-	        }, function (t) {
-	          invoke("throw", t, i, a);
-	        }) : e.resolve(h).then(function (t) {
-	          u.value = t, i(u);
-	        }, function (t) {
-	          return invoke("throw", t, i, a);
-	        });
-	      }
-	      a(c.arg);
-	    }
-	    var r;
-	    o(this, "_invoke", {
-	      value: function value(t, n) {
-	        function callInvokeWithMethodAndArg() {
-	          return new e(function (e, r) {
-	            invoke(t, n, e, r);
-	          });
-	        }
-	        return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
-	      }
-	    });
-	  }
-	  function makeInvokeMethod(e, r, n) {
-	    var o = h;
-	    return function (i, a) {
-	      if (o === f) throw new Error("Generator is already running");
-	      if (o === s) {
-	        if ("throw" === i) throw a;
-	        return {
-	          value: t,
-	          done: !0
-	        };
-	      }
-	      for (n.method = i, n.arg = a;;) {
-	        var c = n.delegate;
-	        if (c) {
-	          var u = maybeInvokeDelegate(c, n);
-	          if (u) {
-	            if (u === y) continue;
-	            return u;
-	          }
-	        }
-	        if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) {
-	          if (o === h) throw o = s, n.arg;
-	          n.dispatchException(n.arg);
-	        } else "return" === n.method && n.abrupt("return", n.arg);
-	        o = f;
-	        var p = tryCatch(e, r, n);
-	        if ("normal" === p.type) {
-	          if (o = n.done ? s : l, p.arg === y) continue;
-	          return {
-	            value: p.arg,
-	            done: n.done
-	          };
-	        }
-	        "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg);
-	      }
-	    };
-	  }
-	  function maybeInvokeDelegate(e, r) {
-	    var n = r.method,
-	      o = e.iterator[n];
-	    if (o === t) return r.delegate = null, "throw" === n && e.iterator["return"] && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y;
-	    var i = tryCatch(o, e.iterator, r.arg);
-	    if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y;
-	    var a = i.arg;
-	    return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y);
-	  }
-	  function pushTryEntry(t) {
-	    var e = {
-	      tryLoc: t[0]
-	    };
-	    1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e);
-	  }
-	  function resetTryEntry(t) {
-	    var e = t.completion || {};
-	    e.type = "normal", delete e.arg, t.completion = e;
-	  }
-	  function Context(t) {
-	    this.tryEntries = [{
-	      tryLoc: "root"
-	    }], t.forEach(pushTryEntry, this), this.reset(!0);
-	  }
-	  function values(e) {
-	    if (e || "" === e) {
-	      var r = e[a];
-	      if (r) return r.call(e);
-	      if ("function" == typeof e.next) return e;
-	      if (!isNaN(e.length)) {
-	        var o = -1,
-	          i = function next() {
-	            for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next;
-	            return next.value = t, next.done = !0, next;
-	          };
-	        return i.next = i;
-	      }
-	    }
-	    throw new TypeError(_typeof(e) + " is not iterable");
-	  }
-	  return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", {
-	    value: GeneratorFunctionPrototype,
-	    configurable: !0
-	  }), o(GeneratorFunctionPrototype, "constructor", {
-	    value: GeneratorFunction,
-	    configurable: !0
-	  }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) {
-	    var e = "function" == typeof t && t.constructor;
-	    return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name));
-	  }, e.mark = function (t) {
-	    return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t;
-	  }, e.awrap = function (t) {
-	    return {
-	      __await: t
-	    };
-	  }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () {
-	    return this;
-	  }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) {
-	    void 0 === i && (i = Promise);
-	    var a = new AsyncIterator(wrap(t, r, n, o), i);
-	    return e.isGeneratorFunction(r) ? a : a.next().then(function (t) {
-	      return t.done ? t.value : a.next();
-	    });
-	  }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () {
-	    return this;
-	  }), define(g, "toString", function () {
-	    return "[object Generator]";
-	  }), e.keys = function (t) {
-	    var e = Object(t),
-	      r = [];
-	    for (var n in e) r.push(n);
-	    return r.reverse(), function next() {
-	      for (; r.length;) {
-	        var t = r.pop();
-	        if (t in e) return next.value = t, next.done = !1, next;
-	      }
-	      return next.done = !0, next;
-	    };
-	  }, e.values = values, Context.prototype = {
-	    constructor: Context,
-	    reset: function reset(e) {
-	      if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t);
-	    },
-	    stop: function stop() {
-	      this.done = !0;
-	      var t = this.tryEntries[0].completion;
-	      if ("throw" === t.type) throw t.arg;
-	      return this.rval;
-	    },
-	    dispatchException: function dispatchException(e) {
-	      if (this.done) throw e;
-	      var r = this;
-	      function handle(n, o) {
-	        return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o;
-	      }
-	      for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-	        var i = this.tryEntries[o],
-	          a = i.completion;
-	        if ("root" === i.tryLoc) return handle("end");
-	        if (i.tryLoc <= this.prev) {
-	          var c = n.call(i, "catchLoc"),
-	            u = n.call(i, "finallyLoc");
-	          if (c && u) {
-	            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
-	            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
-	          } else if (c) {
-	            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
-	          } else {
-	            if (!u) throw new Error("try statement without catch or finally");
-	            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
-	          }
-	        }
-	      }
-	    },
-	    abrupt: function abrupt(t, e) {
-	      for (var r = this.tryEntries.length - 1; r >= 0; --r) {
-	        var o = this.tryEntries[r];
-	        if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) {
-	          var i = o;
-	          break;
-	        }
-	      }
-	      i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null);
-	      var a = i ? i.completion : {};
-	      return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a);
-	    },
-	    complete: function complete(t, e) {
-	      if ("throw" === t.type) throw t.arg;
-	      return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y;
-	    },
-	    finish: function finish(t) {
-	      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
-	        var r = this.tryEntries[e];
-	        if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y;
-	      }
-	    },
-	    "catch": function _catch(t) {
-	      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
-	        var r = this.tryEntries[e];
-	        if (r.tryLoc === t) {
-	          var n = r.completion;
-	          if ("throw" === n.type) {
-	            var o = n.arg;
-	            resetTryEntry(r);
-	          }
-	          return o;
-	        }
-	      }
-	      throw new Error("illegal catch attempt");
-	    },
-	    delegateYield: function delegateYield(e, r, n) {
-	      return this.delegate = {
-	        iterator: values(e),
-	        resultName: r,
-	        nextLoc: n
-	      }, "next" === this.method && (this.arg = t), y;
-	    }
-	  }, e;
-	}
-	module.exports = _regeneratorRuntime, module.exports.__esModule = true, module.exports["default"] = module.exports; 
-} (regeneratorRuntime$1));
-
-var regeneratorRuntimeExports = regeneratorRuntime$1.exports;
-
-// TODO(Babel 8): Remove this file.
-
-var runtime = regeneratorRuntimeExports();
-var regenerator = runtime;
-
-// Copied from https://github.com/facebook/regenerator/blob/main/packages/runtime/runtime.js#L736=
-try {
-  regeneratorRuntime = runtime;
-} catch (accidentalStrictMode) {
-  if (typeof globalThis === "object") {
-    globalThis.regeneratorRuntime = runtime;
-  } else {
-    Function("r", "regeneratorRuntime = r")(runtime);
-  }
+		  return module.exports = _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+		    return typeof o;
+		  } : function (o) {
+		    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+		  }, module.exports.__esModule = true, module.exports["default"] = module.exports, _typeof(o);
+		}
+		module.exports = _typeof, module.exports.__esModule = true, module.exports["default"] = module.exports; 
+	} (_typeof));
+	return _typeof.exports;
 }
 
-var _regeneratorRuntime = /*@__PURE__*/getDefaultExportFromCjs(regenerator);
+var hasRequiredRegeneratorRuntime;
+
+function requireRegeneratorRuntime () {
+	if (hasRequiredRegeneratorRuntime) return regeneratorRuntime$1.exports;
+	hasRequiredRegeneratorRuntime = 1;
+	(function (module) {
+		var _typeof = require_typeof()["default"];
+		function _regeneratorRuntime() {
+		  module.exports = _regeneratorRuntime = function _regeneratorRuntime() {
+		    return e;
+		  }, module.exports.__esModule = true, module.exports["default"] = module.exports;
+		  var t,
+		    e = {},
+		    r = Object.prototype,
+		    n = r.hasOwnProperty,
+		    o = Object.defineProperty || function (t, e, r) {
+		      t[e] = r.value;
+		    },
+		    i = "function" == typeof Symbol ? Symbol : {},
+		    a = i.iterator || "@@iterator",
+		    c = i.asyncIterator || "@@asyncIterator",
+		    u = i.toStringTag || "@@toStringTag";
+		  function define(t, e, r) {
+		    return Object.defineProperty(t, e, {
+		      value: r,
+		      enumerable: !0,
+		      configurable: !0,
+		      writable: !0
+		    }), t[e];
+		  }
+		  try {
+		    define({}, "");
+		  } catch (t) {
+		    define = function define(t, e, r) {
+		      return t[e] = r;
+		    };
+		  }
+		  function wrap(t, e, r, n) {
+		    var i = e && e.prototype instanceof Generator ? e : Generator,
+		      a = Object.create(i.prototype),
+		      c = new Context(n || []);
+		    return o(a, "_invoke", {
+		      value: makeInvokeMethod(t, r, c)
+		    }), a;
+		  }
+		  function tryCatch(t, e, r) {
+		    try {
+		      return {
+		        type: "normal",
+		        arg: t.call(e, r)
+		      };
+		    } catch (t) {
+		      return {
+		        type: "throw",
+		        arg: t
+		      };
+		    }
+		  }
+		  e.wrap = wrap;
+		  var h = "suspendedStart",
+		    l = "suspendedYield",
+		    f = "executing",
+		    s = "completed",
+		    y = {};
+		  function Generator() {}
+		  function GeneratorFunction() {}
+		  function GeneratorFunctionPrototype() {}
+		  var p = {};
+		  define(p, a, function () {
+		    return this;
+		  });
+		  var d = Object.getPrototypeOf,
+		    v = d && d(d(values([])));
+		  v && v !== r && n.call(v, a) && (p = v);
+		  var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p);
+		  function defineIteratorMethods(t) {
+		    ["next", "throw", "return"].forEach(function (e) {
+		      define(t, e, function (t) {
+		        return this._invoke(e, t);
+		      });
+		    });
+		  }
+		  function AsyncIterator(t, e) {
+		    function invoke(r, o, i, a) {
+		      var c = tryCatch(t[r], t, o);
+		      if ("throw" !== c.type) {
+		        var u = c.arg,
+		          h = u.value;
+		        return h && "object" == _typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) {
+		          invoke("next", t, i, a);
+		        }, function (t) {
+		          invoke("throw", t, i, a);
+		        }) : e.resolve(h).then(function (t) {
+		          u.value = t, i(u);
+		        }, function (t) {
+		          return invoke("throw", t, i, a);
+		        });
+		      }
+		      a(c.arg);
+		    }
+		    var r;
+		    o(this, "_invoke", {
+		      value: function value(t, n) {
+		        function callInvokeWithMethodAndArg() {
+		          return new e(function (e, r) {
+		            invoke(t, n, e, r);
+		          });
+		        }
+		        return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
+		      }
+		    });
+		  }
+		  function makeInvokeMethod(e, r, n) {
+		    var o = h;
+		    return function (i, a) {
+		      if (o === f) throw Error("Generator is already running");
+		      if (o === s) {
+		        if ("throw" === i) throw a;
+		        return {
+		          value: t,
+		          done: !0
+		        };
+		      }
+		      for (n.method = i, n.arg = a;;) {
+		        var c = n.delegate;
+		        if (c) {
+		          var u = maybeInvokeDelegate(c, n);
+		          if (u) {
+		            if (u === y) continue;
+		            return u;
+		          }
+		        }
+		        if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) {
+		          if (o === h) throw o = s, n.arg;
+		          n.dispatchException(n.arg);
+		        } else "return" === n.method && n.abrupt("return", n.arg);
+		        o = f;
+		        var p = tryCatch(e, r, n);
+		        if ("normal" === p.type) {
+		          if (o = n.done ? s : l, p.arg === y) continue;
+		          return {
+		            value: p.arg,
+		            done: n.done
+		          };
+		        }
+		        "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg);
+		      }
+		    };
+		  }
+		  function maybeInvokeDelegate(e, r) {
+		    var n = r.method,
+		      o = e.iterator[n];
+		    if (o === t) return r.delegate = null, "throw" === n && e.iterator["return"] && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y;
+		    var i = tryCatch(o, e.iterator, r.arg);
+		    if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y;
+		    var a = i.arg;
+		    return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y);
+		  }
+		  function pushTryEntry(t) {
+		    var e = {
+		      tryLoc: t[0]
+		    };
+		    1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e);
+		  }
+		  function resetTryEntry(t) {
+		    var e = t.completion || {};
+		    e.type = "normal", delete e.arg, t.completion = e;
+		  }
+		  function Context(t) {
+		    this.tryEntries = [{
+		      tryLoc: "root"
+		    }], t.forEach(pushTryEntry, this), this.reset(!0);
+		  }
+		  function values(e) {
+		    if (e || "" === e) {
+		      var r = e[a];
+		      if (r) return r.call(e);
+		      if ("function" == typeof e.next) return e;
+		      if (!isNaN(e.length)) {
+		        var o = -1,
+		          i = function next() {
+		            for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next;
+		            return next.value = t, next.done = !0, next;
+		          };
+		        return i.next = i;
+		      }
+		    }
+		    throw new TypeError(_typeof(e) + " is not iterable");
+		  }
+		  return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", {
+		    value: GeneratorFunctionPrototype,
+		    configurable: !0
+		  }), o(GeneratorFunctionPrototype, "constructor", {
+		    value: GeneratorFunction,
+		    configurable: !0
+		  }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) {
+		    var e = "function" == typeof t && t.constructor;
+		    return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name));
+		  }, e.mark = function (t) {
+		    return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t;
+		  }, e.awrap = function (t) {
+		    return {
+		      __await: t
+		    };
+		  }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () {
+		    return this;
+		  }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) {
+		    void 0 === i && (i = Promise);
+		    var a = new AsyncIterator(wrap(t, r, n, o), i);
+		    return e.isGeneratorFunction(r) ? a : a.next().then(function (t) {
+		      return t.done ? t.value : a.next();
+		    });
+		  }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () {
+		    return this;
+		  }), define(g, "toString", function () {
+		    return "[object Generator]";
+		  }), e.keys = function (t) {
+		    var e = Object(t),
+		      r = [];
+		    for (var n in e) r.push(n);
+		    return r.reverse(), function next() {
+		      for (; r.length;) {
+		        var t = r.pop();
+		        if (t in e) return next.value = t, next.done = !1, next;
+		      }
+		      return next.done = !0, next;
+		    };
+		  }, e.values = values, Context.prototype = {
+		    constructor: Context,
+		    reset: function reset(e) {
+		      if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t);
+		    },
+		    stop: function stop() {
+		      this.done = !0;
+		      var t = this.tryEntries[0].completion;
+		      if ("throw" === t.type) throw t.arg;
+		      return this.rval;
+		    },
+		    dispatchException: function dispatchException(e) {
+		      if (this.done) throw e;
+		      var r = this;
+		      function handle(n, o) {
+		        return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o;
+		      }
+		      for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+		        var i = this.tryEntries[o],
+		          a = i.completion;
+		        if ("root" === i.tryLoc) return handle("end");
+		        if (i.tryLoc <= this.prev) {
+		          var c = n.call(i, "catchLoc"),
+		            u = n.call(i, "finallyLoc");
+		          if (c && u) {
+		            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
+		            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
+		          } else if (c) {
+		            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
+		          } else {
+		            if (!u) throw Error("try statement without catch or finally");
+		            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
+		          }
+		        }
+		      }
+		    },
+		    abrupt: function abrupt(t, e) {
+		      for (var r = this.tryEntries.length - 1; r >= 0; --r) {
+		        var o = this.tryEntries[r];
+		        if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) {
+		          var i = o;
+		          break;
+		        }
+		      }
+		      i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null);
+		      var a = i ? i.completion : {};
+		      return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a);
+		    },
+		    complete: function complete(t, e) {
+		      if ("throw" === t.type) throw t.arg;
+		      return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y;
+		    },
+		    finish: function finish(t) {
+		      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
+		        var r = this.tryEntries[e];
+		        if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y;
+		      }
+		    },
+		    "catch": function _catch(t) {
+		      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
+		        var r = this.tryEntries[e];
+		        if (r.tryLoc === t) {
+		          var n = r.completion;
+		          if ("throw" === n.type) {
+		            var o = n.arg;
+		            resetTryEntry(r);
+		          }
+		          return o;
+		        }
+		      }
+		      throw Error("illegal catch attempt");
+		    },
+		    delegateYield: function delegateYield(e, r, n) {
+		      return this.delegate = {
+		        iterator: values(e),
+		        resultName: r,
+		        nextLoc: n
+		      }, "next" === this.method && (this.arg = t), y;
+		    }
+		  }, e;
+		}
+		module.exports = _regeneratorRuntime, module.exports.__esModule = true, module.exports["default"] = module.exports; 
+	} (regeneratorRuntime$1));
+	return regeneratorRuntime$1.exports;
+}
+
+var regenerator;
+var hasRequiredRegenerator;
+
+function requireRegenerator () {
+	if (hasRequiredRegenerator) return regenerator;
+	hasRequiredRegenerator = 1;
+	// TODO(Babel 8): Remove this file.
+
+	var runtime = requireRegeneratorRuntime()();
+	regenerator = runtime;
+
+	// Copied from https://github.com/facebook/regenerator/blob/main/packages/runtime/runtime.js#L736=
+	try {
+	  regeneratorRuntime = runtime;
+	} catch (accidentalStrictMode) {
+	  if (typeof globalThis === "object") {
+	    globalThis.regeneratorRuntime = runtime;
+	  } else {
+	    Function("r", "regeneratorRuntime = r")(runtime);
+	  }
+	}
+	return regenerator;
+}
+
+var regeneratorExports = requireRegenerator();
+var _regeneratorRuntime = /*@__PURE__*/getDefaultExportFromCjs(regeneratorExports);
 
 let decoder;
 try {
@@ -816,6 +755,9 @@ const RECORD_INLINE_ID = 0xdfff; // temporary first-come first-serve tag // prop
 const BUNDLED_STRINGS_ID = 0xdff9;
 const PACKED_REFERENCE_TAG_ID = 6;
 const STOP_CODE = {};
+let maxArraySize = 112810000; // This is the maximum array size in V8. We would potentially detect and set it higher
+// for JSC, but this is pretty large and should be sufficient for most use cases
+let maxMapSize = 16810000; // JavaScript has a fixed maximum map size of about 16710000, but JS itself enforces this,
 let currentDecoder = {};
 let currentStructures;
 let srcString;
@@ -1088,6 +1030,7 @@ function read() {
 						let array = [];
 						let value, i = 0;
 						while ((value = read()) != STOP_CODE) {
+							if (i >= maxArraySize) throw new Error(`Array length exceeds ${maxArraySize}`)
 							array[i++] = value;
 						}
 						return majorType == 4 ? array : majorType == 3 ? array.join('') : Buffer.concat(array)
@@ -1095,8 +1038,19 @@ function read() {
 						let key;
 						if (currentDecoder.mapsAsObjects) {
 							let object = {};
-							if (currentDecoder.keyMap) while((key = read()) != STOP_CODE) object[safeKey(currentDecoder.decodeKey(key))] = read();
-							else while ((key = read()) != STOP_CODE) object[safeKey(key)] = read();
+							let i = 0;
+							if (currentDecoder.keyMap) {
+								while((key = read()) != STOP_CODE) {
+									if (i++ >= maxMapSize) throw new Error(`Property count exceeds ${maxMapSize}`)
+									object[safeKey(currentDecoder.decodeKey(key))] = read();
+								}
+							}
+							else {
+								while ((key = read()) != STOP_CODE) {
+									if (i++ >= maxMapSize) throw new Error(`Property count exceeds ${maxMapSize}`)
+									object[safeKey(key)] = read();
+								}
+							}
 							return object
 						} else {
 							if (restoreMapsAsObject) {
@@ -1104,8 +1058,24 @@ function read() {
 								restoreMapsAsObject = false;
 							}
 							let map = new Map();
-							if (currentDecoder.keyMap) while((key = read()) != STOP_CODE) map.set(currentDecoder.decodeKey(key), read());
-							else while ((key = read()) != STOP_CODE) map.set(key, read());
+							if (currentDecoder.keyMap) {
+								let i = 0;
+								while((key = read()) != STOP_CODE) {
+									if (i++ >= maxMapSize) {
+										throw new Error(`Map size exceeds ${maxMapSize}`);
+									}
+									map.set(currentDecoder.decodeKey(key), read());
+								}
+							}
+							else {
+								let i = 0;
+								while ((key = read()) != STOP_CODE) {
+									if (i++ >= maxMapSize) {
+										throw new Error(`Map size exceeds ${maxMapSize}`);
+									}
+									map.set(key, read());
+								}
+							}
 							return map
 						}
 					case 7:
@@ -1136,12 +1106,14 @@ function read() {
 			}
 			return readFixedString(token)
 		case 4: // array
+			if (token >= maxArraySize) throw new Error(`Array length exceeds ${maxArraySize}`)
 			let array = new Array(token);
 		  //if (currentDecoder.keyMap) for (let i = 0; i < token; i++) array[i] = currentDecoder.decodeKey(read())	
 			//else 
 			for (let i = 0; i < token; i++) array[i] = read();
 			return array
 		case 5: // map
+			if (token >= maxMapSize) throw new Error(`Map size exceeds ${maxArraySize}`)
 			if (currentDecoder.mapsAsObjects) {
 				let object = {};
 				if (currentDecoder.keyMap) for (let i = 0; i < token; i++) object[safeKey(currentDecoder.decodeKey(read()))] = read();
@@ -1243,6 +1215,7 @@ function read() {
 }
 const validName = /^[a-zA-Z_$][a-zA-Z\d_$]*$/;
 function createStructureReader(structure) {
+	if (!structure) throw new Error('Structure is required in record definition');
 	function readObject() {
 		// get the array size from the header
 		let length = src[position$1++];
@@ -1298,7 +1271,8 @@ function createStructureReader(structure) {
 function safeKey(key) {
 	// protect against prototype pollution
 	if (typeof key === 'string') return key === '__proto__' ? '__proto_' : key
-	if (typeof key !== 'object') return key.toString()
+	if (typeof key === 'number' || typeof key === 'boolean' || typeof key === 'bigint') return key.toString();
+	if (key == null) return key + '';
 	// protect against expensive (DoS) string conversions
 	throw new Error('Invalid property name type ' + typeof key);
 }
@@ -1566,7 +1540,7 @@ currentExtensions[2] = (buffer) => {
 	// bigint extension
 	let value = BigInt(0);
 	for (let i = 0, l = buffer.byteLength; i < l; i++) {
-		value = BigInt(buffer[i]) + value << BigInt(8);
+		value = BigInt(buffer[i]) + (value << BigInt(8));
 	}
 	return value
 };
@@ -1681,6 +1655,7 @@ currentExtensions[28] = (read) => {
 		referenceMap.id = 0;
 	}
 	let id = referenceMap.id++;
+	let startingPosition = position$1;
 	let token = src[position$1];
 	let target;
 	// TODO: handle Maps, Sets, and other types that can cycle; this is complicated, because you potentially need to read
@@ -1693,8 +1668,20 @@ currentExtensions[28] = (read) => {
 	let refEntry = { target }; // a placeholder object
 	referenceMap.set(id, refEntry);
 	let targetProperties = read(); // read the next value as the target object to id
-	if (refEntry.used) // there is a cycle, so we have to assign properties to original target
+	if (refEntry.used) {// there is a cycle, so we have to assign properties to original target
+		if (Object.getPrototypeOf(target) !== Object.getPrototypeOf(targetProperties)) {
+			// this means that the returned target does not match the targetProperties, so we need rerun the read to
+			// have the correctly create instance be assigned as a reference, then we do the copy the properties back to the
+			// target
+			// reset the position so that the read can be repeated
+			position$1 = startingPosition;
+			// the returned instance is our new target for references
+			target = targetProperties;
+			referenceMap.set(id, { target });
+			targetProperties = read();
+		}
 		return Object.assign(target, targetProperties)
+	}
 	refEntry.target = targetProperties; // the placeholder wasn't used, replace with the deserialized one
 	return targetProperties // no cycle, can just use the returned read object
 };
@@ -1776,7 +1763,7 @@ function registerTypedArray(TypedArray, tag) {
 	for (let littleEndian = 0; littleEndian < 2; littleEndian++) {
 		if (!littleEndian && bytesPerElement == 1)
 			continue
-		let sizeShift = bytesPerElement == 2 ? 1 : bytesPerElement == 4 ? 2 : 3;
+		let sizeShift = bytesPerElement == 2 ? 1 : bytesPerElement == 4 ? 2 : bytesPerElement == 8 ? 3 : 0;
 		currentExtensions[littleEndian ? tag : (tag - 4)] = (bytesPerElement == 1 || littleEndian == isLittleEndianMachine$1) ? (buffer) => {
 			if (!TypedArray)
 				throw new Error('Could not find typed array for code ' + tag)
@@ -1786,7 +1773,7 @@ function registerTypedArray(TypedArray, tag) {
 					bytesPerElement === 2 && !(buffer.byteOffset & 1) ||
 					bytesPerElement === 4 && !(buffer.byteOffset & 3) ||
 					bytesPerElement === 8 && !(buffer.byteOffset & 7))
-					return new TypedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+					return new TypedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength >> sizeShift);
 			}
 			// we have to slice/copy here to get a new ArrayBuffer, if we are not word/byte aligned
 			return new TypedArray(Uint8Array.prototype.slice.call(buffer, 0).buffer)
@@ -2375,7 +2362,7 @@ class Encoder extends Decoder {
 					}
 					let constructor = value.constructor;
 					if (constructor === Object) {
-						writeObject(value, true);
+						writeObject(value);
 					} else if (constructor === Array) {
 						length = value.length;
 						if (length < 0x18) {
@@ -2470,8 +2457,8 @@ class Encoder extends Decoder {
 								return encode(json)
 						}
 
-						// no extension found, write as object
-						writeObject(value, !value.hasOwnProperty); // if it doesn't have hasOwnProperty, don't do hasOwnProperty checks
+						// no extension found, write as a plain object
+						writeObject(value);
 					}
 				}
 			} else if (type === 'boolean') {
@@ -2491,7 +2478,19 @@ class Encoder extends Decoder {
 						target[position++] = 0xfb;
 						targetView.setFloat64(position, Number(value));
 					} else {
-						throw new RangeError(value + ' was too large to fit in CBOR 64-bit integer format, set largeBigIntToFloat to convert to float-64')
+						if (value >= BigInt(0))
+							target[position++] = 0xc2; // tag 2
+						else {
+							target[position++] = 0xc3; // tag 2
+							value = BigInt(-1) - value;
+						}
+						let bytes = [];
+						while (value) {
+							bytes.push(Number(value & BigInt(0xff)));
+							value >>= BigInt(8);
+						}
+						writeBuffer(new Uint8Array(bytes.reverse()), makeRoom);
+						return;
 					}
 				}
 				position += 8;
@@ -2533,19 +2532,19 @@ class Encoder extends Decoder {
 				}
 			}
 		} :
-		(object, safePrototype) => {
+		(object) => {
 			target[position++] = 0xb9; // always use map 16, so we can preallocate and set the length afterwards
 			let objectOffset = position - start;
 			position += 2;
 			let size = 0;
-			if (encoder.keyMap) { 
-				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+			if (encoder.keyMap) {
+				for (let key in object) if (typeof object.hasOwnProperty !== 'function' || object.hasOwnProperty(key)) {
 					encode(encoder.encodeKey(key));
 					encode(object[key]);
 					size++;
 				}
 			} else { 
-				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+				for (let key in object) if (typeof object.hasOwnProperty !== 'function' || object.hasOwnProperty(key)) {
 						encode(key);
 						encode(object[key]);
 					size++;
@@ -2554,7 +2553,7 @@ class Encoder extends Decoder {
 			target[objectOffset++ + start] = size >> 8;
 			target[objectOffset + start] = size & 0xff;
 		} :
-		(object, safePrototype) => {
+		(object, skipValues) => {
 			let nextTransition, transition = structures.transitions || (structures.transitions = Object.create(null));
 			let newTransitions = 0;
 			let length = 0;
@@ -2573,7 +2572,7 @@ class Encoder extends Decoder {
 					transition = nextTransition;
 				}				
 			} else {
-				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+				for (let key in object) if (typeof object.hasOwnProperty !== 'function' || object.hasOwnProperty(key)) {
 					nextTransition = transition[key];
 					if (!nextTransition) {
 						if (transition[RECORD_SYMBOL] & 0x100000) {// this indicates it is a brancheable/extendable terminal node, so we will use this record id and extend it
@@ -2633,9 +2632,9 @@ class Encoder extends Decoder {
 					writeArrayHeader(length + 2);
 					encode(0xe000 + recordId);
 					encode(keys);
-					if (safePrototype === null) return; // special exit for iterator
+					if (skipValues) return; // special exit for iterator
 					for (let key in object)
-						if (safePrototype || object.hasOwnProperty(key))
+						if (typeof object.hasOwnProperty !== 'function' || object.hasOwnProperty(key))
 							encode(object[key]);
 					return
 				}
@@ -2645,9 +2644,9 @@ class Encoder extends Decoder {
 			} else {
 				writeArrayHeader(length);
 			}
-			if (safePrototype === null) return; // special exit for iterator
+			if (skipValues) return; // special exit for iterator
 			for (let key in object)
-				if (safePrototype || object.hasOwnProperty(key))
+				if (typeof object.hasOwnProperty !== 'function' || object.hasOwnProperty(key))
 					encode(object[key]);
 		};
 		const makeRoom = (end) => {
@@ -2685,7 +2684,7 @@ class Encoder extends Decoder {
 			if (constructor === Object) {
 				let useRecords = encoder.useRecords !== false;
 				if (useRecords)
-					writeObject(object, null); // write the record identifier
+					writeObject(object, true); // write the record identifier
 				else
 					writeEntityLength(Object.keys(object).length, 0xa0);
 				for (let key in object) {
@@ -2710,7 +2709,7 @@ class Encoder extends Decoder {
 							yield* tryEncode(value, iterateProperties, 'element');
 					} else encode(value);
 				}
-			} else if (object[Symbol.iterator]) {
+			} else if (object[Symbol.iterator] && !object.buffer) { // iterator, but exclude typed arrays
 				target[position++] = 0x9f; // start indefinite array
 				for (let value of object) {
 					if (value && (typeof value === 'object' || position - start > chunkThreshold)) {
@@ -3130,289 +3129,299 @@ var lzjbPack = {};
  * build: Wed, 27 Oct 2021 10:43:10 GMT
  */
 
-Object.defineProperty(lzjbPack, '__esModule', { value: true });
+var hasRequiredLzjbPack;
 
-/*
- * source https://github.com/copy/jslzjb-k
- * Based on jslzjb: https://code.google.com/p/jslzjb/
- * Heavily modified for speed
- */
-// Constants was used for compress/decompress function.
-const
-/** @const */ NBBY = 8,
-      /** @const */ MATCH_BITS = 6,
-      /** @const */ MATCH_MIN = 3,
-      /** @const */ MATCH_MAX = ((1 << MATCH_BITS) + (MATCH_MIN - 1)),
-      /** @const */ OFFSET_MASK = ((1 << (16 - MATCH_BITS)) - 1),
-      /** @const */ LEMPEL_SIZE = 256;
+function requireLzjbPack () {
+	if (hasRequiredLzjbPack) return lzjbPack;
+	hasRequiredLzjbPack = 1;
 
-/**
-  * Because of weak of javascript's natural, many compression algorithm
-  * become useless in javascript implementation. The main problem is
-  * performance, even the simple Huffman, LZ77/78 algorithm will take many
-  * many time to operate. We use LZJB algorithm to do that, it suprisingly
-  * fulfills our requirement to compress string fastly and efficiently.
-  *
-  * Our implementation is based on
-  * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
-  * usr/src/uts/common/os/compress.c
-  * It is licensed under CDDL.
-  *
-  * Compress byte array using fast and efficient algorithm.
-  *
-  * @param {Uint8Array} sstart  The buffer to compress
-  * @param {Uint8Array} dstart  The buffer to write into
-  * @return {number} compressed length (number of bytes written to the
-  *                  output buffer). May be bigger than the size of the
-  *                  output buffer, in which case some bytes are lost
-  */
-function compress(sstart, dstart) {
-    var slen = 0,
-        src = 0,
-        dst = 0,
-        cpy = 0,
-        copymap = 0,
-        copymask = 1 << (NBBY - 1),
-        mlen = 0,
-        offset = 0,
-        hp = 0,
-        lempel = new Int32Array(LEMPEL_SIZE),
-        i = 0;
+	Object.defineProperty(lzjbPack, '__esModule', { value: true });
 
-    // Initialize lempel array.
-    for(i = 0; i < LEMPEL_SIZE; i++) {
-        lempel[i] = -858993460;
-    }
+	/*
+	 * source https://github.com/copy/jslzjb-k
+	 * Based on jslzjb: https://code.google.com/p/jslzjb/
+	 * Heavily modified for speed
+	 */
+	// Constants was used for compress/decompress function.
+	const
+	/** @const */ NBBY = 8,
+	      /** @const */ MATCH_BITS = 6,
+	      /** @const */ MATCH_MIN = 3,
+	      /** @const */ MATCH_MAX = ((1 << MATCH_BITS) + (MATCH_MIN - 1)),
+	      /** @const */ OFFSET_MASK = ((1 << (16 - MATCH_BITS)) - 1),
+	      /** @const */ LEMPEL_SIZE = 256;
 
-    slen = sstart.length;
+	/**
+	  * Because of weak of javascript's natural, many compression algorithm
+	  * become useless in javascript implementation. The main problem is
+	  * performance, even the simple Huffman, LZ77/78 algorithm will take many
+	  * many time to operate. We use LZJB algorithm to do that, it suprisingly
+	  * fulfills our requirement to compress string fastly and efficiently.
+	  *
+	  * Our implementation is based on
+	  * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
+	  * usr/src/uts/common/os/compress.c
+	  * It is licensed under CDDL.
+	  *
+	  * Compress byte array using fast and efficient algorithm.
+	  *
+	  * @param {Uint8Array} sstart  The buffer to compress
+	  * @param {Uint8Array} dstart  The buffer to write into
+	  * @return {number} compressed length (number of bytes written to the
+	  *                  output buffer). May be bigger than the size of the
+	  *                  output buffer, in which case some bytes are lost
+	  */
+	function compress(sstart, dstart) {
+	    var slen = 0,
+	        src = 0,
+	        dst = 0,
+	        cpy = 0,
+	        copymap = 0,
+	        copymask = 1 << (NBBY - 1),
+	        mlen = 0,
+	        offset = 0,
+	        hp = 0,
+	        lempel = new Int32Array(LEMPEL_SIZE),
+	        i = 0;
 
-    while (src < slen) {
-        if ((copymask <<= 1) == (1 << NBBY)) {
-            copymask = 1;
-            copymap = dst;
-            dstart[dst++] = 0;
-        }
+	    // Initialize lempel array.
+	    for(i = 0; i < LEMPEL_SIZE; i++) {
+	        lempel[i] = -858993460;
+	    }
 
-        if (src > slen - MATCH_MAX) {
-            dstart[dst++] = sstart[src++];
-            continue;
-        }
+	    slen = sstart.length;
 
-        hp = ((sstart[src] + 13) ^
-              (sstart[src + 1] - 13) ^
-              sstart[src + 2]) &
-            (LEMPEL_SIZE - 1);
+	    while (src < slen) {
+	        if ((copymask <<= 1) == (1 << NBBY)) {
+	            copymask = 1;
+	            copymap = dst;
+	            dstart[dst++] = 0;
+	        }
 
-        offset = (src - lempel[hp]) & OFFSET_MASK;
-        lempel[hp] = src;
-        cpy = src - offset;
+	        if (src > slen - MATCH_MAX) {
+	            dstart[dst++] = sstart[src++];
+	            continue;
+	        }
 
-        if (cpy >= 0 && cpy != src &&
-            sstart[src] == sstart[cpy] &&
-            sstart[src + 1] == sstart[cpy + 1] &&
-            sstart[src + 2] == sstart[cpy + 2]) {
-            dstart[copymap] |= copymask;
-            for (mlen = MATCH_MIN; mlen < MATCH_MAX; mlen++)
-                if (sstart[src + mlen] != sstart[cpy + mlen])
-                    break;
-            dstart[dst++] = ((mlen - MATCH_MIN) << (NBBY - MATCH_BITS)) |
-                (offset >> NBBY);
-            dstart[dst++] = offset;
-            src += mlen;
-        } else {
-            dstart[dst++] = sstart[src++];
-        }
-    }
+	        hp = ((sstart[src] + 13) ^
+	              (sstart[src + 1] - 13) ^
+	              sstart[src + 2]) &
+	            (LEMPEL_SIZE - 1);
 
-    console.assert(sstart.length >= src);
+	        offset = (src - lempel[hp]) & OFFSET_MASK;
+	        lempel[hp] = src;
+	        cpy = src - offset;
 
-    return dst;
+	        if (cpy >= 0 && cpy != src &&
+	            sstart[src] == sstart[cpy] &&
+	            sstart[src + 1] == sstart[cpy + 1] &&
+	            sstart[src + 2] == sstart[cpy + 2]) {
+	            dstart[copymap] |= copymask;
+	            for (mlen = MATCH_MIN; mlen < MATCH_MAX; mlen++)
+	                if (sstart[src + mlen] != sstart[cpy + mlen])
+	                    break;
+	            dstart[dst++] = ((mlen - MATCH_MIN) << (NBBY - MATCH_BITS)) |
+	                (offset >> NBBY);
+	            dstart[dst++] = offset;
+	            src += mlen;
+	        } else {
+	            dstart[dst++] = sstart[src++];
+	        }
+	    }
+
+	    console.assert(sstart.length >= src);
+
+	    return dst;
+	}
+
+	/**
+	  * Our implementation is based on
+	  * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
+	  * usr/src/uts/common/os/compress.c
+	  * It is licensed under CDDL.
+	  *
+	  * Decompress byte array using fast and efficient algorithm.
+	  *
+	  * @param {Uint8Array} sstart  The buffer to decompress
+	  * @param {number} slen  compressed length
+	  * @param {Uint8Array} dstart  The buffer to write into
+	  * @return {number} decompressed length
+	  */
+	function decompress(sstart, slen, dstart) {
+	    slen = slen | 0;
+
+	    var src = 0,
+	        dst = 0,
+	        cpy = 0,
+	        copymap = 0,
+	        copymask = 1 << (NBBY - 1 | 0),
+	        mlen = 0,
+	        offset = 0;
+
+	    //var avg_mlen = [];
+
+	    while (src < slen) {
+	        if ((copymask <<= 1) === (1 << NBBY)) {
+	            copymask = 1;
+	            copymap = sstart[src];
+	            src = src + 1 | 0;
+	        }
+
+	        if (copymap & copymask) {
+	            mlen = (sstart[src] >> (NBBY - MATCH_BITS | 0)) + MATCH_MIN | 0;
+	            offset = ((sstart[src] << NBBY) | sstart[src + 1 | 0]) & OFFSET_MASK;
+	            src = src + 2 | 0;
+
+	            cpy = dst - offset | 0;
+	            //if (cpy >= 0)
+	            {
+	                //console.log(mlen);
+	                //avg_mlen.push(mlen);
+
+	                //dstart.set(dstart.subarray(cpy, cpy + mlen | 0), dst);
+	                //dst = dst + mlen | 0;
+	                //cpy = cpy + mlen | 0;
+
+	                //mlen = mlen - 1 | 0;
+	                while (mlen > 4) {
+	                    dstart[dst] = dstart[cpy];
+	                    dst = dst + 1 | 0;
+	                    cpy = cpy + 1 | 0;
+
+	                    dstart[dst] = dstart[cpy];
+	                    dst = dst + 1 | 0;
+	                    cpy = cpy + 1 | 0;
+
+	                    dstart[dst] = dstart[cpy];
+	                    dst = dst + 1 | 0;
+	                    cpy = cpy + 1 | 0;
+
+	                    dstart[dst] = dstart[cpy];
+	                    dst = dst + 1 | 0;
+	                    cpy = cpy + 1 | 0;
+
+	                    mlen = mlen - 4 | 0;
+	                }
+
+	                while (mlen > 0) {
+	                    dstart[dst] = dstart[cpy];
+	                    dst = dst + 1 | 0;
+	                    cpy = cpy + 1 | 0;
+	                    mlen = mlen - 1 | 0;
+	                }
+	            }
+	            //else
+	            //{
+	            //    /*
+	            //     * offset before start of destination buffer
+	            //     * indicates corrupt source data
+	            //     */
+	            //    console.warn("possibly corrupt data");
+	            //    return dstart;
+	            //}
+	        } else {
+	            dstart[dst] = sstart[src];
+	            dst = dst + 1 | 0;
+	            src = src + 1 | 0;
+	        }
+	    }
+
+	    //console.log(avg_mlen.reduce(function(a, x) { return a + x; }, 0) / avg_mlen.length);
+
+	    //console.assert(dstart.length >= dst);
+	    //console.assert(sstart.length >= src);
+
+	    return dst;
+	}
+
+
+	function encode_magic() {
+	    const encoder = new TextEncoder('utf-8');
+	    return encoder.encode(MAGIC_STRING);
+	}
+
+	const MAGIC_STRING = '@lzjb';
+	const MAGIC = encode_magic();
+
+	function merge_uint8_array(...args) {
+	    if (args.length > 1) {
+	        const len = args.reduce((acc, arr) => acc + arr.length, 0);
+	        const result = new Uint8Array(len);
+	        let offset = 0;
+	        args.forEach(item => {
+	            result.set(item, offset);
+	            offset += item.length;
+	        });
+	        return result;
+	    } else if (args.length) {
+	        return args[0];
+	    }
+	}
+
+	function number_to_bytes(number) {
+	    const len = Math.ceil(Math.log2(number) / 8);
+	    const byteArray = new Uint8Array(len);
+
+	    for (let index = 0; index < byteArray.length; index ++ ) {
+	        const byte = number & 0xff;
+	        byteArray[index] = byte;
+	        number = (number - byte) / 256;
+	    }
+
+	    return byteArray;
+	}
+
+	function bytes_to_number(byteArray) {
+	    let result = 0;
+	    for (let i = byteArray.length - 1; i >= 0; i--) {
+	        result = (result * 256) + byteArray[i];
+	    }
+
+	    return result;
+	}
+
+	function pack(input, { magic = true } = {}) {
+	    const out = new Uint8Array(Math.max(input.length * 1.5 | 0, 16 * 1024));
+	    const len = compress(input, out);
+	    const len_array = number_to_bytes(input.length);
+	    const payload = [
+	        Uint8Array.of(len_array.length),
+	        len_array,
+	        out.slice(0, len)
+	    ];
+	    if (magic) {
+	        payload.unshift(MAGIC);
+	    }
+	    return merge_uint8_array(...payload);
+	}
+
+	function unpack(input, { magic = true } = {}) {
+	    if (magic) {
+	        const decoder = new TextDecoder('utf-8');
+	        const magic_prefix = decoder.decode(input.slice(0, MAGIC.length));
+	        if (magic_prefix !== MAGIC_STRING) {
+	            throw new Error('Invalid magic value');
+	        }
+	    }
+	    const magic_length = magic ? MAGIC.length : 0;
+	    const size = input[magic_length];
+	    const start = magic_length + 1;
+	    const end = magic_length + size + 1;
+	    const len = bytes_to_number(input.slice(start, end));
+	    input = input.slice(end);
+	    const out = new Uint8Array(len);
+	    decompress(input, input.length, out);
+	    return out;
+	}
+
+	lzjbPack.pack = pack;
+	lzjbPack.unpack = unpack;
+	return lzjbPack;
 }
 
-/**
-  * Our implementation is based on
-  * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
-  * usr/src/uts/common/os/compress.c
-  * It is licensed under CDDL.
-  *
-  * Decompress byte array using fast and efficient algorithm.
-  *
-  * @param {Uint8Array} sstart  The buffer to decompress
-  * @param {number} slen  compressed length
-  * @param {Uint8Array} dstart  The buffer to write into
-  * @return {number} decompressed length
-  */
-function decompress(sstart, slen, dstart) {
-    slen = slen | 0;
+var lzjbPackExports = requireLzjbPack();
 
-    var src = 0,
-        dst = 0,
-        cpy = 0,
-        copymap = 0,
-        copymask = 1 << (NBBY - 1 | 0),
-        mlen = 0,
-        offset = 0;
-
-    //var avg_mlen = [];
-
-    while (src < slen) {
-        if ((copymask <<= 1) === (1 << NBBY)) {
-            copymask = 1;
-            copymap = sstart[src];
-            src = src + 1 | 0;
-        }
-
-        if (copymap & copymask) {
-            mlen = (sstart[src] >> (NBBY - MATCH_BITS | 0)) + MATCH_MIN | 0;
-            offset = ((sstart[src] << NBBY) | sstart[src + 1 | 0]) & OFFSET_MASK;
-            src = src + 2 | 0;
-
-            cpy = dst - offset | 0;
-            //if (cpy >= 0)
-            {
-                //console.log(mlen);
-                //avg_mlen.push(mlen);
-
-                //dstart.set(dstart.subarray(cpy, cpy + mlen | 0), dst);
-                //dst = dst + mlen | 0;
-                //cpy = cpy + mlen | 0;
-
-                //mlen = mlen - 1 | 0;
-                while (mlen > 4) {
-                    dstart[dst] = dstart[cpy];
-                    dst = dst + 1 | 0;
-                    cpy = cpy + 1 | 0;
-
-                    dstart[dst] = dstart[cpy];
-                    dst = dst + 1 | 0;
-                    cpy = cpy + 1 | 0;
-
-                    dstart[dst] = dstart[cpy];
-                    dst = dst + 1 | 0;
-                    cpy = cpy + 1 | 0;
-
-                    dstart[dst] = dstart[cpy];
-                    dst = dst + 1 | 0;
-                    cpy = cpy + 1 | 0;
-
-                    mlen = mlen - 4 | 0;
-                }
-
-                while (mlen > 0) {
-                    dstart[dst] = dstart[cpy];
-                    dst = dst + 1 | 0;
-                    cpy = cpy + 1 | 0;
-                    mlen = mlen - 1 | 0;
-                }
-            }
-            //else
-            //{
-            //    /*
-            //     * offset before start of destination buffer
-            //     * indicates corrupt source data
-            //     */
-            //    console.warn("possibly corrupt data");
-            //    return dstart;
-            //}
-        } else {
-            dstart[dst] = sstart[src];
-            dst = dst + 1 | 0;
-            src = src + 1 | 0;
-        }
-    }
-
-    //console.log(avg_mlen.reduce(function(a, x) { return a + x; }, 0) / avg_mlen.length);
-
-    //console.assert(dstart.length >= dst);
-    //console.assert(sstart.length >= src);
-
-    return dst;
-}
-
-
-function encode_magic$1() {
-    const encoder = new TextEncoder('utf-8');
-    return encoder.encode(MAGIC_STRING);
-}
-
-const MAGIC_STRING = '@lzjb';
-const MAGIC = encode_magic$1();
-
-function merge_uint8_array$1(...args) {
-    if (args.length > 1) {
-        const len = args.reduce((acc, arr) => acc + arr.length, 0);
-        const result = new Uint8Array(len);
-        let offset = 0;
-        args.forEach(item => {
-            result.set(item, offset);
-            offset += item.length;
-        });
-        return result;
-    } else if (args.length) {
-        return args[0];
-    }
-}
-
-function number_to_bytes(number) {
-    const len = Math.ceil(Math.log2(number) / 8);
-    const byteArray = new Uint8Array(len);
-
-    for (let index = 0; index < byteArray.length; index ++ ) {
-        const byte = number & 0xff;
-        byteArray[index] = byte;
-        number = (number - byte) / 256;
-    }
-
-    return byteArray;
-}
-
-function bytes_to_number(byteArray) {
-    let result = 0;
-    for (let i = byteArray.length - 1; i >= 0; i--) {
-        result = (result * 256) + byteArray[i];
-    }
-
-    return result;
-}
-
-function pack(input, { magic = true } = {}) {
-    const out = new Uint8Array(Math.max(input.length * 1.5 | 0, 16 * 1024));
-    const len = compress(input, out);
-    const len_array = number_to_bytes(input.length);
-    const payload = [
-        Uint8Array.of(len_array.length),
-        len_array,
-        out.slice(0, len)
-    ];
-    if (magic) {
-        payload.unshift(MAGIC);
-    }
-    return merge_uint8_array$1(...payload);
-}
-
-function unpack(input, { magic = true } = {}) {
-    if (magic) {
-        const decoder = new TextDecoder('utf-8');
-        const magic_prefix = decoder.decode(input.slice(0, MAGIC.length));
-        if (magic_prefix !== MAGIC_STRING) {
-            throw new Error('Invalid magic value');
-        }
-    }
-    const magic_length = magic ? MAGIC.length : 0;
-    const size = input[magic_length];
-    const start = magic_length + 1;
-    const end = magic_length + size + 1;
-    const len = bytes_to_number(input.slice(start, end));
-    input = input.slice(end);
-    const out = new Uint8Array(len);
-    decompress(input, input.length, out);
-    return out;
-}
-
-var pack_1 = lzjbPack.pack = pack;
-var unpack_1 = lzjbPack.unpack = unpack;
-
-function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttpRequest,o=[],u=[],i={},a=function(){return {ok:2==(s.status/100|0),statusText:s.statusText,status:s.status,url:s.responseURL,text:function(){return Promise.resolve(s.responseText)},json:function(){return Promise.resolve(s.responseText).then(JSON.parse)},blob:function(){return Promise.resolve(new Blob([s.response]))},clone:a,headers:{keys:function(){return o},entries:function(){return u},get:function(e){return i[e.toLowerCase()]},has:function(e){return e.toLowerCase()in i}}}};for(var l in s.open(n.method||"get",e,!0),s.onload=function(){s.getAllResponseHeaders().replace(/^(.*?):[^\S\n]*([\s\S]*?)$/gm,function(e,n,t){o.push(n=n.toLowerCase()),u.push([n,t]),i[n]=i[n]?i[n]+","+t:t;}),t(a());},s.onerror=r,s.withCredentials="include"==n.credentials,n.headers)s.setRequestHeader(l,n.headers[l]);s.send(n.body||null);})}
+function e(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttpRequest,o=[],u={},a=function e(){return {ok:2==(s.status/100|0),statusText:s.statusText,status:s.status,url:s.responseURL,text:function(){return Promise.resolve(s.responseText)},json:function(){return Promise.resolve(s.responseText).then(JSON.parse)},blob:function(){return Promise.resolve(new Blob([s.response]))},clone:e,headers:{keys:function(){return o},entries:function(){return o.map(function(e){return [e,s.getResponseHeader(e)]})},get:function(e){return s.getResponseHeader(e)},has:function(e){return null!=s.getResponseHeader(e)}}}};for(var i in s.open(n.method||"get",e,!0),s.onload=function(){s.getAllResponseHeaders().toLowerCase().replace(/^(.+?):/gm,function(e,n){u[n]||o.push(u[n]=n);}),t(a());},s.onerror=r,s.withCredentials="include"==n.credentials,n.headers)s.setRequestHeader(i,n.headers[i]);s.send(n.body||null);})}
 
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
@@ -3424,13 +3433,16 @@ var _excluded = ["token"],
   _excluded4 = ["use_dynamic"],
   _excluded5 = ["use_dynamic"],
   _excluded6 = ["env", "dynamic_env", "use_dynamic", "error"];
-function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
-function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _classPrivateFieldInitSpec(e, t, a) { _checkPrivateRedeclaration(e, t), t.set(e, a); }
+function _checkPrivateRedeclaration(e, t) { if (t.has(e)) throw new TypeError("Cannot initialize the same private elements twice on an object"); }
+function _classPrivateFieldGet(s, a) { return s.get(_assertClassBrand(s, a)); }
+function _classPrivateFieldSet(s, a, r) { return s.set(_assertClassBrand(s, a), r), r; }
+function _assertClassBrand(e, t, n) { if ("function" == typeof e ? e === t : e.has(t)) return arguments.length < 3 ? t : n; throw new TypeError("Private element is not present on this object"); }
 function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
 function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e) { t && (r = t); var _n3 = 0, F = function F() {}; return { s: F, n: function n() { return _n3 >= r.length ? { done: !0 } : { done: !1, value: r[_n3++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _asyncIterator(r) { var n, t, o, e = 2; for ("undefined" != typeof Symbol && (t = Symbol.asyncIterator, o = Symbol.iterator); e--;) { if (t && null != (n = r[t])) return n.call(r); if (o && null != (n = r[o])) return new AsyncFromSyncIterator(n.call(r)); t = "@@asyncIterator", o = "@@iterator"; } throw new TypeError("Object is not async iterable"); }
@@ -3439,7 +3451,7 @@ var root = typeof global !== 'undefined' ? global : self;
 
 /* c8 ignore next 3 */
 if (!root.fetch) {
-  root.fetch = unfetch;
+  root.fetch = e;
 }
 
 // -------------------------------------------------------------------------
@@ -3479,30 +3491,30 @@ function contentLoaded(win, fn) {
     add = modern ? 'addEventListener' : 'attachEvent',
     rem = modern ? 'removeEventListener' : 'detachEvent',
     pre = modern ? '' : 'on',
-    init = function init(e) {
+    _init = function init(e) {
       if (e.type == 'readystatechange' && doc.readyState != 'complete') return;
-      (e.type == 'load' ? win : doc)[rem](pre + e.type, init, false);
+      (e.type == 'load' ? win : doc)[rem](pre + e.type, _init, false);
       if (!done && (done = true)) fn.call(win, e.type || e);
     },
-    poll = function poll() {
+    _poll = function poll() {
       try {
         root.doScroll('left');
       } catch (e) {
-        setTimeout(poll, 50);
+        setTimeout(_poll, 50);
         return;
       }
-      init('poll');
+      _init('poll');
     };
   if (doc.readyState == 'complete') fn.call(win, 'lazy');else {
     if (!modern && root.doScroll) {
       try {
         top = !win.frameElement;
       } catch (e) {}
-      if (top) poll();
+      if (top) _poll();
     }
-    doc[add](pre + 'DOMContentLoaded', init, false);
-    doc[add](pre + 'readystatechange', init, false);
-    win[add](pre + 'load', init, false);
+    doc[add](pre + 'DOMContentLoaded', _init, false);
+    doc[add](pre + 'readystatechange', _init, false);
+    win[add](pre + 'load', _init, false);
   }
 }
 // -------------------------------------------------------------------------
@@ -4506,7 +4518,7 @@ var Lexer = /*#__PURE__*/function () {
     this._state = this._next = this._token = null;
     this._prev_char = '';
   }
-  _createClass(Lexer, [{
+  return _createClass(Lexer, [{
     key: "get",
     value: function get(name) {
       return this.__internal[name];
@@ -4755,7 +4767,6 @@ var Lexer = /*#__PURE__*/function () {
       }
     }
   }]);
-  return Lexer;
 }(); // ----------------------------------------------------------------------
 // TODO: cache the rules creation or whole list
 // ----------------------------------------------------------------------
@@ -4931,7 +4942,7 @@ var Parser = /*#__PURE__*/function () {
       hidden: true
     });
   }
-  _createClass(Parser, [{
+  return _createClass(Parser, [{
     key: "_with_syntax_scope",
     value: function _with_syntax_scope(fn) {
       // expose parser and change stdin so parser extension can use current-input
@@ -4969,7 +4980,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "peek",
     value: function () {
-      var _peek = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+      var _peek = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
         var token;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
@@ -5053,7 +5064,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "read",
     value: function () {
-      var _read = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2() {
+      var _read = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee2() {
         var token;
         return _regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) switch (_context2.prev = _context2.next) {
@@ -5100,7 +5111,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "read_list",
     value: function () {
-      var _read_list = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3() {
+      var _read_list = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee3() {
         var head, prev, dot, token, node, cur;
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) switch (_context3.prev = _context3.next) {
@@ -5174,7 +5185,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "read_value",
     value: function () {
-      var _read_value = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4() {
+      var _read_value = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee4() {
         var token;
         return _regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) switch (_context4.prev = _context4.next) {
@@ -5220,7 +5231,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "read_object",
     value: function () {
-      var _read_object2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee5() {
+      var _read_object2 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee5() {
         var object;
         return _regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) switch (_context5.prev = _context5.next) {
@@ -5281,7 +5292,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "_resolve_object",
     value: function () {
-      var _resolve_object2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(object) {
+      var _resolve_object2 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee6(object) {
         var _this5 = this;
         var result;
         return _regeneratorRuntime.wrap(function _callee6$(_context6) {
@@ -5326,7 +5337,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "_resolve_pair",
     value: function () {
-      var _resolve_pair2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee7(pair) {
+      var _resolve_pair2 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee7(pair) {
         return _regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) switch (_context7.prev = _context7.next) {
             case 0:
@@ -5375,7 +5386,7 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "_read_object",
     value: function () {
-      var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
+      var _read_object3 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
         var _this6 = this;
         var token, special, builtin, expr, extension, is_symbol, was_close_paren, object, args, result, ref, ref_label;
         return _regeneratorRuntime.wrap(function _callee8$(_context8) {
@@ -5558,16 +5569,15 @@ var Parser = /*#__PURE__*/function () {
       return _read_object;
     }()
   }]);
-  return Parser;
 }();
 var Unterminated = /*#__PURE__*/function (_Error) {
-  _inherits(Unterminated, _Error);
   function Unterminated() {
     _classCallCheck(this, Unterminated);
     return _callSuper(this, Unterminated, arguments);
   }
+  _inherits(Unterminated, _Error);
   return _createClass(Unterminated);
-}( /*#__PURE__*/_wrapNativeSuper(Error));
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 Parser.Unterminated = Unterminated;
 // ----------------------------------------------------------------------
 // :: Parser helper that handles circular list structures
@@ -5579,13 +5589,12 @@ var DatumReference = /*#__PURE__*/function () {
     this.name = name;
     this.data = data;
   }
-  _createClass(DatumReference, [{
+  return _createClass(DatumReference, [{
     key: "valueOf",
     value: function valueOf() {
       return this.data;
     }
   }]);
-  return DatumReference;
 }(); // ----------------------------------------------------------------------
 // :: Tokens are the array of strings from tokenizer
 // :: the return value is an array of lips code created out of Pair class.
@@ -5597,7 +5606,7 @@ function _parse(_x, _x2) {
   return _parse2.apply(this, arguments);
 } // ----------------------------------------------------------------------
 function _parse2() {
-  _parse2 = _wrapAsyncGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(arg, env) {
+  _parse2 = _wrapAsyncGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee9(arg, env) {
     var parser, prev, expr;
     return _regeneratorRuntime.wrap(function _callee9$(_context9) {
       while (1) switch (_context9.prev = _context9.next) {
@@ -5729,7 +5738,7 @@ function uniterate_async(_x5) {
 // :: Function that return matcher function that match string against string
 // ----------------------------------------------------------------------
 function _uniterate_async() {
-  _uniterate_async = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(object) {
+  _uniterate_async = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee22(object) {
     var result, _iteratorAbruptCompletion, _didIteratorError, _iteratorError, _iterator, _step, item;
     return _regeneratorRuntime.wrap(function _callee22$(_context23) {
       while (1) switch (_context23.prev = _context23.next) {
@@ -7813,7 +7822,7 @@ function flatten(array, mutable) {
   var toString = Object.prototype.toString;
   var arrayTypeStr = '[object Array]';
   var result = [];
-  var nodes = mutable && array || array.slice();
+  var nodes = array.slice();
   var node;
   if (!array.length) {
     return result;
@@ -8782,13 +8791,13 @@ var macro = 'define-macro';
 var recur_guard = -10000;
 function macro_expand(single) {
   return /*#__PURE__*/function () {
-    var _ref21 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(code, args) {
+    var _ref21 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee12(code, args) {
       var env, bindings, let_macros, lambda, define, is_let_macro, is_procedure, is_lambda, proc_bindings, let_binding, is_macro, expand_let_binding, _expand_let_binding, traverse, _traverse;
       return _regeneratorRuntime.wrap(function _callee12$(_context12) {
         while (1) switch (_context12.prev = _context12.next) {
           case 0:
             _traverse = function _traverse3() {
-              _traverse = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11(node, n, env) {
+              _traverse = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee11(node, n, env) {
                 var name, value, is_let, is_binding, second, code, result, _result, expr, scope, car, cdr, pair;
                 return _regeneratorRuntime.wrap(function _callee11$(_context11) {
                   while (1) switch (_context11.prev = _context11.next) {
@@ -8934,7 +8943,7 @@ function macro_expand(single) {
               return _traverse.apply(this, arguments);
             };
             _expand_let_binding = function _expand_let_binding3() {
-              _expand_let_binding = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10(node, n) {
+              _expand_let_binding = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee10(node, n) {
                 var pair;
                 return _regeneratorRuntime.wrap(function _callee10$(_context10) {
                   while (1) switch (_context10.prev = _context10.next) {
@@ -10981,7 +10990,7 @@ LNumber.prototype.constant = function (value, type) {
 };
 // -------------------------------------------------------------------------
 LNumber.types = {
-  "float": function float(n) {
+  "float": function _float2(n) {
     return new LFloat(n);
   },
   complex: function complex(n) {
@@ -11923,13 +11932,13 @@ var toRational = approxRatio(1e-10);
 function approxRatio(eps) {
   return function (n) {
     var gcde = function gcde(e, x, y) {
-        var _gcd = function _gcd(a, b) {
-          return b < e ? a : _gcd(b, a % b);
+        var _gcd2 = function _gcd(a, b) {
+          return b < e ? a : _gcd2(b, a % b);
         };
         if (Number.isNaN(x) || Number.isNaN(y)) {
           return NaN;
         }
-        return _gcd(Math.abs(x), Math.abs(y));
+        return _gcd2(Math.abs(x), Math.abs(y));
       },
       c = gcde(eps ? eps : 1 / 10000, 1, n);
     return LRational({
@@ -12336,7 +12345,7 @@ function InputPort(read) {
     }
   });
   this._read = read;
-  this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14() {
+  this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee14() {
     var line;
     return _regeneratorRuntime.wrap(function _callee14$(_context14) {
       while (1) switch (_context14.prev = _context14.next) {
@@ -12389,7 +12398,7 @@ InputPort.prototype._make_defaults = function () {
 };
 InputPort.prototype._with_init_parser = function (make_parser, fn) {
   var self = this;
-  return /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15() {
+  return /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee15() {
     var parser,
       _len17,
       args,
@@ -12467,7 +12476,6 @@ OutputPort.prototype.toString = function () {
 };
 // -------------------------------------------------------------------------
 var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
-  _inherits(BufferedOutputPort, _OutputPort);
   function BufferedOutputPort(fn) {
     var _this12;
     _classCallCheck(this, BufferedOutputPort);
@@ -12476,15 +12484,16 @@ var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
       return (_this13 = _this12)._write.apply(_this13, arguments);
     }]);
     typecheck('BufferedOutputPort', fn, 'function');
-    read_only(_assertThisInitialized(_this12), '_fn', fn, {
+    read_only(_this12, '_fn', fn, {
       hidden: true
     });
-    read_only(_assertThisInitialized(_this12), '_buffer', [], {
+    read_only(_this12, '_buffer', [], {
       hidden: true
     });
     return _this12;
   }
-  _createClass(BufferedOutputPort, [{
+  _inherits(BufferedOutputPort, _OutputPort);
+  return _createClass(BufferedOutputPort, [{
     key: "flush",
     value: function flush() {
       if (this._buffer.length) {
@@ -12511,7 +12520,6 @@ var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
       }
     }
   }]);
-  return BufferedOutputPort;
 }(OutputPort); // -------------------------------------------------------------------------
 function OutputStringPort(toString) {
   var _this15 = this;
@@ -12982,13 +12990,13 @@ LipsError.prototype.constructor = LipsError;
 // :: of body expression #163
 // -------------------------------------------------------------------------
 var IgnoreException = /*#__PURE__*/function (_Error2) {
-  _inherits(IgnoreException, _Error2);
   function IgnoreException() {
     _classCallCheck(this, IgnoreException);
     return _callSuper(this, IgnoreException, arguments);
   }
+  _inherits(IgnoreException, _Error2);
   return _createClass(IgnoreException);
-}( /*#__PURE__*/_wrapNativeSuper(Error)); // -------------------------------------------------------------------------
+}(/*#__PURE__*/_wrapNativeSuper(Error)); // -------------------------------------------------------------------------
 // :: Environment constructor (parent and name arguments are optional)
 // -------------------------------------------------------------------------
 function Environment(obj, parent, name) {
@@ -13378,8 +13386,8 @@ var internal_env = new Environment({
     return Promise.resolve(prompt(''));
   }),
   // those will be compiled by babel regex plugin
-  'letter-unicode-regex': /(?:[A-Za-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u0870-\u0887\u0889-\u088E\u08A0-\u08C9\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C5D\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16F1-\u16F8\u1700-\u1711\u171F-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u1884\u1887-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4C\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2183\u2184\u2C00-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005\u3006\u3031-\u3035\u303B\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6E5\uA717-\uA71F\uA722-\uA788\uA78B-\uA7CA\uA7D0\uA7D1\uA7D3\uA7D5-\uA7D9\uA7F2-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF40\uDF42-\uDF49\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDD70-\uDD7A\uDD7C-\uDD8A\uDD8C-\uDD92\uDD94\uDD95\uDD97-\uDDA1\uDDA3-\uDDB1\uDDB3-\uDDB9\uDDBB\uDDBC\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67\uDF80-\uDF85\uDF87-\uDFB0\uDFB2-\uDFBA]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDE80-\uDEA9\uDEB0\uDEB1\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDF70-\uDF81\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC71\uDC72\uDC75\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE3F\uDE40\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A\uDF40-\uDF46]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEB0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDEE0-\uDEF2\uDF02\uDF04-\uDF10\uDF12-\uDF33\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC80-\uDD43]|\uD80B[\uDF90-\uDFF0]|[\uD80C\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883\uD885-\uD887][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2F\uDC41-\uDC46]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE70-\uDEBE\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDD00-\uDD08]|\uD82B[\uDFF0-\uDFF3\uDFF5-\uDFFB\uDFFD\uDFFE]|\uD82C[\uDC00-\uDD22\uDD32\uDD50-\uDD52\uDD55\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD837[\uDF00-\uDF1E\uDF25-\uDF2A]|\uD838[\uDC30-\uDC6D\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDE90-\uDEAD\uDEC0-\uDEEB]|\uD839[\uDCD0-\uDCEB\uDFE0-\uDFE6\uDFE8-\uDFEB\uDFED\uDFEE\uDFF0-\uDFFE]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDF\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF39\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0\uDFF0-\uDFFF]|\uD87B[\uDC00-\uDE5D]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A\uDF50-\uDFFF]|\uD888[\uDC00-\uDFAF])/,
-  'numeral-unicode-regex': /(?:[0-9\xB2\xB3\xB9\xBC-\xBE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D58-\u0D5E\u0D66-\u0D78\u0DE6-\u0DEF\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uA9F0-\uA9F9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]|\uD800[\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDEE1-\uDEFB\uDF20-\uDF23\uDF41\uDF4A\uDFD1-\uDFD5]|\uD801[\uDCA0-\uDCA9]|\uD802[\uDC58-\uDC5F\uDC79-\uDC7F\uDCA7-\uDCAF\uDCFB-\uDCFF\uDD16-\uDD1B\uDDBC\uDDBD\uDDC0-\uDDCF\uDDD2-\uDDFF\uDE40-\uDE48\uDE7D\uDE7E\uDE9D-\uDE9F\uDEEB-\uDEEF\uDF58-\uDF5F\uDF78-\uDF7F\uDFA9-\uDFAF]|\uD803[\uDCFA-\uDCFF\uDD30-\uDD39\uDE60-\uDE7E\uDF1D-\uDF26\uDF51-\uDF54\uDFC5-\uDFCB]|\uD804[\uDC52-\uDC6F\uDCF0-\uDCF9\uDD36-\uDD3F\uDDD0-\uDDD9\uDDE1-\uDDF4\uDEF0-\uDEF9]|\uD805[\uDC50-\uDC59\uDCD0-\uDCD9\uDE50-\uDE59\uDEC0-\uDEC9\uDF30-\uDF3B]|\uD806[\uDCE0-\uDCF2\uDD50-\uDD59]|\uD807[\uDC50-\uDC6C\uDD50-\uDD59\uDDA0-\uDDA9\uDF50-\uDF59\uDFC0-\uDFD4]|\uD809[\uDC00-\uDC6E]|\uD81A[\uDE60-\uDE69\uDEC0-\uDEC9\uDF50-\uDF59\uDF5B-\uDF61]|\uD81B[\uDE80-\uDE96]|\uD834[\uDEC0-\uDED3\uDEE0-\uDEF3\uDF60-\uDF78]|\uD835[\uDFCE-\uDFFF]|\uD838[\uDD40-\uDD49\uDEF0-\uDEF9]|\uD839[\uDCF0-\uDCF9]|\uD83A[\uDCC7-\uDCCF\uDD50-\uDD59]|\uD83B[\uDC71-\uDCAB\uDCAD-\uDCAF\uDCB1-\uDCB4\uDD01-\uDD2D\uDD2F-\uDD3D]|\uD83C[\uDD00-\uDD0C]|\uD83E[\uDFF0-\uDFF9])/,
+  'letter-unicode-regex': /(?:[A-Za-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u0870-\u0887\u0889-\u088E\u08A0-\u08C9\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C5D\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16F1-\u16F8\u1700-\u1711\u171F-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u1884\u1887-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4C\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C8A\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2183\u2184\u2C00-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005\u3006\u3031-\u3035\u303B\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6E5\uA717-\uA71F\uA722-\uA788\uA78B-\uA7CD\uA7D0\uA7D1\uA7D3\uA7D5-\uA7DC\uA7F2-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF40\uDF42-\uDF49\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDD70-\uDD7A\uDD7C-\uDD8A\uDD8C-\uDD92\uDD94\uDD95\uDD97-\uDDA1\uDDA3-\uDDB1\uDDB3-\uDDB9\uDDBB\uDDBC\uDDC0-\uDDF3\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67\uDF80-\uDF85\uDF87-\uDFB0\uDFB2-\uDFBA]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDD4A-\uDD65\uDD6F-\uDD85\uDE80-\uDEA9\uDEB0\uDEB1\uDEC2-\uDEC4\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDF70-\uDF81\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC71\uDC72\uDC75\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE3F\uDE40\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61\uDF80-\uDF89\uDF8B\uDF8E\uDF90-\uDFB5\uDFB7\uDFD1\uDFD3]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A\uDF40-\uDF46]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEB0-\uDEF8\uDFC0-\uDFE0]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDEE0-\uDEF2\uDF02\uDF04-\uDF10\uDF12-\uDF33\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC80-\uDD43]|\uD80B[\uDF90-\uDFF0]|[\uD80C\uD80E\uD80F\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883\uD885-\uD887][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2F\uDC41-\uDC46\uDC60-\uDFFF]|\uD810[\uDC00-\uDFFA]|\uD811[\uDC00-\uDE46]|\uD818[\uDD00-\uDD1D]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE70-\uDEBE\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDD40-\uDD6C\uDE40-\uDE7F\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDCFF-\uDD08]|\uD82B[\uDFF0-\uDFF3\uDFF5-\uDFFB\uDFFD\uDFFE]|\uD82C[\uDC00-\uDD22\uDD32\uDD50-\uDD52\uDD55\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD837[\uDF00-\uDF1E\uDF25-\uDF2A]|\uD838[\uDC30-\uDC6D\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDE90-\uDEAD\uDEC0-\uDEEB]|\uD839[\uDCD0-\uDCEB\uDDD0-\uDDED\uDDF0\uDFE0-\uDFE6\uDFE8-\uDFEB\uDFED\uDFEE\uDFF0-\uDFFE]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDF\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF39\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0\uDFF0-\uDFFF]|\uD87B[\uDC00-\uDE5D]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A\uDF50-\uDFFF]|\uD888[\uDC00-\uDFAF])/,
+  'numeral-unicode-regex': /(?:[0-9\xB2\xB3\xB9\xBC-\xBE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D58-\u0D5E\u0D66-\u0D78\u0DE6-\u0DEF\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uA9F0-\uA9F9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]|\uD800[\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDEE1-\uDEFB\uDF20-\uDF23\uDF41\uDF4A\uDFD1-\uDFD5]|\uD801[\uDCA0-\uDCA9]|\uD802[\uDC58-\uDC5F\uDC79-\uDC7F\uDCA7-\uDCAF\uDCFB-\uDCFF\uDD16-\uDD1B\uDDBC\uDDBD\uDDC0-\uDDCF\uDDD2-\uDDFF\uDE40-\uDE48\uDE7D\uDE7E\uDE9D-\uDE9F\uDEEB-\uDEEF\uDF58-\uDF5F\uDF78-\uDF7F\uDFA9-\uDFAF]|\uD803[\uDCFA-\uDCFF\uDD30-\uDD39\uDD40-\uDD49\uDE60-\uDE7E\uDF1D-\uDF26\uDF51-\uDF54\uDFC5-\uDFCB]|\uD804[\uDC52-\uDC6F\uDCF0-\uDCF9\uDD36-\uDD3F\uDDD0-\uDDD9\uDDE1-\uDDF4\uDEF0-\uDEF9]|\uD805[\uDC50-\uDC59\uDCD0-\uDCD9\uDE50-\uDE59\uDEC0-\uDEC9\uDED0-\uDEE3\uDF30-\uDF3B]|\uD806[\uDCE0-\uDCF2\uDD50-\uDD59\uDFF0-\uDFF9]|\uD807[\uDC50-\uDC6C\uDD50-\uDD59\uDDA0-\uDDA9\uDF50-\uDF59\uDFC0-\uDFD4]|\uD809[\uDC00-\uDC6E]|\uD818[\uDD30-\uDD39]|\uD81A[\uDE60-\uDE69\uDEC0-\uDEC9\uDF50-\uDF59\uDF5B-\uDF61]|\uD81B[\uDD70-\uDD79\uDE80-\uDE96]|\uD833[\uDCF0-\uDCF9]|\uD834[\uDEC0-\uDED3\uDEE0-\uDEF3\uDF60-\uDF78]|\uD835[\uDFCE-\uDFFF]|\uD838[\uDD40-\uDD49\uDEF0-\uDEF9]|\uD839[\uDCF0-\uDCF9\uDDF1-\uDDFA]|\uD83A[\uDCC7-\uDCCF\uDD50-\uDD59]|\uD83B[\uDC71-\uDCAB\uDCAD-\uDCAF\uDCB1-\uDCB4\uDD01-\uDD2D\uDD2F-\uDD3D]|\uD83C[\uDD00-\uDD0C]|\uD83E[\uDFF0-\uDFF9])/,
   'space-unicode-regex': /[\t-\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/
 }, undefined, 'internal');
 // ----------------------------------------------------------------------
@@ -13785,8 +13793,8 @@ var global_env = new Environment({
       return __dirname.replace(/[^/]+$/, '');
     }
     if (is_node()) {
-      return new Promise( /*#__PURE__*/function () {
-        var _ref31 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(resolve, reject) {
+      return new Promise(/*#__PURE__*/function () {
+        var _ref31 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee18(resolve, reject) {
           var _path, _fs, root_dir, cmd, _args20;
           return _regeneratorRuntime.wrap(function _callee18$(_context18) {
             while (1) switch (_context18.prev = _context18.next) {
@@ -15977,7 +15985,7 @@ function node_specific() {
 } // -------------------------------------------------------------------------
 /* c8 ignore next 15 */
 function _node_specific() {
-  _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
+  _node_specific = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
     var _yield$import, createRequire, moduleURL, __dirname__, __filename__;
     return _regeneratorRuntime.wrap(function _callee23$(_context24) {
       while (1) switch (_context24.prev = _context24.next) {
@@ -15987,7 +15995,7 @@ function _node_specific() {
         case 2:
           _yield$import = _context24.sent;
           createRequire = _yield$import.createRequire;
-          nodeRequire = createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.src || new URL('lips.cjs', document.baseURI).href)));
+          nodeRequire = createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('lips.cjs', document.baseURI).href)));
           _context24.next = 7;
           return import('fs');
         case 7:
@@ -15999,7 +16007,7 @@ function _node_specific() {
           global_env.set('global', global);
           global_env.set('self', global);
           global_env.set('window', undefined);
-          moduleURL = new URL((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.src || new URL('lips.cjs', document.baseURI).href))); // using name __direname and __filename breaks after transpilation
+          moduleURL = new URL((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('lips.cjs', document.baseURI).href))); // using name __direname and __filename breaks after transpilation
           __dirname__ = path.dirname(moduleURL.pathname);
           __filename__ = path.basename(moduleURL.pathname);
           global_env.set('__dirname', __dirname__);
@@ -16260,7 +16268,7 @@ function resolve_promises(arg) {
     return _promise.apply(this, arguments);
   }
   function _promise() {
-    _promise = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(node) {
+    _promise = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime.mark(function _callee20(node) {
       var pair;
       return _regeneratorRuntime.wrap(function _callee20$(_context21) {
         while (1) switch (_context21.prev = _context21.next) {
@@ -16489,10 +16497,7 @@ var Parameter = /*#__PURE__*/function () {
     _classCallCheck(this, Parameter);
     _defineProperty(this, "__value__", void 0);
     _defineProperty(this, "__fn__", void 0);
-    _classPrivateFieldInitSpec(this, _p_name__, {
-      writable: true,
-      value: void 0
-    });
+    _classPrivateFieldInitSpec(this, _p_name__, void 0);
     this.__value__ = init;
     if (fn) {
       if (!is_function(fn)) {
@@ -16501,16 +16506,16 @@ var Parameter = /*#__PURE__*/function () {
       this.__fn__ = fn;
     }
     if (name) {
-      _classPrivateFieldSet(this, _p_name__, name);
+      _classPrivateFieldSet(_p_name__, this, name);
     }
   }
-  _createClass(Parameter, [{
+  return _createClass(Parameter, [{
     key: "__name__",
     get: function get() {
-      return _classPrivateFieldGet(this, _p_name__);
+      return _classPrivateFieldGet(_p_name__, this);
     },
     set: function set(name) {
-      _classPrivateFieldSet(this, _p_name__, name);
+      _classPrivateFieldSet(_p_name__, this, name);
       if (this.__fn__) {
         this.__fn__.__name__ = "fn-".concat(name);
       }
@@ -16529,7 +16534,6 @@ var Parameter = /*#__PURE__*/function () {
       return new Parameter(value, this.__fn__, this.__name__);
     }
   }]);
-  return Parameter;
 }(); // -------------------------------------------------------------------------
 var LambdaContext = /*#__PURE__*/function () {
   function LambdaContext(payload) {
@@ -16539,7 +16543,7 @@ var LambdaContext = /*#__PURE__*/function () {
     _defineProperty(this, "use_dynamic", void 0);
     Object.assign(this, payload);
   }
-  _createClass(LambdaContext, [{
+  return _createClass(LambdaContext, [{
     key: "__name__",
     get: function get() {
       return this.env.__name__;
@@ -16556,7 +16560,6 @@ var LambdaContext = /*#__PURE__*/function () {
       return (_this$env = this.env).get.apply(_this$env, arguments);
     }
   }]);
-  return LambdaContext;
 }(); // -------------------------------------------------------------------------
 function search_param(env, param) {
   var candidate = env.get(param.__name__, {
@@ -16593,7 +16596,7 @@ var Continuation = /*#__PURE__*/function () {
     _defineProperty(this, "__value__", void 0);
     this.__value__ = k;
   }
-  _createClass(Continuation, [{
+  return _createClass(Continuation, [{
     key: "invoke",
     value: function invoke() {
       if (this.__value__ === null) {
@@ -16601,7 +16604,6 @@ var Continuation = /*#__PURE__*/function () {
       }
     }
   }]);
-  return Continuation;
 }(); // -------------------------------------------------------------------------
 function _evaluate(code) {
   var _ref47 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -17287,7 +17289,7 @@ function decode_magic(obj) {
 function serialize_bin(obj) {
   var magic = encode_magic();
   var payload = cbor.encode(obj);
-  return merge_uint8_array(magic, pack_1(payload, {
+  return merge_uint8_array(magic, lzjbPackExports.pack(payload, {
     magic: false
   }));
 }
@@ -17298,7 +17300,7 @@ function unserialize_bin(data) {
     type = _decode_magic.type,
     version = _decode_magic.version;
   if (type === 'LIPS' && version === 1) {
-    var arr = unpack_1(data.slice(MAGIC_LENGTH), {
+    var arr = lzjbPackExports.unpack(data.slice(MAGIC_LENGTH), {
       magic: false
     });
     return cbor.decode(arr);
@@ -17392,17 +17394,17 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 08 Nov 2024 13:26:12 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 08 Nov 2024 13:38:41 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 08 Nov 2024 13:26:12 +0000').valueOf();
+  var date = LString('Fri, 08 Nov 2024 13:38:41 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
   };
   var _year = _date.getFullYear();
   var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
-  var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
+  var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.20 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
   return banner;
 }();
 // -------------------------------------------------------------------------
@@ -17434,8 +17436,8 @@ read_only(LString, '__class__', 'string');
 read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
-var version = 'DEV';
-var date = 'Fri, 08 Nov 2024 13:26:12 +0000';
+var version = '1.0.0-beta.20';
+var date = 'Fri, 08 Nov 2024 13:38:41 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

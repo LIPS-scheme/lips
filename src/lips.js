@@ -44,7 +44,7 @@ const root = typeof global !== 'undefined' ? global : self;
 
 import { addExtension, Encoder } from 'cbor-x';
 import { pack, unpack } from 'lzjb-pack';
-import unfetch from 'unfetch';
+import unfetch from 'unfetch/dist/unfetch.mjs';
 
 /* c8 ignore next 3 */
 if (!root.fetch) {
