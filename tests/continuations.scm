@@ -82,6 +82,25 @@
 
           (t.is result '("Hello <0>")))))
 
+(test.failing "continuations: scope mutation"
+      (lambda (t)
+        (define counter '())
+
+        (define (make-counter n)
+          (let ((m (call/cc
+                    (lambda (cont)
+                      (begin
+                        (set! counter cont)
+                        0)))))
+            (begin
+              (set! n (+ n 1))
+              (+ m n))))
+
+        (t.is (make-counter 0) 1)
+        (t.is (counter 0) 2)
+        (t.is (counter 0) 3)))
+
+
 (test.failing "continuations: coroutine generator"
       (lambda (t)
         (define (make-coroutine-generator proc)

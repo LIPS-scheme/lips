@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.19
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 27 May 2024 11:41:47 +0000
+ * build: Fri, 08 Nov 2024 13:26:12 +0000
  */
 
 (function (global, factory) {
@@ -107,6 +107,10 @@
     o.push.apply(o, e);
     var p = new (t.bind.apply(t, o))();
     return r && _setPrototypeOf(p, r.prototype), p;
+  }
+
+  function _readOnlyError(name) {
+    throw new TypeError("\"" + name + "\" is read-only");
   }
 
   function _arrayWithHoles(arr) {
@@ -3506,25 +3510,23 @@
     }
   }
   // -------------------------------------------------------------------------
-  /* eslint-disable */
   /* c8 ignore next 13 */
   function log(x) {
-    if (is_debug()) {
-      if (is_plain_object(x)) {
-        console.log(map_object(x, function (value) {
-          return toString(value, true);
-        }));
-      } else {
-        var _console;
-        for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          args[_key - 1] = arguments[_key];
-        }
-        (_console = console).log.apply(_console, [toString(x, true)].concat(_toConsumableArray(args.map(function (item) {
-          return toString(item, true);
-        }))));
-      }
+    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+    if (is_plain_object(x) && is_debug(args[0])) {
+      console.log(map_object(x, function (value) {
+        return toString(value, true);
+      }));
+    } else if (is_debug()) {
+      var _console;
+      (_console = console).log.apply(_console, [toString(x, true)].concat(_toConsumableArray(args.map(function (item) {
+        return toString(item, true);
+      }))));
     }
   }
+  /* eslint-enable */
   // ----------------------------------------------------------------------
   /* c8 ignore next */
   function is_debug() {
@@ -3913,8 +3915,25 @@
   }
   // ----------------------------------------------------------------------
   function parse_symbol(arg) {
-    if (arg.match(/^\|.*\|$/)) {
-      arg = arg.replace(/(^\|)|(\|$)/g, '');
+    arg.match(/^name/);
+    var re = /(^|.)\|/g;
+    if (arg.match(re)) {
+      // handle escaped bar and escaped slash
+      arg = arg.split('|').filter(Boolean).reduce(function (acc, str) {
+        var result = '';
+        if (str.match(/^\\+$/)) {
+          if (str.length > 1) {
+            var count = Math.floor(str.length / 2);
+            result = '\\'.repeat(count);
+          }
+          if (str.length % 2 !== 0) {
+            result += '|';
+          }
+        } else {
+          result = str;
+        }
+        return acc + result;
+      });
       var chars = {
         t: '\t',
         r: '\r',
@@ -3922,8 +3941,8 @@
       };
       arg = arg.replace(/\\(x[^;]+);/g, function (_, chr) {
         return String.fromCharCode(parseInt('0' + chr, 16));
-      }).replace(/\\(.)/g, function (_, chr) {
-        return chars[chr] || chr;
+      }).replace(/\\([trn])/g, function (_, chr) {
+        return chars[chr];
       });
     }
     return new LSymbol(arg);
@@ -4225,6 +4244,18 @@
     };
   }();
   // ----------------------------------------------------------------------
+  // :: helper function that make symbols in names array hygienic
+  // ----------------------------------------------------------------------
+  function hygienic_begin(envs, expr) {
+    var begin = global_env.get('begin');
+    var g_begin = gensym('begin');
+    envs.forEach(function (env) {
+      env.set(g_begin, begin);
+    });
+    return new Pair(g_begin, expr);
+  }
+
+  // ----------------------------------------------------------------------
   // Class used to escape promises: feature #54
   // ----------------------------------------------------------------------
   function QuotedPromise(promise) {
@@ -4521,6 +4552,11 @@
         var found = this.next_token();
         if (found) {
           this._token = this.__input__.substring(this._i, this._next);
+          if (!this.__token__) {
+            // handle case when accessing __token__ from the syntax extension
+            // (e.g. string interpolation) as the first expression in a REPL
+            read_only(this, '__token__', this.token(true));
+          }
           return this.token(meta);
         }
         return eof;
@@ -4769,6 +4805,7 @@
   Lexer.character = Symbol["for"]('character');
   Lexer.bracket = Symbol["for"]('bracket');
   Lexer.b_symbol = Symbol["for"]('b_symbol');
+  Lexer.b_symbol_ex = Symbol["for"]('b_symbol_ex');
   Lexer.b_comment = Symbol["for"]('b_comment');
   Lexer.i_comment = Symbol["for"]('i_comment');
   Lexer.l_datum = Symbol["for"]('l_datum');
@@ -4799,7 +4836,7 @@
   // for dot comma `(a .,b)
   [/\./, Lexer.boundary, /,/, null, null],
   // block symbols
-  [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]];
+  [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], [/\|/, null, /\S/, Lexer.b_symbol, Lexer.b_symbol_ex], [/\S/, null, Lexer.boundary, Lexer.b_symbol_ex, null]];
   // ----------------------------------------------------------------------
   Lexer._brackets = [[/[()[\]]/, null, null, null, null]];
   // ----------------------------------------------------------------------
@@ -4901,17 +4938,16 @@
     _createClass(Parser, [{
       key: "_with_syntax_scope",
       value: function _with_syntax_scope(fn) {
-        var _this5 = this;
         // expose parser and change stdin so parser extension can use current-input
         // to read data from the parser stream #150
         var internal = get_internal(this.__env__);
         var stdin = internal.get('stdin');
-        this.__env__.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
+        global_env.set('lips', _objectSpread(_objectSpread({}, lips), {}, {
           __parser__: this
         }));
         internal.set('stdin', new ParserInputPort(this, this.__env__));
         var cleanup = function cleanup() {
-          _this5.__env__.set('lips', lips);
+          global_env.set('lips', lips);
           internal.set('stdin', stdin);
         };
         return unpromise(fn(), function (result) {
@@ -5250,7 +5286,7 @@
       key: "_resolve_object",
       value: function () {
         var _resolve_object2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(object) {
-          var _this6 = this;
+          var _this5 = this;
           var result;
           return _regeneratorRuntime.wrap(function _callee6$(_context6) {
             while (1) switch (_context6.prev = _context6.next) {
@@ -5260,7 +5296,7 @@
                   break;
                 }
                 return _context6.abrupt("return", object.map(function (item) {
-                  return _this6._resolve_object(item);
+                  return _this5._resolve_object(item);
                 }));
               case 2:
                 if (!is_plain_object(object)) {
@@ -5269,7 +5305,7 @@
                 }
                 result = {};
                 Object.keys(object).forEach(function (key) {
-                  result[key] = _this6._resolve_object(object[key]);
+                  result[key] = _this5._resolve_object(object[key]);
                 });
                 return _context6.abrupt("return", result);
               case 6:
@@ -5344,7 +5380,7 @@
       key: "_read_object",
       value: function () {
         var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
-          var _this7 = this;
+          var _this6 = this;
           var token, special, builtin, expr, extension, is_symbol, was_close_paren, object, args, result, ref, ref_label;
           return _regeneratorRuntime.wrap(function _callee8$(_context8) {
             while (1) switch (_context8.prev = _context8.next) {
@@ -5422,8 +5458,8 @@
                 }
                 return _context8.abrupt("return", this._with_syntax_scope(function () {
                   return call_function(extension, is_symbol ? [] : args, {
-                    env: _this7.__env__,
-                    dynamic_env: _this7.__env__,
+                    env: _this6.__env__,
+                    dynamic_env: _this6.__env__,
                     use_dynamic: false
                   });
                 }));
@@ -5458,7 +5494,7 @@
                 }
                 _context8.next = 44;
                 return this._with_syntax_scope(function () {
-                  return _this7.evaluate(expr);
+                  return _this6.evaluate(expr);
                 });
               case 44:
                 result = _context8.sent;
@@ -6195,7 +6231,7 @@
     return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
   }
   // line breaking rules
-  Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
+  Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1, not_close], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1, not_close], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
   // ----------------------------------------------------------------------
   Formatter.prototype["break"] = function () {
     var code = this.__code__.replace(/\n[ \t]*/g, '\n ').replace(/^\s+/, '');
@@ -8160,7 +8196,7 @@
         // if key is Object it should only work for plain_object
         // because otherwise it will match every object
         // we don't use instanceof so it don't work for subclasses
-        if (obj instanceof key && (key === Object && plain_object && !iterator || key !== Object)) {
+        if (constructor === key && (key === Object && plain_object && !iterator || key !== Object)) {
           fn = value;
         }
       });
@@ -8367,6 +8403,9 @@
       if (type(obj) === 'instance') {
         if (is_lambda(constructor) && constructor.__name__) {
           name = constructor.__name__.valueOf();
+          if (_typeof$1(name) === 'symbol') {
+            name = name.toString().replace(/^Symbol\((?:#:)?([^\)]+)\)$/, '$1');
+          }
         } else if (!is_native_function(constructor)) {
           name = 'instance';
         }
@@ -9087,8 +9126,13 @@
     log(symbols);
     /* eslint-disable complexity */
     function traverse(pattern, code) {
-      var pattern_names = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-      var ellipsis = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+      var state = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var _state$ellipsis = state.ellipsis,
+        ellipsis = _state$ellipsis === void 0 ? false : _state$ellipsis,
+        _state$trailing = state.trailing,
+        trailing = _state$trailing === void 0 ? false : _state$trailing,
+        _state$pattern_names = state.pattern_names,
+        pattern_names = _state$pattern_names === void 0 ? [] : _state$pattern_names;
       log({
         code: code,
         pattern: pattern
@@ -9096,13 +9140,15 @@
       if (is_atom(pattern) && !(pattern instanceof LSymbol)) {
         return same_atom(pattern, code);
       }
-      if (pattern instanceof LSymbol && symbols.includes(pattern.literal())) {
-        // TODO: literal() may be SLOW
-        if (!LSymbol.is(code, pattern)) {
-          return false;
+      if (pattern instanceof LSymbol) {
+        var literal = pattern.literal(); // TODO: literal() may be SLOW
+        if (symbols.includes(literal)) {
+          if (!LSymbol.is(code, literal) && !LSymbol.is(pattern, code)) {
+            return false;
+          }
+          var ref = expansion.ref(literal);
+          return !ref || ref === define || ref === global_env;
         }
-        var ref = expansion.ref(pattern);
-        return !ref || ref === define || ref === global_env;
       }
       if (Array.isArray(pattern) && Array.isArray(code)) {
         log('<<< a 1');
@@ -9128,25 +9174,29 @@
           } else if (Array.isArray(pattern[0])) {
             log('<<< a 3');
             var _names = _toConsumableArray(pattern_names);
+            var new_state = _objectSpread(_objectSpread({}, state), {}, {
+              pattern_names: _names,
+              ellipsis: true
+            });
             if (!code.every(function (node) {
-              return traverse(pattern[0], node, _names, true);
+              return traverse(pattern[0], node, new_state);
             })) {
               return false;
             }
           }
           if (pattern.length > 2) {
             var pat = pattern.slice(2);
-            return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
+            return traverse(pat, code.slice(-pat.length), state);
           }
           return true;
         }
-        var first = traverse(pattern[0], code[0], pattern_names, ellipsis);
+        var first = traverse(pattern[0], code[0], state);
         log({
           first: first,
           pattern: pattern[0],
           code: code[0]
         });
-        var rest = traverse(pattern.slice(1), code.slice(1), pattern_names, ellipsis);
+        var rest = traverse(pattern.slice(1), code.slice(1), state);
         log({
           first: first,
           rest: rest
@@ -9170,23 +9220,30 @@
         }
       }
       if (is_pair(pattern) && is_pair(pattern.cdr) && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
+        log('>> 1 (a)');
         // pattern (... ???) - SRFI-46
         if (!is_nil(pattern.cdr.cdr)) {
           if (is_pair(pattern.cdr.cdr)) {
+            log('>> 1 (b)');
             // if we have (x ... a b) we need to remove two from the end
             var list_len = pattern.cdr.cdr.length();
+            var improper_list = !is_nil(pattern.last_pair().cdr);
             if (!is_pair(code)) {
               return false;
             }
             var code_len = code.length();
             var list = code;
-            while (code_len - 1 > list_len) {
+            var _trailing = improper_list ? 1 : 1;
+            while (code_len - _trailing > list_len) {
               list = list.cdr;
               code_len--;
             }
             var _rest5 = list.cdr;
             list.cdr = _nil;
-            if (!traverse(pattern.cdr.cdr, _rest5, pattern_names, ellipsis)) {
+            var new_sate = _objectSpread(_objectSpread({}, state), {}, {
+              trailing: improper_list
+            });
+            if (!traverse(pattern.cdr.cdr, _rest5, new_sate)) {
               return false;
             }
           }
@@ -9196,7 +9253,7 @@
           if (bindings['...'].symbols[_name3] && !pattern_names.includes(_name3) && !ellipsis) {
             throw new Error('syntax: named ellipsis can only appear onces');
           }
-          log('>> 1');
+          log('>> 1 (next)');
           if (is_nil(code)) {
             log('>> 2');
             if (ellipsis) {
@@ -9227,6 +9284,7 @@
           } else {
             log('>> 6');
             if (is_pair(code)) {
+              log('>> 7 ' + ellipsis);
               // cons (a . b) => (var ... . x)
               if (!is_pair(code.cdr) && !is_nil(code.cdr)) {
                 log('>> 7 (b)');
@@ -9234,28 +9292,34 @@
                   return false;
                 } else if (!bindings['...'].symbols[_name3]) {
                   bindings['...'].symbols[_name3] = new Pair(code.car, _nil);
-                  return traverse(pattern.cdr.cdr, code.cdr);
+                  return traverse(pattern.cdr.cdr, code.cdr, state);
                 }
               }
               // code as improper list
               var last_pair = code.last_pair();
+              log({
+                last_pair: last_pair
+              });
               if (!is_nil(last_pair.cdr)) {
+                log('>> 7 (c)');
                 if (is_nil(pattern.cdr.cdr)) {
                   // case (a ...) for (a b . x)
                   return false;
                 } else {
+                  log('>> 7 (d)');
                   // case (a ... . b) for (a b . x)
                   var copy = code.clone();
                   copy.last_pair().cdr = _nil;
                   bindings['...'].symbols[_name3] = copy;
-                  return traverse(pattern.cdr.cdr, last_pair.cdr);
+                  return traverse(pattern.cdr.cdr, last_pair.cdr, state);
                 }
               }
-              log('>> 7 ' + ellipsis);
               pattern_names.push(_name3);
               if (!bindings['...'].symbols[_name3]) {
+                log('>> 7 (e)');
                 bindings['...'].symbols[_name3] = new Pair(code, _nil);
               } else {
+                log('>> 7 (f)');
                 var _node2 = bindings['...'].symbols[_name3];
                 bindings['...'].symbols[_name3] = _node2.append(new Pair(code, _nil));
               }
@@ -9266,7 +9330,7 @@
               // empty ellipsis with rest  (a b ... . d) #290
               log('>> 8');
               bindings['...'].symbols[_name3] = null;
-              return traverse(pattern.cdr.cdr, code);
+              return traverse(pattern.cdr.cdr, code, state);
             } else {
               log('>> 9');
               return false;
@@ -9283,8 +9347,12 @@
           }
           log('>> 11');
           var _node3 = code;
+          var _new_state = _objectSpread(_objectSpread({}, state), {}, {
+            pattern_names: names,
+            ellipsis: true
+          });
           while (is_pair(_node3)) {
-            if (!traverse(pattern.car, _node3.car, names, true)) {
+            if (!traverse(pattern.car, _node3.car, _new_state)) {
               return false;
             }
             _node3 = _node3.cdr;
@@ -9294,8 +9362,12 @@
         if (Array.isArray(pattern.car)) {
           var names = _toConsumableArray(pattern_names);
           var _node4 = code;
+          var _new_state2 = _objectSpread(_objectSpread({}, state), {}, {
+            pattern_names: names,
+            ellipsis: true
+          });
           while (is_pair(_node4)) {
-            if (!traverse(pattern.car, _node4.car, names, true)) {
+            if (!traverse(pattern.car, _node4.car, _new_state2)) {
               return false;
             }
             _node4 = _node4.cdr;
@@ -9330,15 +9402,29 @@
           code: code,
           pattern: pattern
         });
+        var rest_pattern = pattern.car instanceof LSymbol && pattern.cdr instanceof LSymbol;
+        if (trailing && rest_pattern) {
+          log('>> 13 (a)');
+          // handle (x ... y . z)
+          if (!is_nil(code.cdr)) {
+            return false;
+          }
+          var _car = pattern.car.valueOf();
+          var _cdr = pattern.cdr.valueOf();
+          bindings.symbols[_car] = code.car;
+          bindings.symbols[_cdr] = _nil;
+          return true;
+          //return is_pair(code.cdr) && code.cdr.length() > 1;
+        }
         if (is_nil(code.cdr)) {
+          log('>> 13 (b)');
           // last item in in call using in recursive calls on
           // last element of the list
           // case of pattern (p . rest) and code (0)
-          var rest_pattern = pattern.car instanceof LSymbol && pattern.cdr instanceof LSymbol;
           if (rest_pattern) {
             // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
             // where <> is symbol
-            if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+            if (!traverse(pattern.car, code.car, state)) {
               return false;
             }
             log('>> 14');
@@ -9358,7 +9444,10 @@
           code: code
         });
         // case (x y) ===> (var0 var1 ... warn) where var1 match nil
-        if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+        // trailing: true start processing of (var ... x . y)
+        if (is_pair(pattern.cdr) && is_pair(pattern.cdr.cdr) && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && is_pair(pattern.cdr.cdr.cdr) && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, state) && traverse(pattern.cdr.cdr.cdr, code.cdr, _objectSpread(_objectSpread({}, state), {}, {
+          trailing: true
+        }))) {
           var _name6 = pattern.cdr.car.__name__;
           log({
             pattern: pattern,
@@ -9376,15 +9465,14 @@
           pattern: pattern,
           code: code
         });
-        var car = traverse(pattern.car, code.car, pattern_names, ellipsis);
+        var car = traverse(pattern.car, code.car, state);
+        var cdr = traverse(pattern.cdr, code.cdr, state);
         log({
+          $car_code: code.car,
+          $car_pattern: pattern.car,
           car: car,
-          pattern: pattern.car,
-          code: code.car
-        });
-        var cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
-        log({
-          car: car,
+          $cdr_code: code.cdr,
+          $cdr_pattern: pattern.cdr,
           cdr: cdr
         });
         if (car && cdr) {
@@ -9577,46 +9665,47 @@
           var item = bindings[_name7];
           if (item === null) {
             return;
-          } else if (item) {
+          } else if (_name7 in bindings) {
             log({
               name: _name7,
               binding: bindings[_name7]
             });
             if (is_pair(item)) {
               log('[t 2 Pair ' + nested);
-              var _car = item.car,
-                _cdr = item.cdr;
+              var _car2 = item.car,
+                _cdr2 = item.cdr;
               var _rest_expr = is_array ? expr.slice(2) : expr.cdr.cdr;
               if (nested) {
-                if (!is_nil(_cdr)) {
+                if (!is_nil(_cdr2)) {
                   log('|| next 1');
-                  next(_name7, _cdr);
+                  next(_name7, _cdr2);
                 }
                 if (is_array && _rest_expr.length || !is_nil(_rest_expr) && !is_array) {
                   var _rest7 = transform_ellipsis_expr(_rest_expr, bindings, state, next);
                   if (is_array) {
-                    return _car.concat(_rest7);
-                  } else if (is_pair(_car)) {
-                    return _car.append(_rest7);
+                    return _car2.concat(_rest7);
+                  } else if (is_pair(_car2)) {
+                    return _car2.append(_rest7);
                   } else {
                     log('UNKNOWN');
                   }
                 }
-                return _car;
-              } else if (is_pair(_car)) {
-                if (!is_nil(_car.cdr)) {
+                return _car2;
+              } else if (is_pair(_car2)) {
+                if (!is_nil(_car2.cdr)) {
                   log('|| next 2');
-                  next(_name7, new Pair(_car.cdr, _cdr));
+                  next(_name7, new Pair(_car2.cdr, _cdr2));
                 }
-                return _car.car;
-              } else if (is_nil(_cdr)) {
-                return _car;
+                // wrap with Value to handle undefined
+                return new Value(_car2.car);
+              } else if (is_nil(_cdr2)) {
+                return _car2;
               } else {
                 var last_pair = expr.last_pair();
                 if (last_pair.cdr instanceof LSymbol) {
                   log('|| next 3');
                   next(_name7, item.last_pair());
-                  return _car;
+                  return _car2;
                 }
               }
             } else if (item instanceof Array) {
@@ -9679,6 +9768,7 @@
         return expr;
       }
       if (is_pair(expr) || is_array) {
+        log('>> 0');
         var first = is_array ? expr[0] : expr.car;
         var second, rest_second;
         if (is_array) {
@@ -9763,6 +9853,9 @@
                 // undefined can be null caused by null binding
                 // on empty ellipsis
                 if (car !== undefined) {
+                  if (car instanceof Value) {
+                    car.valueOf(), _readOnlyError("car");
+                  }
                   if (is_spread) {
                     if (is_array) {
                       if (Array.isArray(car)) {
@@ -9819,6 +9912,9 @@
                 nested: true
               });
               if (car) {
+                if (car instanceof Value) {
+                  car.valueOf(), _readOnlyError("car");
+                }
                 return new Pair(car, _nil);
               }
               return _nil;
@@ -9857,6 +9953,9 @@
                 value: value
               });
               if (typeof value !== 'undefined') {
+                if (value instanceof Value) {
+                  value = value.valueOf();
+                }
                 if (is_array) {
                   _result3.push(value);
                 } else {
@@ -9897,6 +9996,9 @@
               }
             }
             log('<<<< 2');
+            log({
+              result: _result3
+            });
             return _result3;
           }
         }
@@ -10030,8 +10132,12 @@
     return typeof value === 'undefined';
   }
   // -------------------------------------------------------------------------
+  function get_proto(obj) {
+    return Object.getPrototypeOf(obj);
+  }
+  // -------------------------------------------------------------------------
   function is_iterator(obj, symbol) {
-    if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+    if (has_own_symbol(obj, symbol) || has_own_symbol(get_proto(obj), symbol)) {
       return is_function(obj[symbol]);
     }
   }
@@ -10326,8 +10432,7 @@
             return pair.cdr.car;
           });
         }
-        var args_name = gensym('args');
-        return Pair.fromArray([LSymbol('let'), [[args_name, Pair(LSymbol('list'), args)]], [LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], [LSymbol('apply'), code.car, args_name]]]);
+        return new Pair(Pair.fromArray([LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], code.car]), args);
       } else if (macro_expand) {
         // Macro.defmacro are special macros that should return lips code
         // here we use evaluate, so we need to check special flag set by
@@ -10345,7 +10450,7 @@
       }
       var i = 0;
       function exec() {
-        var output = new Pair(new LSymbol('begin'), code.cdr);
+        var output = hygienic_begin([env], code.cdr);
         return _evaluate(output, {
           env: env,
           dynamic_env: env,
@@ -10465,7 +10570,7 @@
   }
   // ----------------------------------------------------------------------
   function pipe() {
-    var _this8 = this;
+    var _this7 = this;
     for (var _len8 = arguments.length, fns = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
       fns[_key8] = arguments[_key8];
     }
@@ -10477,7 +10582,7 @@
         args[_key9] = arguments[_key9];
       }
       return fns.reduce(function (args, f) {
-        return [f.apply(_this8, args)];
+        return [f.apply(_this7, args)];
       }, args)[0];
     };
   }
@@ -10542,7 +10647,7 @@
     typecheck('curry', fn, 'function');
     var len = fn.length;
     return function () {
-      var _this9 = this;
+      var _this8 = this;
       var args = init_args.slice();
       // HACK: we use IIFE here to get rid of the name of the function.
       // The JavaScript is smart and add name property to a function
@@ -10555,7 +10660,7 @@
           }
           args = args.concat(more_args);
           if (args.length >= len) {
-            return fn.apply(_this9, args);
+            return fn.apply(_this8, args);
           } else {
             return curried;
           }
@@ -11618,9 +11723,9 @@
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.complex_op = function (name, n, fn) {
-    var _this10 = this;
+    var _this9 = this;
     var calc = function calc(re, im) {
-      var result = fn(_this10.__re__, re, _this10.__im__, im);
+      var result = fn(_this9.__re__, re, _this9.__im__, im);
       if ('im' in result && 're' in result) {
         if (result.im.cmp(0) === 0) {
           return result.re;
@@ -12216,7 +12321,7 @@
   // :: Port abstraction - read should be a function that return next line
   // -------------------------------------------------------------------------
   function InputPort(read) {
-    var _this11 = this;
+    var _this10 = this;
     var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : global_env;
     if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
       return new InputPort(read);
@@ -12240,12 +12345,12 @@
       return _regeneratorRuntime.wrap(function _callee14$(_context14) {
         while (1) switch (_context14.prev = _context14.next) {
           case 0:
-            if (_this11.char_ready()) {
+            if (_this10.char_ready()) {
               _context14.next = 6;
               break;
             }
             _context14.next = 3;
-            return _this11._read();
+            return _this10._read();
           case 3:
             line = _context14.sent;
             parser = new Parser({
@@ -12253,7 +12358,7 @@
             });
             parser.parse(line);
           case 6:
-            return _context14.abrupt("return", _this11.__parser__);
+            return _context14.abrupt("return", _this10.__parser__);
           case 7:
           case "end":
             return _context14.stop();
@@ -12316,13 +12421,13 @@
     return this._with_parser !== null;
   };
   InputPort.prototype.close = function () {
-    var _this12 = this;
+    var _this11 = this;
     this.__parser__ = null;
     // make content garbage collected, we assign null,
     // because the value is in prototype
     this._with_parser = null;
     ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-      _this12[name] = function () {
+      _this11[name] = function () {
         throw new Error('input-port: port is closed');
       };
     });
@@ -12368,20 +12473,20 @@
   var BufferedOutputPort = /*#__PURE__*/function (_OutputPort) {
     _inherits(BufferedOutputPort, _OutputPort);
     function BufferedOutputPort(fn) {
-      var _this13;
+      var _this12;
       _classCallCheck(this, BufferedOutputPort);
-      _this13 = _callSuper(this, BufferedOutputPort, [function () {
-        var _this14;
-        return (_this14 = _this13)._write.apply(_this14, arguments);
+      _this12 = _callSuper(this, BufferedOutputPort, [function () {
+        var _this13;
+        return (_this13 = _this12)._write.apply(_this13, arguments);
       }]);
       typecheck('BufferedOutputPort', fn, 'function');
-      read_only(_assertThisInitialized(_this13), '_fn', fn, {
+      read_only(_assertThisInitialized(_this12), '_fn', fn, {
         hidden: true
       });
-      read_only(_assertThisInitialized(_this13), '_buffer', [], {
+      read_only(_assertThisInitialized(_this12), '_buffer', [], {
         hidden: true
       });
-      return _this13;
+      return _this12;
     }
     _createClass(BufferedOutputPort, [{
       key: "flush",
@@ -12394,13 +12499,13 @@
     }, {
       key: "_write",
       value: function _write() {
-        var _this15 = this;
+        var _this14 = this;
         for (var _len18 = arguments.length, args = new Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
           args[_key18] = arguments[_key18];
         }
         if (args.length) {
           args.forEach(function (arg) {
-            _this15._buffer.push(arg);
+            _this14._buffer.push(arg);
           });
           var last_value = this._buffer[this._buffer.length - 1];
           if (last_value.match(/\n$/)) {
@@ -12413,7 +12518,7 @@
     return BufferedOutputPort;
   }(OutputPort); // -------------------------------------------------------------------------
   function OutputStringPort(toString) {
-    var _this16 = this;
+    var _this15 = this;
     if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
       return new OutputStringPort(toString);
     }
@@ -12426,7 +12531,7 @@
       } else {
         x = x.valueOf();
       }
-      _this16.__buffer__.push(x);
+      _this15.__buffer__.push(x);
     };
   }
   OutputStringPort.prototype = Object.create(OutputPort.prototype);
@@ -12441,7 +12546,7 @@
   };
   // -------------------------------------------------------------------------
   function OutputFilePort(filename, fd) {
-    var _this17 = this;
+    var _this16 = this;
     if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
       return new OutputFilePort(filename, fd);
     }
@@ -12457,7 +12562,7 @@
       } else {
         x = x.valueOf();
       }
-      _this17.fs().write(_this17._fd, x, function (err) {
+      _this16.fs().write(_this16._fd, x, function (err) {
         if (err) {
           throw err;
         }
@@ -12476,16 +12581,16 @@
     return user_env.get('**internal-env**').get(name);
   };
   OutputFilePort.prototype.close = function () {
-    var _this18 = this;
+    var _this17 = this;
     return new Promise(function (resolve, reject) {
-      _this18.fs().close(_this18._fd, function (err) {
+      _this17.fs().close(_this17._fd, function (err) {
         if (err) {
           reject(err);
         } else {
-          read_only(_this18, '_fd', null, {
+          read_only(_this17, '_fd', null, {
             hidden: true
           });
-          OutputPort.prototype.close.call(_this18);
+          OutputPort.prototype.close.call(_this17);
           resolve();
         }
       });
@@ -12496,7 +12601,7 @@
   };
   // -------------------------------------------------------------------------
   function InputStringPort(string) {
-    var _this19 = this;
+    var _this18 = this;
     var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : global_env;
     if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
       return new InputStringPort(string);
@@ -12504,13 +12609,13 @@
     typecheck('InputStringPort', string, 'string');
     string = string.valueOf();
     this._with_parser = this._with_init_parser.bind(this, function () {
-      if (!_this19.__parser__) {
-        _this19.__parser__ = new Parser({
+      if (!_this18.__parser__) {
+        _this18.__parser__ = new Parser({
           env: env
         });
-        _this19.__parser__.parse(string);
+        _this18.__parser__.parse(string);
       }
-      return _this19.__parser__;
+      return _this18.__parser__;
     });
     read_only(this, '__type__', text_port);
     this._make_defaults();
@@ -12577,13 +12682,13 @@
     return "#<input-port (bytevector)>";
   };
   InputByteVectorPort.prototype.close = function () {
-    var _this20 = this;
+    var _this19 = this;
     read_only(this, '__vector__', _nil);
     var err = function err() {
       throw new Error('Input-binary-port: port is closed');
     };
     ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
-      _this20[name] = err;
+      _this19[name] = err;
     });
     this.u8_ready = this.char_ready = function () {
       return false;
@@ -12701,7 +12806,7 @@
   };
   // -------------------------------------------------------------------------
   function OutputBinaryFilePort(filename, fd) {
-    var _this21 = this;
+    var _this20 = this;
     if (typeof this !== 'undefined' && !(this instanceof OutputBinaryFilePort) || typeof this === 'undefined') {
       return new OutputBinaryFilePort(filename, fd);
     }
@@ -12716,7 +12821,7 @@
       typecheck('write', x, ['number', 'uint8array']);
       var buffer;
       if (!fs) {
-        fs = _this21.internal('fs');
+        fs = _this20.internal('fs');
       }
       if (LNumber.isNumber(x)) {
         buffer = new Uint8Array([x.valueOf()]);
@@ -12724,7 +12829,7 @@
         buffer = new Uint8Array(Array.from(x));
       }
       return new Promise(function (resolve, reject) {
-        fs.write(_this21._fd, buffer, function (err) {
+        fs.write(_this20._fd, buffer, function (err) {
           if (err) {
             reject(err);
           } else {
@@ -12756,7 +12861,7 @@
   // Simpler way to create interpreter with interaction-environment
   // -------------------------------------------------------------------------
   function Interpreter(name) {
-    var _this22 = this;
+    var _this21 = this;
     var _ref27 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
       stderr = _ref27.stderr,
       stdin = _ref27.stdin,
@@ -12780,7 +12885,7 @@
       env: this.__env__
     });
     this.__env__.set('parent.frame', doc('parent.frame', function () {
-      return _this22.__env__;
+      return _this21.__env__;
     }, global_env.__env__['parent.frame'].__doc__));
     var defaults_name = '**interaction-environment-defaults**';
     this.set(defaults_name, get_props(obj).concat(defaults_name));
@@ -12800,7 +12905,7 @@
   // -------------------------------------------------------------------------
   Interpreter.prototype.exec = /*#__PURE__*/function () {
     var _ref28 = _asyncToGenerator(function (arg) {
-      var _this23 = this;
+      var _this22 = this;
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
         var _options$use_dynamic, use_dynamic, dynamic_env, env;
@@ -12813,12 +12918,12 @@
               // simple solution to overwrite this variable in each interpreter
               // before evaluation of user code
               if (!env) {
-                env = _this23.__env__;
+                env = _this22.__env__;
               }
               if (!dynamic_env) {
                 dynamic_env = env;
               }
-              global_env.set('**interaction-environment**', _this23.__env__);
+              global_env.set('**interaction-environment**', _this22.__env__);
               if (!Array.isArray(arg)) {
                 _context16.next = 10;
                 break;
@@ -12829,8 +12934,8 @@
                 use_dynamic: use_dynamic
               }));
             case 10:
-              _this23.__parser__.parse(arg);
-              return _context16.abrupt("return", exec(_this23.__parser__, {
+              _this22.__parser__.parse(arg);
+              return _context16.abrupt("return", exec(_this22.__parser__, {
                 env: env,
                 dynamic_env: dynamic_env,
                 use_dynamic: use_dynamic
@@ -13006,12 +13111,12 @@
   };
   // -------------------------------------------------------------------------
   Environment.prototype.clone = function () {
-    var _this24 = this;
+    var _this23 = this;
     // duplicate refs
     var env = {};
     // TODO: duplicated Symbols
     Object.keys(this.__env__).forEach(function (key) {
-      env[key] = _this24.__env__[key];
+      env[key] = _this23.__env__[key];
     });
     return new Environment(env, this.__parent__, this.__name__);
   };
@@ -13145,14 +13250,14 @@
   // For internal use only
   // -------------------------------------------------------------------------
   Environment.prototype.constant = function (name, value) {
-    var _this25 = this;
+    var _this24 = this;
     if (this.__env__.hasOwnProperty(name)) {
       throw new Error("Environment::constant: ".concat(name, " already exists"));
     }
     if (arguments.length === 1 && is_plain_object(arguments[0])) {
       var obj = arguments[0];
       Object.keys(obj).forEach(function (key) {
-        _this25.constant(name, obj[key]);
+        _this24.constant(name, obj[key]);
       });
     } else {
       Object.defineProperty(this.__env__, name, {
@@ -13328,14 +13433,14 @@
     // ------------------------------------------------------------------
     read: doc('read', /*#__PURE__*/function () {
       var _read2 = _asyncToGenerator(function () {
-        var _this26 = this;
+        var _this25 = this;
         var arg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
         return /*#__PURE__*/_regeneratorRuntime.mark(function _callee17() {
           var env, port;
           return _regeneratorRuntime.wrap(function _callee17$(_context17) {
             while (1) switch (_context17.prev = _context17.next) {
               case 0:
-                env = _this26.env;
+                env = _this25.env;
                 if (arg === null) {
                   port = internal(env, 'stdin');
                 } else {
@@ -13423,6 +13528,19 @@
       return str;
     }, "(format string n1 n2 ...)\n\n        This function accepts a string template and replaces any\n        escape sequences in its inputs:\n\n        * ~a value as if printed with `display`\n        * ~s value as if printed with `write`\n        * ~% newline character\n        * ~~ literal tilde '~'\n\n        If there are missing inputs or other escape characters it\n        will error."),
     // ------------------------------------------------------------------
+    newline: doc('newline', function newline() {
+      var port = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+      var display = global_env.get('display');
+      var use_dynamic = this.use_dynamic;
+      var env = global_env;
+      var dynamic_env = global_env;
+      call_function(display, ['\n', port], {
+        env: env,
+        dynamic_env: dynamic_env,
+        use_dynamic: use_dynamic
+      });
+    }, "(newline [port])\n\n        Write newline character to standard output or given port"),
+    // ------------------------------------------------------------------
     display: doc('display', function display(arg) {
       var port = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       if (port === null) {
@@ -13445,7 +13563,7 @@
       }
       var value = args.map(repr).join(' ');
       port.write.call(global_env, value);
-      global_env.get('newline')(port);
+      global_env.get('newline').call(this, port);
     }, "(display-error . args)\n\n        Display an error message on stderr."),
     // ------------------------------------------------------------------
     '%foldcase-string': doc('%foldcase-string', foldcase_string, "(%foldcase-string string)\n\n         Same as string-foldcase but without typechecking"),
@@ -13513,7 +13631,7 @@
     }, "(cdr pair)\n\n        This function returns the cdr (all but first) of the list."),
     // ------------------------------------------------------------------
     'set!': doc(new Macro('set!', function (code) {
-      var _this27 = this;
+      var _this26 = this;
       var _ref30 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         use_dynamic = _ref30.use_dynamic,
         rest = _objectWithoutProperties(_ref30, _excluded4);
@@ -13567,7 +13685,7 @@
           if (parts.length > 1) {
             var key = parts.pop();
             var name = parts.join('.');
-            var obj = _this27.get(name, {
+            var obj = _this26.get(name, {
               throwError: false
             });
             if (obj) {
@@ -13623,6 +13741,8 @@
           env = this.get('**interaction-environment**');
         }
       }
+      var package_name = '@lips';
+      var has_package = file.startsWith(package_name);
       // TODO: move **module-path** to internal env
       var PATH = '**module-path**';
       var module_path = global_env.get(PATH, {
@@ -13664,42 +13784,61 @@
           return code;
         });
       }
+      function get_root_dir() {
+        var __dirname = global_env.get('__dirname');
+        return __dirname.replace(/[^/]+$/, '');
+      }
       if (is_node()) {
         return new Promise( /*#__PURE__*/function () {
           var _ref31 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(resolve, reject) {
-            var path, cmd, _args20;
+            var _path, _fs, root_dir, cmd, _args20;
             return _regeneratorRuntime.wrap(function _callee18$(_context18) {
               while (1) switch (_context18.prev = _context18.next) {
                 case 0:
-                  path = nodeRequire('path');
+                  _context18.prev = 0;
+                  _context18.next = 3;
+                  return node_ready;
+                case 3:
+                  _path = nodeRequire('path');
+                  _fs = nodeRequire('fs');
+                  root_dir = get_root_dir();
+                  if (has_package) {
+                    file = file.replace(package_name, root_dir);
+                  }
                   if (!module_path) {
-                    _context18.next = 6;
+                    _context18.next = 12;
                     break;
                   }
                   module_path = module_path.valueOf();
-                  file = path.join(module_path, file);
-                  _context18.next = 12;
+                  if (!file.startsWith('/')) {
+                    file = _path.join(module_path, file);
+                  }
+                  _context18.next = 19;
                   break;
-                case 6:
+                case 12:
+                  if (file.startsWith('/')) {
+                    _context18.next = 19;
+                    break;
+                  }
                   cmd = g_env.get('command-line', {
                     throwError: false
                   });
                   if (!cmd) {
-                    _context18.next = 11;
+                    _context18.next = 18;
                     break;
                   }
-                  _context18.next = 10;
+                  _context18.next = 17;
                   return cmd();
-                case 10:
+                case 17:
                   _args20 = _context18.sent;
-                case 11:
+                case 18:
                   if (_args20 && !is_nil(_args20)) {
                     process.cwd();
-                    file = path.join(path.dirname(_args20.car.valueOf()), file);
+                    file = _path.join(_path.dirname(_args20.car.valueOf()), file);
                   }
-                case 12:
-                  global_env.set(PATH, path.dirname(file));
-                  nodeRequire('fs').readFile(file, function (err, data) {
+                case 19:
+                  global_env.set(PATH, _path.dirname(file));
+                  _fs.readFile(file, function (err, data) {
                     if (err) {
                       reject(err);
                       global_env.set(PATH, module_path);
@@ -13714,20 +13853,37 @@
                       }
                     }
                   });
-                case 14:
+                  _context18.next = 26;
+                  break;
+                case 23:
+                  _context18.prev = 23;
+                  _context18.t0 = _context18["catch"](0);
+                  console.error(_context18.t0);
+                case 26:
                 case "end":
                   return _context18.stop();
               }
-            }, _callee18);
+            }, _callee18, null, [[0, 23]]);
           }));
           return function (_x14, _x15) {
             return _ref31.apply(this, arguments);
           };
         }());
       }
+      if (has_package) {
+        var _global_env$get, _path3;
+        var _path2 = (_global_env$get = global_env.get('__dirname', {
+          throwError: false
+        })) !== null && _global_env$get !== void 0 ? _global_env$get : current_script;
+        (_path3 = _path2) !== null && _path3 !== void 0 ? _path3 : _path2 = current_script;
+        var _root = _path2.replace(/dist\/?[^\/]*$/, '');
+        file = file.replace(package_name, _root);
+      }
       if (module_path) {
         module_path = module_path.valueOf();
-        file = module_path + '/' + file.replace(/^\.?\/?/, '');
+        if (!file.startsWith('/')) {
+          file = module_path + '/' + file.replace(/^\.?\/?/, '');
+        }
       }
       return fetch(file).then(function (code) {
         global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
@@ -13754,7 +13910,7 @@
     // ------------------------------------------------------------------
     'do': doc(new Macro('do', /*#__PURE__*/function () {
       var _ref32 = _asyncToGenerator(function (code, _ref33) {
-        var _this28 = this;
+        var _this27 = this;
         var use_dynamic = _ref33.use_dynamic,
           error = _ref33.error;
         return /*#__PURE__*/_regeneratorRuntime.mark(function _callee19() {
@@ -13762,7 +13918,7 @@
           return _regeneratorRuntime.wrap(function _callee19$(_context20) {
             while (1) switch (_context20.prev = _context20.next) {
               case 0:
-                self = _this28;
+                self = _this27;
                 dynamic_env = self;
                 scope = self.inherit('do');
                 vars = code.car;
@@ -14094,8 +14250,8 @@
         }
         env.set(name, parameter);
       }
-      var body = new Pair(new LSymbol('begin'), code.cdr);
-      return _evaluate(body, _objectSpread(_objectSpread({}, eval_args), {}, {
+      var expr = hygienic_begin([env, eval_args.dynamic_env], code.cdr);
+      return _evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
         env: env
       }));
     }), "(syntax-parameterize (bindings) body)\n\n         Macro work similar to let-syntax but the the bindnds will be exposed to the user.\n         With syntax-parameterize you can define anaphoric macros."),
@@ -14199,21 +14355,14 @@
     }, "(parent.frame)\n\n        Returns the parent environment if called from inside a function.\n        If no parent frame can be found it returns nil."),
     // ------------------------------------------------------------------
     'eval': doc('eval', function (code, env) {
-      var _this29 = this;
       env = env || this.get('interaction-environment').call(this);
-      return _evaluate(code, {
-        env: env,
-        dynamic_env: env,
-        error: function error(e) {
-          var error = global_env.get('display-error');
-          error.call(_this29, e.message);
-          if (e.code) {
-            var stack = e.code.map(function (line, i) {
-              return "[".concat(i + 1, "]: ").concat(line);
-            }).join('\n');
-            error.call(_this29, stack);
-          }
-        }
+      return new Promise(function (resolve, reject) {
+        var result = _evaluate(code, {
+          env: env,
+          dynamic_env: env,
+          error: reject
+        });
+        resolve(result);
       });
     }, "(eval expr)\n        (eval expr environment)\n\n        Function that evaluates LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
     // ------------------------------------------------------------------
@@ -14291,7 +14440,7 @@
           }
         }
         var rest = __doc__ ? code.cdr.cdr : code.cdr;
-        var output = new Pair(new LSymbol('begin'), rest);
+        var output = hygienic_begin([env, dynamic_env], rest);
         var eval_args = {
           env: env,
           dynamic_env: dynamic_env,
@@ -14624,7 +14773,11 @@
       // -----------------------------------------------------------------
       function unquote_splice(pair, unquote_cnt, max_unq) {
         if (unquote_cnt < max_unq) {
-          return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), _nil);
+          var cdr = _nil;
+          if (!is_nil(pair.cdr)) {
+            cdr = recur(pair.cdr, unquote_cnt - 1, max_unq);
+          }
+          return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), cdr);
         }
         var lists = [];
         return function next(node) {
@@ -14823,7 +14976,7 @@
     }, "(clone list)\n\n        Function that returns a clone of the list, that does not share any pairs with the\n        original, so the clone can be safely mutated without affecting the original."),
     // ------------------------------------------------------------------
     append: doc('append', function append() {
-      var _global_env$get;
+      var _global_env$get2;
       for (var _len25 = arguments.length, items = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
         items[_key25] = arguments[_key25];
       }
@@ -14833,7 +14986,7 @@
         }
         return item;
       });
-      return (_global_env$get = global_env.get('append!')).call.apply(_global_env$get, [this].concat(_toConsumableArray(items)));
+      return (_global_env$get2 = global_env.get('append!')).call.apply(_global_env$get2, [this].concat(_toConsumableArray(items)));
     }, "(append item ...)\n\n        Function that creates a new list with each argument appended end-to-end.\n        It will always return a new list and not modify its arguments."),
     // ------------------------------------------------------------------
     'append!': doc('append!', function () {
@@ -15170,7 +15323,7 @@
     }, "(string->number number [radix])\n\n        Function that parses a string into a number."),
     // ------------------------------------------------------------------
     'try': doc(new Macro('try', function (code, _ref41) {
-      var _this30 = this;
+      var _this28 = this;
       var use_dynamic = _ref41.use_dynamic;
         _ref41.error;
       return new Promise(function (resolve, reject) {
@@ -15206,15 +15359,15 @@
           };
         }
         var args = {
-          env: _this30,
+          env: _this28,
           use_dynamic: use_dynamic,
-          dynamic_env: _this30,
+          dynamic_env: _this28,
           error: function error(e) {
             if (e instanceof IgnoreException) {
               throw e;
             }
             if (catch_clause) {
-              var env = _this30.inherit('try');
+              var env = _this28.inherit('try');
               var name = catch_clause.cdr.car.car;
               if (!(name instanceof LSymbol)) {
                 throw new Error('try: invalid syntax: catch require variable name');
@@ -15224,7 +15377,7 @@
               var catch_args = {
                 env: env,
                 use_dynamic: use_dynamic,
-                dynamic_env: _this30,
+                dynamic_env: _this28,
                 error: function error(e) {
                   catch_error = true;
                   reject(e);
@@ -15274,7 +15427,7 @@
     }, "(find fn list)\n        (find regex list)\n\n        Higher-order function that finds the first value for which fn return true.\n        If called with a regex it will create a matcher function."),
     // ------------------------------------------------------------------
     'for-each': doc('for-each', function (fn) {
-      var _global_env$get2;
+      var _global_env$get3;
       typecheck('for-each', fn, 'function');
       for (var _len32 = arguments.length, lists = new Array(_len32 > 1 ? _len32 - 1 : 0), _key32 = 1; _key32 < _len32; _key32++) {
         lists[_key32 - 1] = arguments[_key32];
@@ -15285,14 +15438,14 @@
       // we need to use call(this because babel transpile this code into:
       // var ret = map.apply(void 0, [fn].concat(lists));
       // it don't work with weakBind
-      var ret = (_global_env$get2 = global_env.get('map')).call.apply(_global_env$get2, [this, fn].concat(lists));
+      var ret = (_global_env$get3 = global_env.get('map')).call.apply(_global_env$get3, [this, fn].concat(lists));
       if (is_promise(ret)) {
         return ret.then(function () {});
       }
     }, "(for-each fn . lists)\n\n        Higher-order function that calls function `fn` on each\n        value of the argument. If you provide more than one list\n        it will take each value from each list and call `fn` function\n        with that many arguments as number of list arguments."),
     // ------------------------------------------------------------------
     map: doc('map', function map(fn) {
-      var _this31 = this;
+      var _this29 = this;
       for (var _len33 = arguments.length, lists = new Array(_len33 > 1 ? _len33 - 1 : 0), _key33 = 1; _key33 < _len33; _key33++) {
         lists[_key33 - 1] = arguments[_key33];
       }
@@ -15301,7 +15454,7 @@
       lists.forEach(function (arg, i) {
         typecheck('map', arg, ['pair', 'nil'], i + 1);
         // detect cycles
-        if (is_pair(arg) && !is_list.call(_this31, arg)) {
+        if (is_pair(arg) && !is_list.call(_this29, arg)) {
           throw new Error("map: argument ".concat(i + 1, " is not a list"));
         }
       });
@@ -15323,7 +15476,7 @@
         use_dynamic: use_dynamic
       });
       return unpromise(result, function (head) {
-        return unpromise(map.call.apply(map, [_this31, fn].concat(_toConsumableArray(lists.map(function (l) {
+        return unpromise(map.call.apply(map, [_this29, fn].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         })))), function (rest) {
           return new Pair(head, rest);
@@ -15346,18 +15499,6 @@
         node = node.cdr;
       }
     }, "(list? obj)\n\n        Predicate that tests if value is a proper linked list structure.\n        The car of each pair can be any value. It returns false on cyclic lists.\""),
-    // ------------------------------------------------------------------
-    some: doc('some', function some(fn, list) {
-      typecheck('some', fn, 'function');
-      typecheck('some', list, ['pair', 'nil']);
-      if (is_null(list)) {
-        return false;
-      } else {
-        return unpromise(fn(list.car), function (value) {
-          return value || some(fn, list.cdr);
-        });
-      }
-    }, "(some fn list)\n\n        Higher-order function that calls fn on each element of the list.\n        It stops and returns true when fn returns true for a value.\n        If none of the values give true, some will return false.\n        Analogous to Python any(map(fn, list))."),
     // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function (fold, fn, init) {
       for (var _len34 = arguments.length, lists = new Array(_len34 > 3 ? _len34 - 3 : 0), _key34 = 3; _key34 < _len34; _key34++) {
@@ -15405,7 +15546,7 @@
     }, "(pluck . strings)\n\n        If called with a single string it will return a function that when\n        called with an object will return that key from the object.\n        If called with more then one string the returned function will\n        create a new object by copying all properties from the given object."),
     // ------------------------------------------------------------------
     reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-      var _this32 = this;
+      var _this30 = this;
       for (var _len36 = arguments.length, lists = new Array(_len36 > 3 ? _len36 - 3 : 0), _key37 = 3; _key37 < _len36; _key37++) {
         lists[_key37 - 3] = arguments[_key37];
       }
@@ -15419,7 +15560,7 @@
       return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
         return l.car;
       })).concat([init])), function (value) {
-        return reduce.call.apply(reduce, [_this32, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+        return reduce.call.apply(reduce, [_this30, fn, value].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         }))));
       });
@@ -15813,8 +15954,8 @@
   function reversseFind(dir, fn) {
     var parts = dir.split(path.sep).filter(Boolean);
     for (var i = parts.length; i--;) {
-      var _path;
-      var p = (_path = path).join.apply(_path, ['/'].concat(_toConsumableArray(parts.slice(0, i + 1))));
+      var _path4;
+      var p = (_path4 = path).join.apply(_path4, ['/'].concat(_toConsumableArray(parts.slice(0, i + 1))));
       if (fn(p)) {
         return p;
       }
@@ -15838,7 +15979,7 @@
   function node_specific() {
     return _node_specific.apply(this, arguments);
   } // -------------------------------------------------------------------------
-  /* c8 ignore next 11 */
+  /* c8 ignore next 15 */
   function _node_specific() {
     _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
       var _yield$import, createRequire, moduleURL, __dirname__, __filename__;
@@ -15912,16 +16053,20 @@
     }));
     return _node_specific.apply(this, arguments);
   }
+  var node_ready; // Scheme load function need to wait for node_specific
   if (is_node()) {
-    node_specific();
-  } else if (typeof window !== 'undefined' && window === root) {
-    global_env.set('window', window);
-    global_env.set('global', undefined);
-    global_env.set('self', window);
-  } else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
-    global_env.set('self', self);
-    global_env.set('window', undefined);
-    global_env.set('global', undefined);
+    node_ready = node_specific();
+  } else {
+    node_ready = Promise.resolve();
+    if (typeof window !== 'undefined' && window === root) {
+      global_env.set('window', window);
+      global_env.set('global', undefined);
+      global_env.set('self', window);
+    } else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
+      global_env.set('self', self);
+      global_env.set('window', undefined);
+      global_env.set('global', undefined);
+    }
   }
   // -------------------------------------------------------------------------
   function typeErrorMessage(fn, got, expected) {
@@ -16837,6 +16982,7 @@
         url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/").concat(std);
       }
     }
+    global_env.set('__dirname', url.replace(/[^/]+$/, ''));
     var load = global_env.get('load');
     return load.call(user_env, url, global_env);
   }
@@ -17250,17 +17396,17 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 27 May 2024 11:41:47 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 08 Nov 2024 13:26:12 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 27 May 2024 11:41:47 +0000').valueOf();
+    var date = LString('Fri, 08 Nov 2024 13:26:12 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
     };
     var _year = _date.getFullYear();
     var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
-    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.19 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
+    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
     return banner;
   }();
   // -------------------------------------------------------------------------
@@ -17292,8 +17438,8 @@
   read_only(QuotedPromise, '__class__', 'promise');
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
-  var version = '1.0.0-beta.19';
-  var date = 'Mon, 27 May 2024 11:41:47 +0000';
+  var version = 'DEV';
+  var date = 'Fri, 08 Nov 2024 13:26:12 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

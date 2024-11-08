@@ -267,6 +267,11 @@
       (lambda (t)
         (t.is (to.throw (lips.parse "#f10")) #t)))
 
+(test "parser: escape symbols"
+      (lambda (t)
+        (t.is (map symbol->string '(|name| name|| name|\|| name|\\|xxx name|\\\\| name|\\|))
+              '("name" "name" "name|" "name\\xxx" "name\\\\" "name\\"))))
+
 (test "lexer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")

@@ -1579,3 +1579,64 @@
 
         (t.is (alist foo 10 bar 20 baz 30)
               '((foo . 10) (bar . 20) (baz . 30)))))
+
+(test "syntax: nested syntax rules (SRFI-239 case)"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((foo expr clauses ...)
+             (let-syntax ((clause
+                           (syntax-rules ::: (_ pair null doted matched)
+                             ((clause obj pair n d ((_ . _) body1 ::: body2) remaining :::)
+                              (if (pair? obj)
+                                  (begin body1 ::: body2))))))
+               (let ((obj expr))
+                 (clause obj pair null doted clauses ...))))))
+
+        (t.is (foo '(1 2) ((_ . _) 'pair)) 'pair)))
+
+(test "syntax: ellipsis maps into #void"
+      (lambda (t)
+        (define-syntax when
+          (syntax-rules ()
+            ((_ test body ...)
+             (let ((tmp test))
+               (if tmp
+                   (begin
+                     body ...))))))
+
+        (t.snapshot (macroexpand (when (assoc 'bar alist) #void)))))
+
+(test "syntax: let and syntax-parameterize hygiene #356"
+      (lambda (t)
+        (define-syntax-parameter it (syntax-rules () ((_) (syntax-error "Use outside aif"))))
+
+        (define-syntax awhen
+          (syntax-rules ()
+            ((_ test body ...)
+             (let ((tmp test))
+               (syntax-parameterize
+                ((it (syntax-rules ()
+                       ((__) tmp))))
+                (if tmp
+                    (begin
+                      body ...)))))))
+
+        (t.is (let ((alist '((foo . "lorem") (bar . "ipsum") (baz . "dolor")))
+                    (begin (lambda () (throw 'ZONK))))
+                (awhen (assoc 'bar alist) "msg"))
+              "msg")))
+
+(test "syntax: improper pattern"
+      (lambda (t)
+        (define-syntax f
+          (syntax-rules ()
+            ((f a ... x . y)
+             (let ((output (vector)))
+               (begin
+                 (begin
+                   (output.push (list a x y)))  ...)
+               output))))
+
+        (t.is (f 10 20 30 'a 'b)
+              #((10 b ()) (20 b ()) (30 b ()) (a b ())))))

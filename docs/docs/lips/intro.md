@@ -1053,6 +1053,25 @@ $ lips -c file.xcb
 Will create `file.xcb` in same directory. For smaller files it make not have a difference when
 loading `.xcb` or `.scm` files.
 
+<<<<<<< HEAD
+**NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are
+treated as comments, so you can't compile the code that have those directives.
+
+## loading SRFI
+
+In LIPS, you can use `(load)` with path absolute or relative to the directory of the executed LIPS
+file. But you can use special syntax that indicate the root directory of the LIPS Scheme.
+
+```scheme
+(load "@lips/lib/srfi/1.scm")
+```
+
+This will load the code from [SRFI-1](https://srfi.schemers.org/srfi-1/srfi-1.html) List
+Library. You can use this syntax in Node based REPL (NPM executable).  The same syntax should work
+with the web. But note that the root directory reply on the path of the LIPS Scheme script file. So
+you if you bundle the code with Webpack or Rollup, LIPS may not find the root URL and may not be
+able to load the proper file.
+=======
 **NOTE**: directives `#!fold-case` and `#!no-fold-case` work only inside the parser and they are treated
 as comments, so you can't compile the code that have those directives.
 
@@ -1061,3 +1080,4 @@ as comments, so you can't compile the code that have those directives.
 LISP Scheme currently don't support [continuations](/docs/scheme-intro/continuations) and [Tail Call
 Optimization](/docs/scheme-intro/core#tail-call-optimization).  But they are part of the roadmap for
 version 1.0.
+>>>>>>> origin/master

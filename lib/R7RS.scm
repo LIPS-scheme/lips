@@ -1426,6 +1426,7 @@
          (new ,name ,@(cdr constructor)))
        (define (,pred obj)
          (instanceof ,name obj))
+       (set-repr! ,name (lambda () (string-append "#<record(" (symbol->string ',name) ")>")))
        ,@(map (lambda (field)
                 (let ((prop-name (car field))
                       (get (cadr field))
@@ -1550,7 +1551,7 @@
 
    Create new empty library object with empty namespace."
   (let* ((parent (. (current-environment) '__parent__))
-         (lib (let ((lib (--> parent (get name &(:throwError false)))))
+         (lib (let ((lib (--> parent (get name &(:throwError #f)))))
                 (if (null? lib)
                     (new %Library name)
                     lib)))

@@ -1,2 +1,2 @@
 [codespell]
-skip = ./node_modules*,./dist/*,./package-lock.json,./lib/srfi/*,./assets/UnicodeData.txt,./assets/CaseFolding.txt,./scripts/numerals.scm
+skip = build,coverage,node_modules*,./dist/*,package-lock.json,./lib/srfi/*,./assets/UnicodeData.txt,./assets/CaseFolding.txt,./scripts/numerals.scm

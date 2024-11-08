@@ -146,9 +146,13 @@
         (t.is '|\n| (string->symbol "\n"))
         (t.is '|\t\t| (string->symbol "\t\t"))
         (t.is '|\r| (string->symbol "\r"))
-        (t.is '|\s| 's)
+        (t.is '|\s| '\s)
         (t.is '|\x3BB;| 'λ)
-        (t.is '|\x9;\x9;| '|\t\t|)))
+        (t.is '|\x9;\x9;| '|\t\t|)
+        ;; found in
+        ;; https://docs.scheme.org/surveys/reader-vertical-bar-concatenated-with-number/
+        (t.is (lips.tokenize "|1|aaa |a|b|c| |foo bar|")
+              #("|1|aaa" "|a|b|c|" "|foo bar|"))))
 
 (test "core: dot comma"
       (lambda (t)
@@ -746,6 +750,11 @@
 (test "core: replace async"
       (lambda (t)
         (t.is (replace #/foo/ (lambda () (Promise.resolve "lips")) "foo bar") "lips bar")))
+
+(test "core: should throw proper error"
+      (lambda (t)
+        (t.is (try (eval '(+ x x)) (catch (e) e.message))
+              "Unbound variable `x'")))
 
 ;; TODO
 ;; begin*

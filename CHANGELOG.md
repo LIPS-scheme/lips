@@ -1,3 +1,27 @@
+## 1.0.0-beta.20
+### Feature
+* allow to call `load` with `@lips` prefix [#354](https://github.com/jcubic/lips/issues/354)
+* add string interpolation [#321](https://github.com/jcubic/lips/issues/321)
+* add default repr for R7RS records
+* add parenthesis matching in Node.js REPL
+### Bugfix
+* fix duplicated identifiers in syntax-rules (case of SRFI-239 example implementation)
+* fix `load` of absolute path in Node
+* fix require of LIPS package from Node
+* fix transforming `syntax-rules` ellipsis that expand into #void
+* fix improper lists in `syntax-rules` [#360](https://github.com/LIPS-scheme/lips/issues/360)
+* fix handling of REPL in Emacs (`run-scheme`)
+* fix `promise?` predicate
+* fix handling of `|1|1` and `|a|b|c|` symbols
+* fix repr of anonymous classes [#361](https://github.com/LIPS-scheme/lips/issues/361)
+* fix handling of escape characters in symbols
+* fix processing list with nested unquote-splicing [#362](https://github.com/LIPS-scheme/lips/issues/362)
+* fix exception during error from eval [#362](https://github.com/LIPS-scheme/lips/issues/362)
+* allow to catch exceptions from eval
+* fix else keyword as only expression in cond [#366](https://github.com/LIPS-scheme/lips/issues/366)
+* fix clash of variable named `list` in named `let` [#398](https://github.com/LIPS-scheme/lips/issues/398)
+* fix Node REPL flickering
+
 ## 1.0.0-beta.19
 ### Breaking
 * change `get-environment-variables` and `get-environment-variable` returns nil and undefined in the browser

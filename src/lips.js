@@ -117,21 +117,19 @@ function contentLoaded(win, fn) {
     }
 }
 // -------------------------------------------------------------------------
-/* eslint-disable */
 /* c8 ignore next 13 */
 function log(x, ...args) {
-    if (is_debug()) {
-        if (is_plain_object(x)) {
-            console.log(map_object(x, function(value) {
-                return toString(value, true);
-            }));
-        } else {
-            console.log(toString(x, true), ...args.map(item => {
-                return toString(item, true);
-            }));
-        }
+    if (is_plain_object(x) && is_debug(args[0])) {
+        console.log(map_object(x, function(value) {
+            return toString(value, true);
+        }));
+    } else if (is_debug()) {
+        console.log(toString(x, true), ...args.map(item => {
+            return toString(item, true);
+        }));
     }
 }
+/* eslint-enable */
 // ----------------------------------------------------------------------
 /* c8 ignore next */
 function is_debug(n = null) {
@@ -506,17 +504,34 @@ function parse_string(string) {
 }
 // ----------------------------------------------------------------------
 function parse_symbol(arg) {
-    if (arg.match(/^\|.*\|$/)) {
-        arg = arg.replace(/(^\|)|(\|$)/g, '');
-        var chars = {
+    const debug = arg.match(/^name/);
+    const re = /(^|.)\|/g;
+    if (arg.match(re)) {
+        // handle escaped bar and escaped slash
+        arg = arg.split('|').filter(Boolean).reduce((acc, str) => {
+            let result = '';
+            if (str.match(/^\\+$/)) {
+                if (str.length > 1) {
+                    const count = Math.floor(str.length / 2);
+                    result = '\\'.repeat(count);
+                }
+                if (str.length % 2 !== 0) {
+                    result += '|';
+                }
+            } else {
+                result = str;
+            }
+            return acc + result;
+        });
+        const chars = {
             t: '\t',
             r: '\r',
             n: '\n'
         };
         arg = arg.replace(/\\(x[^;]+);/g, function(_, chr) {
             return String.fromCharCode(parseInt('0' + chr, 16));
-        }).replace(/\\(.)/g, function(_, chr) {
-            return chars[chr] || chr;
+        }).replace(/\\([trn])/g, function(_, chr) {
+            return chars[chr];
         });
     }
     return new LSymbol(arg);
@@ -819,6 +834,18 @@ const gensym = (function() {
     };
 })();
 // ----------------------------------------------------------------------
+// :: helper function that make symbols in names array hygienic
+// ----------------------------------------------------------------------
+function hygienic_begin(envs, expr) {
+    const begin = global_env.get('begin');
+    const g_begin = gensym('begin');
+    envs.forEach(env => {
+        env.set(g_begin, begin);
+    });
+    return new Pair(g_begin, expr);
+}
+
+// ----------------------------------------------------------------------
 // Class used to escape promises: feature #54
 // ----------------------------------------------------------------------
 function QuotedPromise(promise) {
@@ -1083,6 +1110,11 @@ class Lexer {
         var found = this.next_token();
         if (found) {
             this._token = this.__input__.substring(this._i, this._next);
+            if (!this.__token__) {
+                // handle case when accessing __token__ from the syntax extension
+                // (e.g. string interpolation) as the first expression in a REPL
+                read_only(this, '__token__', this.token(true));
+            }
             return this.token(meta);
         }
         return eof;
@@ -1289,6 +1321,8 @@ Lexer.regex_class = Symbol.for('regex_class');
 Lexer.character = Symbol.for('character');
 Lexer.bracket = Symbol.for('bracket');
 Lexer.b_symbol = Symbol.for('b_symbol');
+Lexer.b_symbol_ex = Symbol.for('b_symbol_ex');
+
 Lexer.b_comment = Symbol.for('b_comment');
 Lexer.i_comment = Symbol.for('i_comment');
 Lexer.l_datum = Symbol.for('l_datum');
@@ -1356,7 +1390,9 @@ Lexer._rules = [
     // block symbols
     [/\|/, null, null, null, Lexer.b_symbol],
     [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol],
-    [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]
+    [/\|/, null, Lexer.boundary, Lexer.b_symbol, null],
+    [/\|/, null, /\S/, Lexer.b_symbol, Lexer.b_symbol_ex],
+    [/\S/, null, Lexer.boundary, Lexer.b_symbol_ex, null]
 ];
 // ----------------------------------------------------------------------
 Lexer._brackets = [
@@ -1463,10 +1499,10 @@ class Parser {
         // to read data from the parser stream #150
         const internal = get_internal(this.__env__);
         const stdin = internal.get('stdin');
-        this.__env__.set('lips',  { ...lips, __parser__: this });
+        global_env.set('lips',  { ...lips, __parser__: this });
         internal.set('stdin', new ParserInputPort(this, this.__env__));
         const cleanup = () => {
-            this.__env__.set('lips', lips);
+            global_env.set('lips', lips);
             internal.set('stdin', stdin);
         }
         return unpromise(fn(), (result) => {
@@ -2311,8 +2347,8 @@ function keywords_re(...args) {
 // line breaking rules
 Formatter.rules = [
     [[sexp], 0, not_close],
-    [[p_o, keywords_re('begin', 'cond-expand')], 1],
-    [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+    [[p_o, keywords_re('begin', 'cond-expand')], 1, not_close],
+    [[p_o, let_re, symbol, p_o, let_value, p_e], 1, not_close],
     [[p_o, let_re, symbol, sexp_or_atom], 1, not_close],
     [[p_o, let_re, p_o, let_value], 1, not_close],
     [[p_o, keywords_re('define-syntax'), /.+/], 1],
@@ -2325,7 +2361,7 @@ Formatter.rules = [
     [[p_o, not_p, sexp], 1, not_close],
     [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
     [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
-    [[p_o, keywords_re('if'), not_p, glob], 1],
+    [[p_o, keywords_re('if'), not_p, glob], 1, not_close],
     [[p_o, def_lambda_re, identifiers], 0, not_close],
     [[p_o, def_lambda_re, identifiers, string_re], 0, not_close],
     [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close],
@@ -3181,7 +3217,7 @@ Pair.prototype.map = function(fn) {
         return nil;
     }
 };
-var repr = new Map();
+const repr = new Map();
 // ----------------------------------------------------------------------
 function is_plain_object(object) {
     return object && typeof object === 'object' && object.constructor === Object;
@@ -3203,11 +3239,11 @@ function is_lips_function(x) {
 }
 // ----------------------------------------------------------------------
 function user_repr(obj) {
-    var constructor = obj.constructor || Object;
-    var plain_object = is_plain_object(obj);
+    const constructor = obj.constructor || Object;
+    const plain_object = is_plain_object(obj);
     var iterator = is_function(obj[Symbol.asyncIterator]) ||
         is_function(obj[Symbol.iterator]);
-    var fn;
+    let fn;
     if (repr.has(constructor)) {
         fn = repr.get(constructor);
     } else {
@@ -3216,7 +3252,7 @@ function user_repr(obj) {
             // if key is Object it should only work for plain_object
             // because otherwise it will match every object
             // we don't use instanceof so it don't work for subclasses
-            if (obj instanceof key &&
+            if (constructor === key &&
                 (key === Object && plain_object && !iterator || key !== Object)) {
                 fn = value;
             }
@@ -3418,6 +3454,9 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
         if (type(obj) === 'instance') {
             if (is_lambda(constructor) && constructor.__name__) {
                 name = constructor.__name__.valueOf();
+                if (typeof name === 'symbol') {
+                    name = name.toString().replace(/^Symbol\((?:#:)?([^\)]+)\)$/, '$1');
+                }
             } else if (!is_native_function(constructor)) {
                 name = 'instance';
             }
@@ -4040,7 +4079,7 @@ Syntax.Parameter = SyntaxParameter;
 // :: TODO detect cycles
 // ----------------------------------------------------------------------
 function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
-    var bindings = {
+    const bindings = {
         '...': {
             symbols: { }, // symbols ellipsis (x ...)
             lists: [ ]
@@ -4054,7 +4093,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     // duplicated ellipsis symbol
     log(symbols);
     /* eslint-disable complexity */
-    function traverse(pattern, code, pattern_names = [], ellipsis = false) {
+    function traverse(pattern, code, state = {}) {
+        const { ellipsis = false, trailing = false, pattern_names = [] } = state;
         log({
             code,
             pattern
@@ -4062,13 +4102,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         if (is_atom(pattern) && !(pattern instanceof LSymbol)) {
             return same_atom(pattern, code);
         }
-        if (pattern instanceof LSymbol &&
-            symbols.includes(pattern.literal())) { // TODO: literal() may be SLOW
-            if (!LSymbol.is(code, pattern)) {
-                return false;
+        if (pattern instanceof LSymbol) {
+            const literal = pattern.literal(); // TODO: literal() may be SLOW
+            if (symbols.includes(literal)) {
+                if (!LSymbol.is(code, literal) && !LSymbol.is(pattern, code)) {
+                    return false;
+                }
+                const ref = expansion.ref(literal);
+                return !ref || ref === define || ref === global_env;
             }
-            const ref = expansion.ref(pattern);
-            return !ref || ref === define || ref === global_env;
         }
         if (Array.isArray(pattern) && Array.isArray(code)) {
             log('<<< a 1');
@@ -4095,19 +4137,20 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     log('<<< a 3');
                     const names = [...pattern_names];
                     let node = code;
-                    if (!code.every(node => traverse(pattern[0], node, names, true))) {
+                    const new_state = { ...state, pattern_names: names, ellipsis: true };
+                    if (!code.every(node => traverse(pattern[0], node, new_state))) {
                         return false;
                     }
                 }
                 if (pattern.length > 2) {
                     const pat = pattern.slice(2);
-                    return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
+                    return traverse(pat, code.slice(-pat.length), state);
                 }
                 return true;
             }
-            const first = traverse(pattern[0], code[0], pattern_names, ellipsis);
+            const first = traverse(pattern[0], code[0], state);
             log({first, pattern: pattern[0], code: code[0]});
-            const rest = traverse(pattern.slice(1), code.slice(1), pattern_names, ellipsis);
+            const rest = traverse(pattern.slice(1), code.slice(1), state);
             log({first, rest});
             return first && rest;
         }
@@ -4132,23 +4175,28 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         if (is_pair(pattern) &&
             is_pair(pattern.cdr) &&
             LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
+            log('>> 1 (a)');
             // pattern (... ???) - SRFI-46
             if (!is_nil(pattern.cdr.cdr)) {
                 if (is_pair(pattern.cdr.cdr)) {
+                    log('>> 1 (b)');
                     // if we have (x ... a b) we need to remove two from the end
                     const list_len = pattern.cdr.cdr.length();
+                    const improper_list = !is_nil(pattern.last_pair().cdr);
                     if (!is_pair(code)) {
                         return false;
                     }
                     let code_len = code.length();
                     let list = code;
-                    while (code_len - 1 > list_len) {
+                    const trailing = improper_list ? 1 : 1;
+                    while (code_len - trailing > list_len) {
                         list = list.cdr;
                         code_len--;
                     }
                     const rest = list.cdr;
                     list.cdr = nil;
-                    if (!traverse(pattern.cdr.cdr, rest, pattern_names, ellipsis)) {
+                    const new_sate = { ...state, trailing: improper_list };
+                    if (!traverse(pattern.cdr.cdr, rest, new_sate)) {
                         return false;
                     }
                 }
@@ -4159,7 +4207,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     !pattern_names.includes(name) && !ellipsis) {
                     throw new Error('syntax: named ellipsis can only appear onces');
                 }
-                log('>> 1');
+                log('>> 1 (next)');
                 if (is_nil(code)) {
                     log('>> 2');
                     if (ellipsis) {
@@ -4190,6 +4238,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 } else {
                     log('>> 6');
                     if (is_pair(code)) {
+                        log('>> 7 ' + ellipsis);
                         // cons (a . b) => (var ... . x)
                         if (!is_pair(code.cdr) && !is_nil(code.cdr)) {
                             log('>> 7 (b)');
@@ -4197,31 +4246,35 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 return false;
                             } else if (!bindings['...'].symbols[name]) {
                                 bindings['...'].symbols[name] = new Pair(code.car, nil);
-                                return traverse(pattern.cdr.cdr, code.cdr);
+                                return traverse(pattern.cdr.cdr, code.cdr, state);
                             }
                         }
                         // code as improper list
                         const last_pair = code.last_pair();
+                        log({ last_pair });
                         if (!is_nil(last_pair.cdr)) {
+                            log('>> 7 (c)')
                             if (is_nil(pattern.cdr.cdr)) {
                                 // case (a ...) for (a b . x)
                                 return false;
                             } else {
+                                log('>> 7 (d)');
                                 // case (a ... . b) for (a b . x)
                                 const copy = code.clone();
                                 copy.last_pair().cdr = nil;
                                 bindings['...'].symbols[name] = copy;
-                                return traverse(pattern.cdr.cdr, last_pair.cdr);
+                                return traverse(pattern.cdr.cdr, last_pair.cdr, state);
                             }
                         }
-                        log('>> 7 ' + ellipsis);
                         pattern_names.push(name);
                         if (!bindings['...'].symbols[name]) {
+                            log('>> 7 (e)');
                             bindings['...'].symbols[name] = new Pair(
                                 code,
                                 nil
                             );
                         } else {
+                            log('>> 7 (f)');
                             const node = bindings['...'].symbols[name];
                             bindings['...'].symbols[name] = node.append(
                                 new Pair(
@@ -4237,7 +4290,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                         // empty ellipsis with rest  (a b ... . d) #290
                         log('>> 8');
                         bindings['...'].symbols[name] = null;
-                        return traverse(pattern.cdr.cdr, code);
+                        return traverse(pattern.cdr.cdr, code, state);
                     } else {
                         log('>> 9');
                         return false;
@@ -4254,8 +4307,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 }
                 log('>> 11');
                 let node = code;
+                const new_state = { ...state, pattern_names: names, ellipsis: true };
                 while (is_pair(node)) {
-                    if (!traverse(pattern.car, node.car, names, true)) {
+                    if (!traverse(pattern.car, node.car, new_state)) {
                         return false;
                     }
                     node = node.cdr;
@@ -4264,8 +4318,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             } if (Array.isArray(pattern.car) ) {
                 var names = [...pattern_names];
                 let node = code;
+                const new_state = { ...state, pattern_names: names, ellipsis: true };
                 while (is_pair(node)) {
-                    if (!traverse(pattern.car, node.car, names, true)) {
+                    if (!traverse(pattern.car, node.car, new_state)) {
                         return false;
                     }
                     node = node.cdr;
@@ -4299,16 +4354,30 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 code,
                 pattern
             });
+            const rest_pattern = pattern.car instanceof LSymbol &&
+                pattern.cdr instanceof LSymbol;
+            if (trailing && rest_pattern) {
+                log('>> 13 (a)');
+                // handle (x ... y . z)
+                if (!is_nil(code.cdr)) {
+                    return false;
+                }
+                const car = pattern.car.valueOf();
+                const cdr = pattern.cdr.valueOf();
+                bindings.symbols[car] = code.car;
+                bindings.symbols[cdr] = nil;
+                return true;
+                //return is_pair(code.cdr) && code.cdr.length() > 1;
+            }
             if (is_nil(code.cdr)) {
+                log('>> 13 (b)');
                 // last item in in call using in recursive calls on
                 // last element of the list
                 // case of pattern (p . rest) and code (0)
-                var rest_pattern = pattern.car instanceof LSymbol &&
-                    pattern.cdr instanceof LSymbol;
                 if (rest_pattern) {
                     // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
                     // where <> is symbol
-                    if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+                    if (!traverse(pattern.car, code.car, state)) {
                         return false;
                     }
                     log('>> 14');
@@ -4328,14 +4397,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 code
             });
             // case (x y) ===> (var0 var1 ... warn) where var1 match nil
+            // trailing: true start processing of (var ... x . y)
             if (is_pair(pattern.cdr) &&
                 is_pair(pattern.cdr.cdr) &&
                 pattern.cdr.car instanceof LSymbol &&
                 LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) &&
                 is_pair(pattern.cdr.cdr.cdr) &&
                 !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) &&
-                traverse(pattern.car, code.car, pattern_names, ellipsis) &&
-                traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+                traverse(pattern.car, code.car, state) &&
+                traverse(pattern.cdr.cdr.cdr, code.cdr, {...state, trailing: true })) {
                 const name = pattern.cdr.car.__name__;
                 log({
                     pattern,
@@ -4353,10 +4423,16 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 pattern,
                 code
             });
-            const car = traverse(pattern.car, code.car, pattern_names, ellipsis);
-            log({car, pattern: pattern.car, code: code.car});
-            const cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
-            log({ car, cdr });
+            const car = traverse(pattern.car, code.car, state);
+            const cdr = traverse(pattern.cdr, code.cdr, state);
+            log({
+                $car_code: code.car,
+                $car_pattern: pattern.car,
+                car,
+                $cdr_code: code.cdr,
+                $cdr_pattern: pattern.cdr,
+                cdr
+            });
             if (car && cdr) {
                 return true;
             }
@@ -4539,7 +4615,7 @@ function transform_syntax(options = {}) {
                 const item = bindings[name];
                 if (item === null) {
                     return;
-                } else if (item) {
+                } else if (name in bindings) {
                     log({ name, binding: bindings[name] });
                     if (is_pair(item)) {
                         log('[t 2 Pair ' + nested);
@@ -4566,7 +4642,8 @@ function transform_syntax(options = {}) {
                                 log('|| next 2');
                                 next(name, new Pair(car.cdr, cdr));
                             }
-                            return car.car;
+                            // wrap with Value to handle undefined
+                            return new Value(car.car);
                         } else if (is_nil(cdr)) {
                             return car;
                         } else {
@@ -4633,6 +4710,7 @@ function transform_syntax(options = {}) {
             return expr;
         }
         if (is_pair(expr) || is_array) {
+            log('>> 0');
             const first = is_array ? expr[0] : expr.car;
             let second, rest_second;
             if (is_array) {
@@ -4719,6 +4797,9 @@ function transform_syntax(options = {}) {
                             // undefined can be null caused by null binding
                             // on empty ellipsis
                             if (car !== undefined) {
+                                if (car instanceof Value) {
+                                    car = car.valueOf();
+                                }
                                 if (is_spread) {
                                     if (is_array) {
                                         if (Array.isArray(car)) {
@@ -4768,6 +4849,9 @@ function transform_syntax(options = {}) {
                             nested: true
                         });
                         if (car) {
+                            if (car instanceof Value) {
+                                car = car.valueOf();
+                            }
                             return new Pair(
                                 car,
                                 nil
@@ -4798,7 +4882,7 @@ function transform_syntax(options = {}) {
                         const next = (key, value) => {
                             new_bind[key] = value;
                         };
-                        const value = transform_ellipsis_expr(
+                        let value = transform_ellipsis_expr(
                             expr,
                             bind,
                             { nested: false },
@@ -4806,6 +4890,9 @@ function transform_syntax(options = {}) {
                         );
                         log({ value });
                         if (typeof value !== 'undefined') {
+                            if (value instanceof Value) {
+                                value = value.valueOf();
+                            }
                             if (is_array) {
                                 result.push(value);
                             } else {
@@ -4840,6 +4927,7 @@ function transform_syntax(options = {}) {
                         }
                     }
                     log('<<<< 2');
+                    log({ result });
                     return result;
                 }
             }
@@ -4979,8 +5067,12 @@ function is_undef(value) {
     return typeof value === 'undefined';
 }
 // -------------------------------------------------------------------------
+function get_proto(obj) {
+    return Object.getPrototypeOf(obj);
+}
+// -------------------------------------------------------------------------
 function is_iterator(obj, symbol) {
-    if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+    if (has_own_symbol(obj, symbol) || has_own_symbol(get_proto(obj), symbol)) {
         return is_function(obj[symbol]);
     }
 }
@@ -5271,16 +5363,14 @@ function let_macro(symbol) {
                 params = code.cdr.car.map(pair => pair.car);
                 args = code.cdr.car.map(pair => pair.cdr.car);
             }
-            const args_name = gensym('args');
-            return Pair.fromArray([
-                LSymbol('let'),
-                [[args_name, Pair(LSymbol('list'), args)]],
-                [LSymbol('letrec'),
-                 [[code.car, Pair(
-                     LSymbol('lambda'),
-                     Pair(params, code.cdr.cdr))]],
-                 [LSymbol('apply'), code.car, args_name]]
-            ]);
+            return new Pair(
+                Pair.fromArray([
+                    LSymbol('letrec'),
+                    [[code.car, Pair(
+                        LSymbol('lambda'),
+                        Pair(params, code.cdr.cdr))]],
+                    code.car]),
+                args);
         } else if (macro_expand) {
             // Macro.defmacro are special macros that should return lips code
             // here we use evaluate, so we need to check special flag set by
@@ -5298,7 +5388,7 @@ function let_macro(symbol) {
         }
         var i = 0;
         function exec() {
-            var output = new Pair(new LSymbol('begin'), code.cdr);
+            var output = hygienic_begin([env], code.cdr);
             return evaluate(output, {
                 env,
                 dynamic_env: env,
@@ -8024,6 +8114,16 @@ var global_env = new Environment({
         If there are missing inputs or other escape characters it
         will error.`),
     // ------------------------------------------------------------------
+    newline: doc('newline', function newline(port = null) {
+        const display = global_env.get('display');
+        const { use_dynamic } = this;
+        const env = global_env;
+        const dynamic_env = global_env;
+        call_function(display, ['\n', port], { env, dynamic_env, use_dynamic });
+    }, `(newline [port])
+
+        Write newline character to standard output or given port`),
+    // ------------------------------------------------------------------
     display: doc('display', function display(arg, port = null) {
         if (port === null) {
             port = internal(this, 'stdout');
@@ -8045,7 +8145,7 @@ var global_env = new Environment({
         const repr = global_env.get('repr');
         const value = args.map(repr).join(' ');
         port.write.call(global_env, value);
-        global_env.get('newline')(port);
+        global_env.get('newline').call(this, port);
     }, `(display-error . args)
 
         Display an error message on stderr.`),
@@ -8244,6 +8344,8 @@ var global_env = new Environment({
                 env = this.get('**interaction-environment**');
             }
         }
+        const package_name = '@lips';
+        const has_package = file.startsWith(package_name);
         // TODO: move **module-path** to internal env
         const PATH = '**module-path**';
         var module_path = global_env.get(PATH, { throwError: false });
@@ -8281,45 +8383,69 @@ var global_env = new Environment({
                     return code;
                 });
         }
+        function get_root_dir() {
+            const __dirname = global_env.get('__dirname');
+            return __dirname.replace(/[^/]+$/, '');
+        }
         if (is_node()) {
             return new Promise(async (resolve, reject) => {
-                const path = nodeRequire('path');
-                let cwd;
-                if (module_path) {
-                    module_path = module_path.valueOf();
-                    file = path.join(module_path, file);
-                } else {
-                    const cmd = g_env.get('command-line', { throwError: false });
-                    let args;
-                    if (cmd) {
-                        args = await cmd();
+                try {
+                    await node_ready;
+                    const path = nodeRequire('path');
+                    const fs = nodeRequire('fs');
+                    let cwd;
+                    const root_dir = get_root_dir();
+                    if (has_package) {
+                        file = file.replace(package_name, root_dir);
                     }
-                    if (args && !is_nil(args)) {
-                        cwd = process.cwd();
-                        file = path.join(path.dirname(args.car.valueOf()), file);
-                    }
-                }
-                global_env.set(PATH, path.dirname(file));
-                nodeRequire('fs').readFile(file, function(err, data) {
-                    if (err) {
-                        reject(err);
-                        global_env.set(PATH, module_path);
-                    } else {
-                        try {
-                            run(data).then(() => {
-                                resolve();
-                                global_env.set(PATH, module_path);
-                            }).catch(reject);
-                        } catch (e) {
-                            reject(e);
+                    if (module_path) {
+                        module_path = module_path.valueOf();
+                        if (!file.startsWith('/')) {
+                            file = path.join(module_path, file);
+                        }
+                    } else if (!file.startsWith('/')) {
+                        const cmd = g_env.get('command-line', { throwError: false });
+                        let args;
+                        if (cmd) {
+                            args = await cmd();
+                        }
+                        if (args && !is_nil(args)) {
+                            cwd = process.cwd();
+                            file = path.join(path.dirname(args.car.valueOf()), file);
                         }
                     }
-                });
+                    global_env.set(PATH, path.dirname(file));
+                    fs.readFile(file, function(err, data) {
+                        if (err) {
+                            reject(err);
+                            global_env.set(PATH, module_path);
+                        } else {
+                            try {
+                                run(data).then(() => {
+                                    resolve();
+                                    global_env.set(PATH, module_path);
+                                }).catch(reject);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    });
+                } catch(e) {
+                    console.error(e);
+                }
             });
+        }
+        if (has_package) {
+            let path = global_env.get('__dirname', { throwError: false }) ?? current_script;
+            path ??= current_script;
+            const root = path.replace(/dist\/?[^\/]*$/, '');
+            file = file.replace(package_name, root);
         }
         if (module_path) {
             module_path = module_path.valueOf();
-            file = module_path + '/' + file.replace(/^\.?\/?/, '');
+            if (!file.startsWith('/')) {
+                file = module_path + '/' + file.replace(/^\.?\/?/, '');
+            }
         }
         return fetch(file).then(code => {
             global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
@@ -8653,8 +8779,10 @@ var global_env = new Environment({
             }
             env.set(name, parameter);
         }
-        const body = new Pair(new LSymbol('begin'), code.cdr);
-        return evaluate(body, { ...eval_args, env });
+        const expr = hygienic_begin([
+            env, eval_args.dynamic_env
+        ], code.cdr);
+        return evaluate(expr, { ...eval_args, env });
     }), `(syntax-parameterize (bindings) body)
 
          Macro work similar to let-syntax but the the bindnds will be exposed to the user.
@@ -8798,19 +8926,13 @@ var global_env = new Environment({
     // ------------------------------------------------------------------
     'eval': doc('eval', function(code, env) {
         env = env || this.get('interaction-environment').call(this);
-        return evaluate(code, {
-            env,
-            dynamic_env: env,
-            error: e => {
-                var error = global_env.get('display-error');
-                error.call(this, e.message);
-                if (e.code) {
-                    var stack = e.code.map((line, i) => {
-                        return `[${i + 1}]: ${line}`;
-                    }).join('\n');
-                    error.call(this, stack);
-                }
-            }
+        return new Promise((resolve, reject) => {
+            const result = evaluate(code, {
+                env,
+                dynamic_env: env,
+                error: reject
+            });
+            resolve(result);
         });
     }, `(eval expr)
         (eval expr environment)
@@ -8881,7 +9003,7 @@ var global_env = new Environment({
                 }
             }
             var rest = __doc__ ? code.cdr.cdr : code.cdr;
-            var output = new Pair(new LSymbol('begin'), rest);
+            var output = hygienic_begin([env, dynamic_env], rest);
             const eval_args = {
                 env,
                 dynamic_env,
@@ -9242,12 +9364,16 @@ var global_env = new Environment({
         // -----------------------------------------------------------------
         function unquote_splice(pair, unquote_cnt, max_unq) {
             if (unquote_cnt < max_unq) {
+                let cdr = nil;
+                if (!is_nil(pair.cdr)) {
+                    cdr = recur(pair.cdr, unquote_cnt - 1, max_unq);
+                }
                 return new Pair(
                     new Pair(
                         pair.car.car,
                         recur(pair.car.cdr, unquote_cnt, max_unq)
                     ),
-                    nil
+                    cdr
                 );
             }
             var lists = [];
@@ -10147,23 +10273,6 @@ var global_env = new Environment({
         Predicate that tests if value is a proper linked list structure.
         The car of each pair can be any value. It returns false on cyclic lists."`),
     // ------------------------------------------------------------------
-    some: doc('some', function some(fn, list) {
-        typecheck('some', fn, 'function');
-        typecheck('some', list, ['pair', 'nil']);
-        if (is_null(list)) {
-            return false;
-        } else {
-            return unpromise(fn(list.car), (value) => {
-                return value || some(fn, list.cdr);
-            });
-        }
-    }, `(some fn list)
-
-        Higher-order function that calls fn on each element of the list.
-        It stops and returns true when fn returns true for a value.
-        If none of the values give true, some will return false.
-        Analogous to Python any(map(fn, list)).`),
-    // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function(fold, fn, init, ...lists) {
         typecheck('fold', fn, 'function');
         lists.forEach((arg, i) => {
@@ -10756,17 +10865,21 @@ async function node_specific() {
     });
 }
 // -------------------------------------------------------------------------
-/* c8 ignore next 11 */
+/* c8 ignore next 15 */
+let node_ready; // Scheme load function need to wait for node_specific
 if (is_node()) {
-    node_specific();
-} else if (typeof window !== 'undefined' && window === root) {
-    global_env.set('window', window);
-    global_env.set('global', undefined);
-    global_env.set('self', window);
-} else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
-    global_env.set('self', self);
-    global_env.set('window', undefined);
-    global_env.set('global', undefined);
+    node_ready = node_specific();
+} else {
+    node_ready = Promise.resolve();
+    if (typeof window !== 'undefined' && window === root) {
+        global_env.set('window', window);
+        global_env.set('global', undefined);
+        global_env.set('self', window);
+    } else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
+        global_env.set('self', self);
+        global_env.set('window', undefined);
+        global_env.set('global', undefined);
+    }
 }
 // -------------------------------------------------------------------------
 function typeErrorMessage(fn, got, expected, position = null) {
@@ -11337,7 +11450,7 @@ function exec_collect(collect_callback) {
             dynamic_env = env === true ? user_env : env || user_env;
         }
         if (env === true) {
-        env = user_env;
+            env = user_env;
         } else {
             env = env || user_env;
         }
@@ -11456,6 +11569,7 @@ function bootstrap(url = '') {
             url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/${std}`;
         }
     }
+    global_env.set('__dirname', url.replace(/[^/]+$/, ''));
     var load = global_env.get('load');
     return load.call(user_env, url, global_env);
 }

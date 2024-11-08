@@ -260,8 +260,16 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 | Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
+| Mixing groups of definitions with expressions within bodies | [SRFI-251](https://srfi.schemers.org/srfi-251/) |
 
-### require `(load "./lib/srfi/<number>.scm")`
+### require manual loading
+
+You can load the SRFI with special syntax that start with `@lips`
+which points to root LIPS directory:
+
+```scheme
+(load "@lips/lib/srfi/<number>.scm")
+```
 
 They should be loaded as R7RS libraries in final 1.0.0 version
 
@@ -278,8 +286,9 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |
 | Procedures and Syntax for Multiple Values | [SRFI-210](https://srfi.schemers.org/srfi-210/) |
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
+| Destructuring Lists | [SRFI 239](https://srfi.schemers.org/srfi-239/) |
 
-in Web (e.g. in Web REPL) you can use URL:
+in Web (e.g. in Web REPL) you can also use full URL:
 
 ```scheme
 (load "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/srfi/<NUMBER>.scm")
@@ -363,6 +372,8 @@ I would also love to see if you use the library, I may even share the links of p
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
 
 Special thanks to [Lassi Kortela](https://github.com/lassik) for helping with Scheme code.
+
+Thanks for [Algolia DocSearch](https://docsearch.algolia.com/) for providing free search on LIPS website.
 
 ## License
 

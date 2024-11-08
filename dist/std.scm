@@ -553,12 +553,24 @@
    Helper macro used by cond.")
 
 ;; -----------------------------------------------------------------------------
+(define (%else-literal? obj)
+  "(%else-literal? obj)
+
+   Checks if object is symbol else."
+  (and (symbol? obj)
+       (or (eq? obj 'else)
+           (eq? (--> (new lips.LString (obj.literal))
+                     (cmp "else")) 0))))
+
+;; -----------------------------------------------------------------------------
 (define-macro (cond . list)
   "(cond (predicate? . body)
-         (predicate? . body))
+         (predicate? . body)
+         (else . body))
 
    (cond (predicate? => procedure)
-         (predicate? => procedure))
+         (predicate? => procedure)
+         (else . body))
 
    Macro for condition checks. For usage instead of nested ifs.
    You can use predicate and any number of expressions. Or symbol =>
@@ -573,27 +585,23 @@
                              (caddr item)
                              (cdr item)))
              (rest (cdr list)))
-        `(let ((,value ,first))
-           (if ,value
-               ,(if fn
-                    `(,expression ,value)
-                    `(begin
-                       ,@expression))
-               ,(if (and (pair? rest)
-                         (let ((x (caar rest)))
-                           (or (eq? x true)
-                               (and (symbol? x)
-                                    (or (eq? x 'else)
-                                        (eq? (--> (new lips.LString (x.literal)) (cmp "else")) 0))))))
-                    `(begin
-                       ,@(cdar rest))
-                    (if (not (null? rest))
+        (if (%else-literal? first)
+            `(begin
+               ,@expression)
+            `(let ((,value ,first))
+               (if ,value
+                   ,(if fn
+                        `(,expression ,value)
+                        `(begin
+                           ,@expression))
+                   ,(if (not (null? rest))
                         `(cond ,@rest))))))
       '()))
 
 ;; -----------------------------------------------------------------------------
 (define (regex re . rest)
   "(regex re)
+   (regex re flags)
 
    Creates a new regular expression from string, to not break Emacs formatting."
   (typecheck "regex" re "string")
@@ -733,6 +741,51 @@
                      ")")))
 
 ;; -----------------------------------------------------------------------------
+(set-special! "#\"" '%string-interpolation lips.specials.SYMBOL)
+
+(define (%read-interpolated . rest)
+  "(%read-interpolated [port])
+
+   Function read from input port or stdin and return list of strings
+   interleaved with expressions from interpolation ${...}"
+  (let ((port (if (null? rest) (current-input-port) (car rest))))
+    (let loop ((part "") (result (vector)) (char (read-char port)))
+      (cond ((and (char=? char #\$)
+                  (char=? (peek-char port) #\{))
+             (read-char)
+             (let ((expr (read port)))
+               (let ((next (peek-char port)))
+                 (if (char=? next #\})
+                     (begin
+                       (read-char)
+                       (loop "" (vector-append result (vector part expr)) (read-char)))
+                     (error (string-append "Parse Error: expecting } got " (repr next)))))))
+            ((char=? char #\\)
+             (loop (string-append part (repr (read-char))) result (read-char)))
+            ((char=? char #\")
+             (vector->list (vector-append result (vector part))))
+            ((eof-object? char)
+             (error "Parse Error: expecting character #eof found"))
+            (else
+             (loop (string-append part (repr char)) result (read-char)))))))
+
+(define (%string-interpolation)
+  "(%string-interpolation)
+
+   String interpolation syntax-extension that read remainder of a string and return
+   LISP scheme code that evaluate to the string."
+  (let* ((lexer lips.__parser__.__lexer__)
+         (token lexer.__token__)
+         (offset (+ token.col 2))
+         (re (regex (string-append "\\n\\s{1," (repr offset) "}") "g")))
+    `(string-append ,@(map (lambda (expr)
+                             (if (string? expr)
+                                 (begin
+                                   (expr.replace re "\n"))
+                                 `(repr ,expr)))
+                           (%read-interpolated)))))
+
+;; -----------------------------------------------------------------------------
 (define (bound? x . rest)
   "(bound? x [env])
 
@@ -783,15 +836,62 @@
     (qsort list predicate)))
 
 ;; -----------------------------------------------------------------------------
-(define (every fn list)
-  "(every fn list)
+(define-macro (%any lists)
+  `(or ,@lists))
 
-   Function that calls fn on each item of the list, if every value returns true
-   it will return true otherwise it return false.
-   Analogous to Python all(map(fn, list))."
-  (if (null? list)
+
+;; -----------------------------------------------------------------------------
+(define (%any-null? lst)
+  "(%any-null? lst)
+
+   Checks if any of elements in the list is null."
+  (if (null? lst)
+      false
+      (if (null? (car lst))
+          true
+          (%any-null? (cdr lst)))))
+
+;; -----------------------------------------------------------------------------
+(define (%some fn lists)
+  "(%some fn lists)
+
+   version of some without typechecking."
+  (if (or (null? lists) (%any-null? lists))
+      false
+      (if (apply fn (map car lists))
+          true
+          (%some fn (map cdr lists)))))
+
+;; -----------------------------------------------------------------------------
+(define (some fn . lists)
+  "(some fn . lists)
+
+   Higher-order function that calls fn on consecutive elements of the list of lists.
+   It stops and returns true when fn returns true. If none of the values give true,
+   some will return false. Analogous to Python any(map(fn, list))."
+  (typecheck "some" fn "function")
+  (typecheck-args (vector "pair" "nil") "some" lists)
+  (%some fn lists))
+
+;; -----------------------------------------------------------------------------
+(define (%every fn lists)
+  "(%every fn lists)
+
+   version of every without typechecking."
+  (if (or (null? lists) (%any-null? lists))
       true
-      (and (fn (car list)) (every fn (cdr list)))))
+      (and (apply fn (map car lists)) (%every fn (map cdr lists)))))
+
+;; -----------------------------------------------------------------------------
+(define (every fn . lists)
+  "(every fn . lists)
+
+   Higher-order function that calls fn on consecutive item of the list of lists,
+   if every call returns true it will return true otherwise it return false.
+   Analogous to Python all(map(fn, list))."
+  (typecheck "every" fn "function")
+  (typecheck-args (vector "pair" "nil") "every" lists)
+  (%every fn lists))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (promise . body)
@@ -936,6 +1036,7 @@
   "(define-class name parent . body)
 
    Defines a class - JavaScript function constructor with prototype.
+   parent needs to be class, constructor function, or #null
 
    usage:
 
@@ -947,40 +1048,45 @@
                (newline))))
      (define jack (new Person \"Jack\"))
      (jack.hi) ; prints \"Jack says hi\""
-  (let iter ((functions '()) (constructor '()) (lst body))
-    (if (null? lst)
-        `(begin
-           (define ,name ,(if (null? constructor)
-                              `(lambda ())
-                              ;; we return this to solve issue when constructor
-                              ;; return a promise
-                              ;; ref: https://stackoverflow.com/a/50885340/387194
-                              (append (%class-lambda constructor)
-                                      (list 'this))))
-           (set-obj! ,name (Symbol.for "__class__") true)
-           ,(if (not (null? parent))
-                `(begin
-                   (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
-                   (set-obj! (. ,name 'prototype) 'constructor ,name)))
-           (set-obj! ,name '__name__ ',name)
-           ,@(map (lambda (fn)
-                    `(set-obj! (. ,name 'prototype)
-                               ,(%class-method-name (car fn))
-                               ,(%class-lambda fn)))
-                  functions))
-        (let ((item (car lst)))
-          (if (eq? (car item) 'constructor)
-              (iter functions item (cdr lst))
-              (iter (cons item functions) constructor (cdr lst)))))))
+  (let ((g:parent (gensym)))
+    (let iter ((functions '()) (constructor '()) (lst body))
+      (if (null? lst)
+          `(begin
+             (define ,name ,(if (null? constructor)
+                                `(lambda ())
+                                ;; we return this to solve issue when constructor
+                                ;; return a promise
+                                ;; ref: https://stackoverflow.com/a/50885340/387194
+                                (append (%class-lambda constructor)
+                                        (list 'this))))
+             (set-obj! ,name (Symbol.for "__class__") true)
+             (let ((,g:parent ,parent ))
+               (if (not (null? ,g:parent))
+                   (begin
+                     (set-obj! ,name 'prototype (Object.create (. ,g:parent 'prototype)))
+                     (set-obj! (. ,name 'prototype) 'constructor ,name))))
+             (set-obj! ,name '__name__ ',name)
+             ,@(map (lambda (fn)
+                      `(set-obj! (. ,name 'prototype)
+                                 ,(%class-method-name (car fn))
+                                 ,(%class-lambda fn)))
+                    functions))
+          (let ((item (car lst)))
+            (if (eq? (car item) 'constructor)
+                (iter functions item (cdr lst))
+                (iter (cons item functions) constructor (cdr lst))))))))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax class
   (syntax-rules ()
     ((_)
      (error "class: parent required"))
-    ((_ parent body ...)
-     (let ()
+    ((_ parent-expr body ...)
+     (let ((parent parent-expr))
+       (if (not (or (procedure? parent) (eq? parent #null)))
+           (error "parent class need to be a function or #null"))
        (define-class temp parent body ...)
+       (set-obj! temp "__name__" "anonymous")
        temp)))
   "(class <parent> body ...)
 
@@ -1896,7 +2002,8 @@
   "(promise? obj)
 
    Checks if the value is a promise created with delay or make-promise."
-  (string=? (type obj) "promise"))
+  (and (string=? (type obj) "function")
+       (. obj (Symbol.for "promise"))))
 
 ;; -----------------------------------------------------------------------------
 (define (positive? x)
@@ -2785,14 +2892,6 @@
   (typecheck "char-lower-case?" char "character")
   (and (char-alphabetic? char)
        (char=? (char-downcase char) char)))
-
-;; -----------------------------------------------------------------------------
-(define (newline . rest)
-  "(newline [port])
-
-   Write newline character to standard output or given port"
-  (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (display "\n" port)))
 
 ;; -----------------------------------------------------------------------------
 (define (write obj . rest)
@@ -4820,6 +4919,7 @@
          (new ,name ,@(cdr constructor)))
        (define (,pred obj)
          (instanceof ,name obj))
+       (set-repr! ,name (lambda () (string-append "#<record(" (symbol->string ',name) ")>")))
        ,@(map (lambda (field)
                 (let ((prop-name (car field))
                       (get (cadr field))
@@ -4944,7 +5044,7 @@
 
    Create new empty library object with empty namespace."
   (let* ((parent (. (current-environment) '__parent__))
-         (lib (let ((lib (--> parent (get name &(:throwError false)))))
+         (lib (let ((lib (--> parent (get name &(:throwError #f)))))
                 (if (null? lib)
                     (new %Library name)
                     lib)))

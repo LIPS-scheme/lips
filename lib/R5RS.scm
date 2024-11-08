@@ -225,7 +225,8 @@
   "(promise? obj)
 
    Checks if the value is a promise created with delay or make-promise."
-  (string=? (type obj) "promise"))
+  (and (string=? (type obj) "function")
+       (. obj (Symbol.for "promise"))))
 
 ;; -----------------------------------------------------------------------------
 (define (positive? x)
@@ -1114,14 +1115,6 @@
   (typecheck "char-lower-case?" char "character")
   (and (char-alphabetic? char)
        (char=? (char-downcase char) char)))
-
-;; -----------------------------------------------------------------------------
-(define (newline . rest)
-  "(newline [port])
-
-   Write newline character to standard output or given port"
-  (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (display "\n" port)))
 
 ;; -----------------------------------------------------------------------------
 (define (write obj . rest)

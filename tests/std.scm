@@ -342,3 +342,20 @@
                                             `&(:done #f :value ,(/ 1 i))))))))
           (t.is (iterator->array obj) #(1 1/2 1/3 1/4 1/5))
           (t.is (Array.from (iterator->array obj)) #(1 0.5 0.3333333333333333 0.25 0.2)))))
+
+(test "std: string interpolation"
+      (lambda (t)
+        (let ((x 10) (y 20))
+          (t.snapshot #"this is string \" ${(+ x y)} hello ${(repr "hello" #t)}
+                        world
+                         x
+                    x"))))
+
+(test "std: cond"
+      (lambda (t)
+        (t.is (cond (else 10)) 10)
+        (t.is (cond ((zero? 0) 10) (else 20)) 10)
+        (t.is (cond ((zero? 10) 10) (else 20)) 20)
+        (t.is (let ((alist '((a . 10) (b . 20) (c . 30))))
+                (cond ((assoc 'b alist) => cdr) (else #f)))
+              20)))

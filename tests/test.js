@@ -37,8 +37,8 @@ get_files().then(filenames => {
     })).then(async function (files) {
         await exec(`
           (let-env lips.env.__parent__
-            (load "./dist/std.xcb")
-            (load "./tests/helpers/helpers.scm"))
+            (load "@lips/dist/std.xcb")
+            (load "@lips/tests/helpers/helpers.scm"))
           (define test (require "ava"))
         `);
         return exec(files.join('\n\n'));

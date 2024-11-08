@@ -1,13 +1,13 @@
 <h1 align="center">
-  <img src="https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true"
+  <img src="https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
 </h1>
 
 [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/lips_lang)](https://twitter.com/lips_lang)
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.19-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=master&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&80a731f28ad563e153f52942314ee16b)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&d99e59bdd4421bb215d5bb781449d63f)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -162,7 +162,7 @@ npm install -g @jcubic/lips@beta
 
 you can run the interpreter from the terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
 
 You can also run code in a string with:
@@ -201,7 +201,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## FOSDEM'23 Presentation [Video]
 
-[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/master/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
+[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/devel/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
 
@@ -210,7 +210,7 @@ Because LIPS is tree walking interpreter, sometimes it may be slow. Especially i
 process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
-script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
+script [reference.scm](https://github.com/jcubic/lips/blob/devel/scripts/reference.scm)
 
 That generates reference documentation for all builtin functions and macros.
 The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,
@@ -260,8 +260,16 @@ This can happen with React/Preact and when the component returns a Promise. Some
 | Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 | Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
+| Mixing groups of definitions with expressions within bodies | [SRFI-251](https://srfi.schemers.org/srfi-251/) |
 
-### require `(load "./lib/srfi/<number>.scm")`
+### require manual loading
+
+You can load the SRFI with special syntax that start with `@lips`
+which points to root LIPS directory:
+
+```scheme
+(load "@lips/lib/srfi/<number>.scm")
+```
 
 They should be loaded as R7RS libraries in final 1.0.0 version
 
@@ -278,8 +286,9 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |
 | Procedures and Syntax for Multiple Values | [SRFI-210](https://srfi.schemers.org/srfi-210/) |
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
+| Destructuring Lists | [SRFI 239](https://srfi.schemers.org/srfi-239/) |
 
-in Web (e.g. in Web REPL) you can use URL:
+in Web (e.g. in Web REPL) you can also use full URL:
 
 ```scheme
 (load "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/srfi/<NUMBER>.scm")
@@ -300,8 +309,7 @@ in Web (e.g. in Web REPL) you can use URL:
 * [Brian Lovin](https://brianlovin.com/hn/38819212) (HN clone)
 
 ## Projects that use LIPS
-* [Conzept](https://conze.pt) - Topic exploration system for the 21st century (see also their [Twitter account](https://twitter.com/conzept__) and [Command API Documentation](https://conze.pt/guide/command_api)).
-* [Logoi](https://logoi.website/) - a minimalist "superdialect" of the Prolog and Lisp programming languages.
+* [Conzept](https://conze.pt) - Topic exploration system for the 21st century (see also their [Twitter account](https://twitter.com/conzept__) and [Command API Documentation](https://conze.pt/guide/command_api))
 
 ## Roadmap
 ### 1.0
@@ -364,6 +372,8 @@ I would also love to see if you use the library, I may even share the links of p
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
 
 Special thanks to [Lassi Kortela](https://github.com/lassik) for helping with Scheme code.
+
+Thanks for [Algolia DocSearch](https://docsearch.algolia.com/) for providing free search on LIPS website.
 
 ## License
 
