@@ -630,22 +630,6 @@ function run_repl(err, rl) {
         function should_update() {
             return (token || prev_token) && code_above && !string.match(/^[\n\r]+$/);
         }
-        function refresh() {
-            // this always need to be executed inside rl._writeToOutput
-            // even if nothing changes, this make sure that the input
-            // stay intact while editing the command line
-            rl.output.write(code);
-        }
-        function finalize() {
-            if (should_update()) {
-                setTimeout(() => {
-                    // overwrite lines above the cursor this is side effect
-                    process.stdout.write('\x1b7' + ansi_rewrite_above(code_above) + '\x1b8');
-                }, 0);
-            }
-            refresh();
-            prev_token = token;
-        }
         let token, code_above, code;
         try {
             const prefix = multiline ? continue_prompt : prompt;
@@ -676,8 +660,16 @@ function run_repl(err, rl) {
                         }
                     }
                 }
+                if (should_update()) {
+                    // overwrite lines above the cursor this is side effect
+                    process.stdout.write('\x1b7' + ansi_rewrite_above(code_above) + '\x1b8');
+                }
+                prev_token = token;
             }
-            finalize();
+            // this always need to be executed inside rl._writeToOutput
+            // even if nothing changes, this make sure that the input
+            // stay intact while editing the command line
+            rl.output.write(code);
         } catch(e) {
             console.error(e);
         }
