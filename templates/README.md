@@ -3,7 +3,7 @@
        alt="LIPS - Scheme Based Powerful Lisp Language" />
 </h1>
 
-[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/lips_lang)](https://twitter.com/lips_lang)
+[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/LIPS_scheme)](https://twitter.com/LIPS_scheme)
 [![npm](https://img.shields.io/badge/npm-{{VER_DASH}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch={{BRANCH}}&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
