@@ -30,11 +30,10 @@ import {
     nil,
     Pair,
     env,
-    banner,
     InputPort,
     OutputPort
 } from '../src/lips.js';
-import { version, date } from '../dist/lips.esm.js';
+import { version, date, banner } from '../dist/lips.esm.js';
 
 import fs from 'fs';
 import os from 'os';
@@ -404,7 +403,7 @@ if (options.version || options.V) {
     }
 } else if (options.h || options.help) {
     var name = process.argv[1];
-    var intro = banner.replace(/(Jankiewicz\n)[\s\S]+$/, '$1').replace('{{VER}}', version);
+    var intro = banner.replace(/(Jankiewicz\n)[\s\S]+$/, '$1');
     console.log(format('%s\nusage:\n  %s -q | -c | -h | -t | -b <file> | -d | -e <code> | <filename>\n' +
                        '\n  [-h --help]\t\tthis help message\n  [-e --eval]\t\texecute code\n  [-V --v' +
                        'ersion]\tdisplay version information according to srfi-176\n  [-c --compile]\t' +
@@ -420,7 +419,7 @@ if (options.version || options.V) {
     const dynamic = options.d || options.dynamic;
     const entry = '   ' + (dynamic ? 'dynamic' : 'lexical') + ' scope $1';
     if (process.stdin.isTTY && !quiet) {
-        console.log(banner.replace(/(\n\nLIPS.+)/m, entry)); // '
+        console.log(banner.replace(/(\n\nLIPS.+)/m, entry));
     }
     var prompt = 'lips> ';
     var continue_prompt = '... ';
