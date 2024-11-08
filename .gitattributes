@@ -6,6 +6,7 @@ dist/* binary
 package-lock.json binary
 assets/classDiagram.svg binary
 assets/*.png binary
+assets/*.gif binary
 tests/snapshots/* binary
 *.xcm binary
 *.xcb binary
