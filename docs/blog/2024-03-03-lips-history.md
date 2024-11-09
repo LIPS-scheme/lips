@@ -27,10 +27,13 @@ to make it more powerful and easier to interact with JavaScript.
 
 ## History of LIPS
 
-It all started in February 2018 when I've written the first version of Lisp interpreter. You can
-still see the code on [CodePen](https://codepen.io/jcubic/pen/gvvzdp). Then I moved the
-[development to GitHub](https://github.com/jcubic/lips) and named the project LIPS.  The first release
-(version 0.2.0) is marked as Mar 2018.
+It all started in February 2018 when I've written the first version of a Lisp interpreter. You can
+still see the code on [CodePen](https://codepen.io/jcubic/pen/gvvzdp). Then I moved the [development
+to GitHub](https://github.com/jcubic/lips) and named the project LIPS.  The first release (version
+0.2.0) is marked as Mar 2018. The reason why I created another lisp in JavaScript was because I
+wanted to have an Emacs in browser that would have a real lisp inside. That's why LIPS had dynamic
+scope as an option. GNU Emacs use Elisp that for a long time had dynamic scope. So I was planing to
+emulate that.
 
 At the beginning it was Lisp based on Scheme, but at one point after version
 [0.20.1 dated as Jul 1, 2020](https://github.com/jcubic/lips/releases/tag/0.20.1), I've started
