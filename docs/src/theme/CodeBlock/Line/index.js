@@ -15,9 +15,10 @@ export default function CodeBlockLine({
     line,
     className: clsx(classNames, showLineNumbers && styles.codeLine),
   });
-  const lineTokens = line.map((token, key) => (
-    <span key={key} {...getTokenProps({token, key})} />
-  ));
+  const lineTokens = line.map((token, index) => {
+    const { key, ...props } = getTokenProps({token, key: index});
+    return <span key={key} {...props} />
+  });
   return (
     <span {...lineProps}>
       {showLineNumbers ? (
