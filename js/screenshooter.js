@@ -1,1 +1,53 @@
-(()=>{document.querySelector(".box");const e=document.querySelector(".box pre.hidden").innerText,t=document.querySelector(".cm-body");CodeMirror.commands.autocomplete=function(e){e.showHint({hint:CodeMirror.hint.scheme})};const o=CodeMirror(t,{value:e,mode:"lips",lineWrapping:!0,lineNumbers:!0,matchBrackets:!0,theme:"twilight",inputStyle:"contenteditable",extraKeys:{"Ctrl-Space":"autocomplete"}});function n(e){const t=document.createElement("a");t.download="screenshot.png",t.href=e,t.style.display="none",document.body.appendChild(t),t.click(),document.body.removeChild(t)}let c;document.querySelector(".box button").addEventListener("click",(()=>{const e=document.querySelector(".box .wrapper");htmlToImage.toPng(e).then(n).catch((function(e){console.error("oops, something went wrong!",e)}))}));const r=document.body;o.on("update",(function(){var e=t.getBoundingClientRect();c!==e.height&&(c=e.height,r.style.setProperty("--height",e.height+300))}))})();
+(() => {
+const box = document.querySelector('.box');
+const code = document.querySelector('.box pre.hidden').innerText;
+const container = document.querySelector('.cm-body');
+
+CodeMirror.commands.autocomplete = function(cm) {
+    cm.showHint({ hint: CodeMirror.hint.scheme });
+};
+
+const myCodeMirror = CodeMirror(container, {
+    value: code,
+    mode:  "lips",
+    lineWrapping: true,
+    lineNumbers: true,
+    matchBrackets: true,
+    theme: 'twilight',
+    inputStyle: "contenteditable",
+    extraKeys: { "Ctrl-Space": "autocomplete" }
+});
+
+function download(url) {
+    const a = document.createElement('a');
+    a.download = 'screenshot.png';
+    a.href = url;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+const button = document.querySelector('.box button');
+button.addEventListener('click', () => {
+    const node = document.querySelector(".box .wrapper");
+    htmlToImage.toPng(node)
+        .then(download)
+        .catch(function(error) {
+            console.error('oops, something went wrong!', error);
+        });
+});
+let height;
+const body = document.body;
+
+myCodeMirror.on('update', adjust_height);
+
+function adjust_height() {
+    var rect = container.getBoundingClientRect();
+    if (height !== rect.height) {
+        height = rect.height;
+        body.style.setProperty('--height', rect.height + 300);
+    }
+}
+
+})();
