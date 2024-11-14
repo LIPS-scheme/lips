@@ -299,7 +299,7 @@ const examples = [
 (if (null? self.qrcode)
     (%promisify ($.getScript "https://cdn.jsdelivr.net/gh/jcubic/static/js/qrcode.js")))
 (let ((code (%promisify (qrcode.generate "https://tinyurl.com/fxv87gb"))))
-  (term.echo (code.replace #/\\[47m/g "[30;47m"))
+  (term.echo (code.replace #/\\[47m/g "[30;47m") &(:ansi #t))
   #void)`
   }
 ];
