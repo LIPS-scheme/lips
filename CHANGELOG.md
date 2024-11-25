@@ -1,3 +1,7 @@
+## 1.0.0-beta.21
+### Feature
+* allow to use copy-paste indent with Node >=18.19.0
+
 ## 1.0.0-beta.20
 ### Feature
 * allow to call `load` with `@lips` prefix [#354](https://github.com/jcubic/lips/issues/354)

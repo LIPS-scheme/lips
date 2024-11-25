@@ -53,7 +53,8 @@ const require = createRequire(import.meta.url);
 
 const kDebounceHistoryMS = 15;
 
-const supports_paste_brackets = satisfies(process.version, '>=v20.6.0');
+const supports_paste_brackets = satisfies(process.version, '>=18.19.0 <19') ||
+      satisfies(process.version, '>=20.6.0');
 
 // -----------------------------------------------------------------------------
 process.on('uncaughtException', function (err) {
