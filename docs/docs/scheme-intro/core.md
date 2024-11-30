@@ -443,7 +443,7 @@ and when you evaluate:
 ;; ==> 1/2
 ```
 
-If scheme provide rational numbers, or it will return `0.5` otherwise.
+If scheme provides rational numbers, or it will return `0.5` otherwise.
 
 ### Recursion
 You can define a function that reference to itself:
