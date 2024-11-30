@@ -131,7 +131,7 @@ export default function Interpreter(): JSX.Element {
         {isStatic && <script src="https://cdn.jsdelivr.net/npm/jquery" />}
         {isStatic && <script src="https://cdn.jsdelivr.net/combine/gh/jcubic/jquery.terminal@devel/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal@latest/js/prism.js,npm/prismjs/components/prism-scheme.min.js" />}
         {isStatic && <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js" />}
-        {isStatic && <script src="https://cdn.jsdelivr.net/npm/@jcubic/lib/js/prism.js" />}
+        {isStatic && <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js" />}
         {!globalThis.lips && <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
                                      data-bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb"/>}
       </Head>
