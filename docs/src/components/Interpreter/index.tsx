@@ -20,6 +20,10 @@ function track(type: string, command: string) {
   if (_paq) {
     _paq.push(['trackEvent', 'REPL', type, command]);
   }
+  const umami = globalThis.umami as any;
+  if (umami) {
+    umami.track('REPL', { type, command });
+  }
 }
 
 type PiwikTrack = Array<Array<string>>;
