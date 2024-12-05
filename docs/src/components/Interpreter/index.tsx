@@ -16,17 +16,12 @@ export interface TerminalProps extends CSSProperties {
 }
 
 function track(type: string, command: string) {
-  const _paq = globalThis._paq as PiwikTrack;
-  if (_paq) {
-    _paq.push(['trackEvent', 'REPL', type, command]);
-  }
   const umami = globalThis.umami as any;
   if (umami) {
     umami.track('REPL', { type, command });
   }
 }
 
-type PiwikTrack = Array<Array<string>>;
 export type JQueryTerminal = ReturnType<typeof globalThis.terminal>;
 
 const replReady = () => {
