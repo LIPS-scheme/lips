@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 08 Nov 2024 13:26:12 +0000
+ * build: Fri, 06 Dec 2024 13:48:17 +0000
  */
 
 (function (global, factory) {
@@ -3949,39 +3949,53 @@
   }
   // ----------------------------------------------------------------------
   function parse_argument(arg) {
-    if (constants.hasOwnProperty(arg)) {
-      return constants[arg];
+    var meta = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var token = meta ? arg.token : arg;
+    if (constants.hasOwnProperty(token)) {
+      return constants[token];
     }
-    if (arg.match(/^"[\s\S]*"$/)) {
-      return parse_string(arg);
-    } else if (arg[0] === '#') {
-      var regex = arg.match(re_re);
+    var result;
+    if (token.match(/^"[\s\S]*"$/)) {
+      result = parse_string(token);
+    } else if (token[0] === '#') {
+      var regex = token.match(re_re);
       if (regex) {
-        return new RegExp(regex[1], regex[2]);
-      } else if (arg.match(char_re)) {
-        return parse_character(arg);
+        result = new RegExp(regex[1], regex[2]);
+      } else if (token.match(char_re)) {
+        result = parse_character(token);
       }
       // characters with more than one codepoint
-      var m = arg.match(/#\\(.+)/);
+      var m = token.match(/#\\(.+)/);
       if (m && ucs2decode(m[1]).length === 1) {
-        return parse_character(arg);
+        result = parse_character(token);
       }
     }
-    if (arg.match(/[0-9a-f]|[+-]i/i)) {
-      if (arg.match(int_re)) {
-        return parse_integer(arg);
-      } else if (arg.match(float_re)) {
-        return parse_float(arg);
-      } else if (arg.match(rational_re)) {
-        return parse_rational(arg);
-      } else if (arg.match(complex_re)) {
-        return parse_complex(arg);
+    if (token.match(/[0-9a-f]|[+-]i/i)) {
+      if (token.match(int_re)) {
+        result = parse_integer(token);
+      } else if (token.match(float_re)) {
+        result = parse_float(token);
+      } else if (token.match(rational_re)) {
+        result = parse_rational(token);
+      } else if (token.match(complex_re)) {
+        result = parse_complex(token);
       }
     }
-    if (arg.match(/^#[iexobd]/)) {
+    if (!result && token.match(/^#[iexobd]/)) {
       throw new Error('Invalid numeric constant: ' + arg);
     }
-    return parse_symbol(arg);
+    if (!result) {
+      result = parse_symbol(token);
+    }
+    if (meta) {
+      var col = arg.col,
+        offset = arg.offset,
+        line = arg.line;
+      read_only(result, '__col__', col);
+      read_only(result, '__offset__', offset);
+      read_only(result, '__line__', line);
+    }
+    return result;
   }
   // ----------------------------------------------------------------------
   function is_atom_string(str) {
@@ -5082,23 +5096,35 @@
     }, {
       key: "match_datum_label",
       value: function match_datum_label(token) {
+        if (this._meta) {
+          token = token.token;
+        }
         var m = token.match(/^#([0-9]+)=$/);
         return m && m[1];
       }
     }, {
       key: "match_datum_ref",
       value: function match_datum_ref(token) {
+        if (this._meta) {
+          token = token.token;
+        }
         var m = token.match(/^#([0-9]+)#$/);
         return m && m[1];
       }
     }, {
       key: "is_open",
       value: function is_open(token) {
+        if (this._meta) {
+          token = token.token;
+        }
         return ['(', '['].includes(token);
       }
     }, {
       key: "is_close",
       value: function is_close(token) {
+        if (this._meta) {
+          token = token.token;
+        }
         return [')', ']'].includes(token);
       }
     }, {
@@ -5187,13 +5213,13 @@
                 return this.read();
               case 2:
                 token = _context4.sent;
-                if (!(token === eof)) {
+                if (!(token === eof || token.token === eof)) {
                   _context4.next = 5;
                   break;
                 }
                 throw new Error('Parser: Expected token eof found');
               case 5:
-                return _context4.abrupt("return", parse_argument(token));
+                return _context4.abrupt("return", parse_argument(token, this._meta));
               case 6:
               case "end":
                 return _context4.stop();
@@ -10344,6 +10370,13 @@
     return !exluded_names.includes(name);
   }
   // ----------------------------------------------------------------------
+  function enumerable(object, name, value) {
+    Object.defineProperty(object, name, {
+      value: value,
+      enumerable: true
+    });
+  }
+  // ----------------------------------------------------------------------
   function hidden_prop(obj, name, value) {
     Object.defineProperty(obj, Symbol["for"](name), {
       get: function get() {
@@ -10705,15 +10738,9 @@
     } else {
       name = LCharacter.__rev_names__[_char7];
     }
-    Object.defineProperty(this, '__char__', {
-      value: _char7,
-      enumerable: true
-    });
+    enumerable(this, '__char__', _char7);
     if (name) {
-      Object.defineProperty(this, '__name__', {
-        value: name,
-        enumerable: true
-      });
+      enumerable(this, '__name__', name);
     }
   }
   LCharacter.__names__ = characters;
@@ -10972,16 +10999,11 @@
       this.constant(n, 'integer');
     }
   }
+
   // -------------------------------------------------------------------------
   LNumber.prototype.constant = function (value, type) {
-    Object.defineProperty(this, '__value__', {
-      value: value,
-      enumerable: true
-    });
-    Object.defineProperty(this, '__type__', {
-      value: type,
-      enumerable: true
-    });
+    enumerable(this, '__value__', value);
+    enumerable(this, '__type__', type);
   };
   // -------------------------------------------------------------------------
   LNumber.types = {
@@ -11520,18 +11542,9 @@
   LComplex.prototype.constructor = LComplex;
   // -------------------------------------------------------------------------
   LComplex.prototype.constant = function (im, re) {
-    Object.defineProperty(this, '__im__', {
-      value: im,
-      enumerable: true
-    });
-    Object.defineProperty(this, '__re__', {
-      value: re,
-      enumerable: true
-    });
-    Object.defineProperty(this, '__type__', {
-      value: 'complex',
-      enumerable: true
-    });
+    enumerable(this, '__im__', im);
+    enumerable(this, '__re__', re);
+    enumerable(this, '__type__', 'complex');
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.serialize = function () {
@@ -12012,18 +12025,9 @@
   LRational.prototype.constructor = LRational;
   // -------------------------------------------------------------------------
   LRational.prototype.constant = function (num, denom) {
-    Object.defineProperty(this, '__num__', {
-      value: num,
-      enumerable: true
-    });
-    Object.defineProperty(this, '__denom__', {
-      value: denom,
-      enumerable: true
-    });
-    Object.defineProperty(this, '__type__', {
-      value: 'rational',
-      enumerable: true
-    });
+    enumerable(this, '__num__', num);
+    enumerable(this, '__denom__', denom);
+    enumerable(this, '__type__', 'rational');
   };
   // -------------------------------------------------------------------------
   LRational.prototype.serialize = function () {
@@ -13260,10 +13264,7 @@
         _this24.constant(name, obj[key]);
       });
     } else {
-      Object.defineProperty(this.__env__, name, {
-        value: value,
-        enumerable: true
-      });
+      enumerable(this.__env__, name, value);
     }
     return this;
   };
@@ -17396,10 +17397,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 08 Nov 2024 13:26:12 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 06 Dec 2024 13:48:17 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 08 Nov 2024 13:26:12 +0000').valueOf();
+    var date = LString('Fri, 06 Dec 2024 13:48:17 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17439,7 +17440,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 08 Nov 2024 13:26:12 +0000';
+  var date = 'Fri, 06 Dec 2024 13:48:17 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

@@ -537,40 +537,51 @@ function parse_symbol(arg) {
     return new LSymbol(arg);
 }
 // ----------------------------------------------------------------------
-function parse_argument(arg) {
-    if (constants.hasOwnProperty(arg)) {
-        return constants[arg];
+function parse_argument(arg, meta = false) {
+    const token = meta ? arg.token : arg;
+    if (constants.hasOwnProperty(token)) {
+        return constants[token];
     }
-    if (arg.match(/^"[\s\S]*"$/)) {
-        return parse_string(arg);
-    } else if (arg[0] === '#') {
-        var regex = arg.match(re_re);
+    let result;
+    if (token.match(/^"[\s\S]*"$/)) {
+        result = parse_string(token);
+    } else if (token[0] === '#') {
+        var regex = token.match(re_re);
         if (regex) {
-            return new RegExp(regex[1], regex[2]);
-        } else if (arg.match(char_re)) {
-            return parse_character(arg);
+            result = new RegExp(regex[1], regex[2]);
+        } else if (token.match(char_re)) {
+            result = parse_character(token);
         }
         // characters with more than one codepoint
-        var m = arg.match(/#\\(.+)/);
+        var m = token.match(/#\\(.+)/);
         if (m && ucs2decode(m[1]).length === 1) {
-            return parse_character(arg);
+            result = parse_character(token);
         }
     }
-    if (arg.match(/[0-9a-f]|[+-]i/i)) {
-        if (arg.match(int_re)) {
-            return parse_integer(arg);
-        } else if (arg.match(float_re)) {
-            return parse_float(arg);
-        } else if (arg.match(rational_re)) {
-            return parse_rational(arg);
-        } else if (arg.match(complex_re)) {
-            return parse_complex(arg);
+    if (token.match(/[0-9a-f]|[+-]i/i)) {
+        if (token.match(int_re)) {
+            result = parse_integer(token);
+        } else if (token.match(float_re)) {
+            result = parse_float(token);
+        } else if (token.match(rational_re)) {
+            result = parse_rational(token);
+        } else if (token.match(complex_re)) {
+            result = parse_complex(token);
         }
     }
-    if (arg.match(/^#[iexobd]/)) {
+    if (!result && token.match(/^#[iexobd]/)) {
         throw new Error('Invalid numeric constant: ' + arg);
     }
-    return parse_symbol(arg);
+    if (!result) {
+        result = parse_symbol(token);
+    }
+    if (meta) {
+        const { col, offset, line } = arg;
+        read_only(result, '__col__', col);
+        read_only(result, '__offset__', offset);
+        read_only(result, '__line__', line);
+    }
+    return result;
 }
 // ----------------------------------------------------------------------
 function is_atom_string(str) {
@@ -1570,17 +1581,29 @@ class Parser {
         return token;
     }
     match_datum_label(token) {
+        if (this._meta) {
+            token = token.token;
+        }
         var m = token.match(/^#([0-9]+)=$/);
         return m && m[1];
     }
     match_datum_ref(token) {
+        if (this._meta) {
+            token = token.token;
+        }
         var m = token.match(/^#([0-9]+)#$/);
         return m && m[1];
     }
     is_open(token) {
+        if (this._meta) {
+            token = token.token;
+        }
         return ['(', '['].includes(token);
     }
     is_close(token) {
+        if (this._meta) {
+            token = token.token;
+        }
         return [')', ']'].includes(token);
     }
     async read_list() {
@@ -1616,10 +1639,10 @@ class Parser {
     }
     async read_value() {
         let token = await this.read();
-        if (token === eof) {
+        if (token === eof || token.token === eof) {
             throw new Error('Parser: Expected token eof found');
         }
-        return parse_argument(token);
+        return parse_argument(token, this._meta);
     }
     is_comment(token) {
         return token.match(/^;/) || (token.match(/^#\|/) && token.match(/\|#$/));
@@ -7947,8 +7970,8 @@ var internal_env = new Environment({
     'space-unicode-regex': /\s/u
 }, undefined, 'internal');
 // ----------------------------------------------------------------------
-var nan = LNumber(NaN);
-var constants = {
+const nan = LNumber(NaN);
+const constants = {
     '#t': true,
     '#f': false,
     '#true': true,
@@ -7960,7 +7983,7 @@ var constants = {
     ...parsable_contants
 };
 // -------------------------------------------------------------------------
-var global_env = new Environment({
+const global_env = new Environment({
     eof,
     undefined, // undefined as parser constant breaks most of the unit tests
     // ---------------------------------------------------------------------
