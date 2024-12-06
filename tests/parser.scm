@@ -313,3 +313,15 @@
       (lambda (t)
         (let ((code "\"foo"))
           (t.is (to.throw (lips.tokenize code)) #t))))
+
+(test "parser: metadata"
+      (lambda (t)
+        (let* ((code "(define foo (lambda (x)
+                                    (let ((y (* x x)))
+                                      (+ x y))))")
+               (env lips.env)
+               (Parser lips.Parser)
+               (parse lips.parse)
+               (parser (new Parser (object :env env :meta true))))
+          (parser.prepare code)
+          (t.snapshot (parse parser)))))
