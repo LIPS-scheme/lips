@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 06 Dec 2024 13:48:17 +0000
+ * build: Fri, 06 Dec 2024 14:17:44 +0000
  */
 
 (function (global, factory) {
@@ -4970,8 +4970,8 @@
         }, cleanup);
       }
     }, {
-      key: "parse",
-      value: function parse(arg) {
+      key: "prepare",
+      value: function prepare(arg) {
         if (arg instanceof LString) {
           arg = arg.toString();
         }
@@ -5647,7 +5647,7 @@
               parser = new Parser({
                 env: env
               });
-              parser.parse(arg);
+              parser.prepare(arg);
             }
           case 2:
             _context9.next = 5;
@@ -12360,7 +12360,7 @@
             parser = new Parser({
               env: env
             });
-            parser.parse(line);
+            parser.prepare(line);
           case 6:
             return _context14.abrupt("return", _this10.__parser__);
           case 7:
@@ -12617,7 +12617,7 @@
         _this18.__parser__ = new Parser({
           env: env
         });
-        _this18.__parser__.parse(string);
+        _this18.__parser__.prepare(string);
       }
       return _this18.__parser__;
     });
@@ -12938,7 +12938,7 @@
                 use_dynamic: use_dynamic
               }));
             case 10:
-              _this22.__parser__.parse(arg);
+              _this22.__parser__.prepare(arg);
               return _context16.abrupt("return", exec(_this22.__parser__, {
                 env: env,
                 dynamic_env: dynamic_env,
@@ -17397,10 +17397,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 06 Dec 2024 13:48:17 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 06 Dec 2024 14:17:44 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 06 Dec 2024 13:48:17 +0000').valueOf();
+    var date = LString('Fri, 06 Dec 2024 14:17:44 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17440,7 +17440,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 06 Dec 2024 13:48:17 +0000';
+  var date = 'Fri, 06 Dec 2024 14:17:44 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

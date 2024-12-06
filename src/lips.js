@@ -1521,7 +1521,7 @@ class Parser {
             return result;
         }, cleanup);
     }
-    parse(arg) {
+    prepare(arg) {
         if (arg instanceof LString) {
             arg = arg.toString();
         }
@@ -1867,7 +1867,7 @@ async function* _parse(arg, env) {
         parser = arg;
     } else {
         parser = new Parser({ env });
-        parser.parse(arg);
+        parser.prepare(arg);
     }
     let prev;
     while (true) {
@@ -7037,7 +7037,7 @@ function InputPort(read, env = global_env) {
         if (!this.char_ready()) {
             const line = await this._read();
             parser = new Parser({ env });
-            parser.parse(line);
+            parser.prepare(line);
         }
         return this.__parser__;
     });
@@ -7238,7 +7238,7 @@ function InputStringPort(string, env = global_env) {
     this._with_parser = this._with_init_parser.bind(this, () => {
         if (!this.__parser__) {
             this.__parser__ = new Parser({ env });
-            this.__parser__.parse(string);
+            this.__parser__.prepare(string);
         }
         return this.__parser__;
     });
@@ -7533,7 +7533,7 @@ Interpreter.prototype.exec = async function(arg, options = {}) {
     if (Array.isArray(arg)) {
         return exec(arg, { env, dynamic_env, use_dynamic });
     } else {
-        this.__parser__.parse(arg);
+        this.__parser__.prepare(arg);
         return exec(this.__parser__, { env, dynamic_env, use_dynamic });
     }
 };
@@ -7983,7 +7983,7 @@ const constants = {
     ...parsable_contants
 };
 // -------------------------------------------------------------------------
-const global_env = new Environment({
+var global_env = new Environment({
     eof,
     undefined, // undefined as parser constant breaks most of the unit tests
     // ---------------------------------------------------------------------
