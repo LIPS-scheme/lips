@@ -11459,7 +11459,7 @@ function exec_collect(collect_callback) {
         const input = Array.isArray(arg) ? arg : _parse(arg);
         for await (let code of input) {
             const value = await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic });
-            results.push(collect_callback(code, await value));
+            results.push(collect_callback(code, value));
         }
         return results;
     };

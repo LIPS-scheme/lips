@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 06 Dec 2024 14:17:44 +0000
+ * build: Fri, 06 Dec 2024 14:49:50 +0000
  */
 
 'use strict';
@@ -16794,7 +16794,7 @@ function exec_collect(collect_callback) {
               return _iterator2.next();
             case 15:
               if (!(_iteratorAbruptCompletion2 = !(_step2 = _context22.sent).done)) {
-                _context22.next = 31;
+                _context22.next = 24;
                 break;
               }
               code = _step2.value;
@@ -16806,54 +16806,46 @@ function exec_collect(collect_callback) {
               });
             case 19:
               value = _context22.sent;
-              _context22.t1 = results;
-              _context22.t2 = collect_callback;
-              _context22.t3 = code;
-              _context22.next = 25;
-              return value;
-            case 25:
-              _context22.t4 = _context22.sent;
-              _context22.t5 = (0, _context22.t2)(_context22.t3, _context22.t4);
-              _context22.t1.push.call(_context22.t1, _context22.t5);
-            case 28:
+              results.push(collect_callback(code, value));
+            case 21:
               _iteratorAbruptCompletion2 = false;
               _context22.next = 13;
               break;
-            case 31:
-              _context22.next = 37;
+            case 24:
+              _context22.next = 30;
               break;
-            case 33:
-              _context22.prev = 33;
-              _context22.t6 = _context22["catch"](11);
+            case 26:
+              _context22.prev = 26;
+              _context22.t1 = _context22["catch"](11);
               _didIteratorError2 = true;
-              _iteratorError2 = _context22.t6;
-            case 37:
-              _context22.prev = 37;
-              _context22.prev = 38;
+              _iteratorError2 = _context22.t1;
+            case 30:
+              _context22.prev = 30;
+              _context22.prev = 31;
               if (!(_iteratorAbruptCompletion2 && _iterator2["return"] != null)) {
-                _context22.next = 42;
+                _context22.next = 35;
                 break;
               }
-              _context22.next = 42;
+              _context22.next = 35;
               return _iterator2["return"]();
-            case 42:
-              _context22.prev = 42;
+            case 35:
+              _context22.prev = 35;
               if (!_didIteratorError2) {
-                _context22.next = 45;
+                _context22.next = 38;
                 break;
               }
               throw _iteratorError2;
-            case 45:
-              return _context22.finish(42);
-            case 46:
-              return _context22.finish(37);
-            case 47:
+            case 38:
+              return _context22.finish(35);
+            case 39:
+              return _context22.finish(30);
+            case 40:
               return _context22.abrupt("return", results);
-            case 48:
+            case 41:
             case "end":
               return _context22.stop();
           }
-        }, _callee21, null, [[11, 33, 37, 47], [38,, 42, 46]]);
+        }, _callee21, null, [[11, 26, 30, 40], [31,, 35, 39]]);
       })();
     });
     function exec_lambda(_x19) {
@@ -17393,10 +17385,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 06 Dec 2024 14:17:44 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 06 Dec 2024 14:49:50 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 06 Dec 2024 14:17:44 +0000').valueOf();
+  var date = LString('Fri, 06 Dec 2024 14:49:50 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17436,7 +17428,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 06 Dec 2024 14:17:44 +0000';
+var date = 'Fri, 06 Dec 2024 14:49:50 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
