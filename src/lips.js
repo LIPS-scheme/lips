@@ -5279,6 +5279,13 @@ function filter_fn_names(name) {
     return !exluded_names.includes(name);
 }
 // ----------------------------------------------------------------------
+function enumerable(object, name, value) {
+    Object.defineProperty(object, name, {
+        value,
+        enumerable: true
+    });
+}
+// ----------------------------------------------------------------------
 function hidden_prop(obj, name, value) {
     Object.defineProperty(obj, Symbol.for(name), {
         get: () => value,
@@ -5588,15 +5595,9 @@ function LCharacter(char) {
     } else {
         name = LCharacter.__rev_names__[char];
     }
-    Object.defineProperty(this, '__char__', {
-        value: char,
-        enumerable: true
-    });
+    enumerable(this, '__char__', char);
     if (name) {
-        Object.defineProperty(this, '__name__', {
-            value: name,
-            enumerable: true
-        });
+        enumerable(this, '__name__', name);
     }
 }
 LCharacter.__names__ = characters;
@@ -5819,16 +5820,11 @@ function LNumber(n, force = false) {
         this.constant(n, 'integer');
     }
 }
+
 // -------------------------------------------------------------------------
 LNumber.prototype.constant = function(value, type) {
-    Object.defineProperty(this, '__value__', {
-        value,
-        enumerable: true
-    });
-    Object.defineProperty(this, '__type__', {
-        value: type,
-        enumerable: true
-    });
+    enumerable(this, '__value__', value);
+    enumerable(this, '__type__', type);
 };
 // -------------------------------------------------------------------------
 LNumber.types = {
@@ -6299,18 +6295,9 @@ LComplex.prototype = Object.create(LNumber.prototype);
 LComplex.prototype.constructor = LComplex;
 // -------------------------------------------------------------------------
 LComplex.prototype.constant = function(im, re) {
-    Object.defineProperty(this, '__im__', {
-        value: im,
-        enumerable: true
-    });
-    Object.defineProperty(this, '__re__', {
-        value: re,
-        enumerable: true
-    });
-    Object.defineProperty(this, '__type__', {
-        value: 'complex',
-        enumerable: true
-    });
+    enumerable(this, '__im__', im);
+    enumerable(this, '__re__', re);
+    enumerable(this, '__type__', 'complex');
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.serialize = function() {
@@ -6746,18 +6733,9 @@ LRational.prototype = Object.create(LNumber.prototype);
 LRational.prototype.constructor = LRational;
 // -------------------------------------------------------------------------
 LRational.prototype.constant = function(num, denom) {
-    Object.defineProperty(this, '__num__', {
-        value: num,
-        enumerable: true
-    });
-    Object.defineProperty(this, '__denom__', {
-        value: denom,
-        enumerable: true
-    });
-    Object.defineProperty(this, '__type__', {
-        value: 'rational',
-        enumerable: true
-    });
+    enumerable(this, '__num__', num);
+    enumerable(this, '__denom__', denom);
+    enumerable(this, '__type__', 'rational');
 };
 // -------------------------------------------------------------------------
 LRational.prototype.serialize = function() {
@@ -7826,10 +7804,7 @@ Environment.prototype.constant = function(name, value) {
             this.constant(name, obj[key]);
         });
     } else {
-        Object.defineProperty(this.__env__, name, {
-            value,
-            enumerable: true
-        });
+        enumerable(this.__env__, name, value);
     }
     return this;
 };
