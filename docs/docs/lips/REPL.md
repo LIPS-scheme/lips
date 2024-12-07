@@ -23,12 +23,15 @@ Web REPL you can access from [Home page](/) or as a [bookmarklet](/#bookmark) us
 Node.js version of the REPL, also supports syntax highlighting and auto indentation. It also
 supports [paste bracket mode from Node.js](https://github.com/nodejs/node/pull/47150) (added by
 [Jakub T. Jankiewicz](https://jcubic.pl/me) and released in
-[v20.6.0](https://nodejs.org/en/blog/release/v20.6.0)), to properly handle copy-paste of Scheme
-code.
+[v20.6.0](https://nodejs.org/en/blog/release/v20.6.0) and [v18.19.0](https://nodejs.org/en/blog/release/v18.19.0)),
+to properly handle copy-paste of Scheme code.
 
-In the future, the Node.js REPL may also support parentheses matching. It's supported by
-[CLisp](https://www.gnu.org/software/clisp/) and [Common Lisp](https://common-lisp.net/)
-interpreter.
+To learn more you can read this article:
+[Handling auto-indentation in Node.js REPL](https://jakub.jankiewicz.org/blog/node-repl-auto-indent/).
+
+From version [1.0.0-beta.20](https://github.com/LIPS-scheme/lips/releases/tag/1.0.0-beta.20)
+the Node.js REPL also supports parentheses matching. It's supported by
+[CLisp](https://www.gnu.org/software/clisp/), a [Common Lisp](https://common-lisp.net/) interpreter.
 
 ## Procedures useful in REPL
 
