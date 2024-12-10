@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 10 Dec 2024 15:10:37 +0000
+ * build: Tue, 10 Dec 2024 15:32:07 +0000
  */
 
 (function (global, factory) {
@@ -5300,7 +5300,11 @@
         var e;
         if (count < 0) {
           e = new Error('Parser: unexpected parenthesis');
-          e.__code__ = [prev.toString() + ')'];
+          if (prev) {
+            e.__code__ = [prev.toString() + ')'];
+          } else {
+            e.__code__ = [')'];
+          }
         } else {
           e = new Error('Parser: expected parenthesis but eof found');
           var re = new RegExp("\\){".concat(count, "}$"));
@@ -17412,10 +17416,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 10 Dec 2024 15:10:37 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 10 Dec 2024 15:32:07 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 10 Dec 2024 15:10:37 +0000').valueOf();
+    var date = LString('Tue, 10 Dec 2024 15:32:07 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17455,7 +17459,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Tue, 10 Dec 2024 15:10:37 +0000';
+  var date = 'Tue, 10 Dec 2024 15:32:07 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

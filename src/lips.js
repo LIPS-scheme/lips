@@ -1679,7 +1679,11 @@ class Parser {
         let e;
         if (count < 0) {
             e = new Error('Parser: unexpected parenthesis');
-            e.__code__ = [prev.toString() + ')'];
+            if (prev) {
+                e.__code__ = [prev.toString() + ')'];
+            } else {
+                e.__code__ = [')'];
+            }
         } else {
             e = new Error('Parser: expected parenthesis but eof found');
             const re = new RegExp(`\\){${count}}$`);

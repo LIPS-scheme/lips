@@ -1,6 +1,9 @@
 ## 1.0.0-beta.21
 ### Feature
-* allow to use copy-paste indent with Node >=18.19.0
+* allow to use auto-indent with Node >=18.19.0
+* add metadata to the parser [#414](https://github.com/jcubic/lips/issues/414), [#416](https://github.com/jcubic/lips/issues/416)
+### Bugfix
+* fix exception when handling parse error for lonely `)` [#417](https://github.com/jcubic/lips/issues/417)
 
 ## 1.0.0-beta.20
 ### Feature
