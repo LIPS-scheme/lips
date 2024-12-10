@@ -325,3 +325,12 @@
                (parser (new Parser (object :env env :meta true))))
           (parser.prepare code)
           (t.snapshot (parse parser)))))
+
+(test "parser: lonely cosing paren"
+      (lambda (t)
+        (t.snapshot (try (let* ((code "    )")
+                                (env lips.env)
+                                (parser (new lips.Parser (object :env env :meta true))))
+                           (parser.prepare code)
+                           (lips.parse parser))
+                         (catch (e) e)))))
