@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 10 Dec 2024 15:32:07 +0000
+ * build: Tue, 10 Dec 2024 19:06:49 +0000
  */
 
 'use strict';
@@ -10212,7 +10212,7 @@ function self_evaluated(obj) {
 }
 // -------------------------------------------------------------------------
 function is_native(obj) {
-  return obj instanceof LNumber || obj instanceof LString || obj instanceof LCharacter;
+  return obj && (obj instanceof LNumber || obj instanceof LString || obj instanceof LCharacter);
 }
 // -------------------------------------------------------------------------
 function has_own_symbol(obj, symbol) {
@@ -15167,12 +15167,18 @@ var global_env = new Environment({
   }, "(env)\n        (env obj)\n\n        Function that returns a list of names (functions, macros and variables)\n        that are bound in the current environment or one of its parents."),
   // ------------------------------------------------------------------
   'new': doc('new', function (obj) {
+    var cls = unbind(obj);
+    var instance;
     for (var _len29 = arguments.length, args = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
       args[_key29 - 1] = arguments[_key29];
     }
-    var instance = _construct(unbind(obj), _toConsumableArray(args.map(function (x) {
-      return unbox(x);
-    })));
+    if (cls[Symbol["for"]("__class__")]) {
+      instance = _construct(cls, args);
+    } else {
+      instance = _construct(cls, _toConsumableArray(args.map(function (x) {
+        return unbox(x);
+      })));
+    }
     return instance;
   }, "(new obj . args)\n\n        Function that creates new JavaScript instance of an object."),
   // ------------------------------------------------------------------
@@ -17412,10 +17418,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 10 Dec 2024 15:32:07 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 10 Dec 2024 19:06:49 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 10 Dec 2024 15:32:07 +0000').valueOf();
+  var date = LString('Tue, 10 Dec 2024 19:06:49 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17455,7 +17461,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 10 Dec 2024 15:32:07 +0000';
+var date = 'Tue, 10 Dec 2024 19:06:49 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

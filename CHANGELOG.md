@@ -4,6 +4,7 @@
 * add metadata to the parser [#414](https://github.com/jcubic/lips/issues/414), [#416](https://github.com/jcubic/lips/issues/416)
 ### Bugfix
 * fix exception when handling parse error for lonely `)` [#417](https://github.com/jcubic/lips/issues/417)
+* fix unboxing arguments of LIPS created classes [#411](https://github.com/jcubic/lips/issues/411)
 
 ## 1.0.0-beta.20
 ### Feature

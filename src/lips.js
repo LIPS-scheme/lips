@@ -5149,9 +5149,9 @@ function self_evaluated(obj) {
 }
 // -------------------------------------------------------------------------
 function is_native(obj) {
-    return obj instanceof LNumber ||
-        obj instanceof LString ||
-        obj instanceof LCharacter;
+    return obj && (obj instanceof LNumber ||
+                   obj instanceof LString ||
+                   obj instanceof LCharacter);
 }
 // -------------------------------------------------------------------------
 function has_own_symbol(obj, symbol) {
@@ -9814,7 +9814,13 @@ var global_env = new Environment({
         that are bound in the current environment or one of its parents.`),
     // ------------------------------------------------------------------
     'new': doc('new', function(obj, ...args) {
-        var instance = new (unbind(obj))(...args.map(x => unbox(x)));
+        const cls = unbind(obj);
+        let instance;
+        if (cls[Symbol.for("__class__")]) {
+            instance = new cls(...args);
+        } else {
+            instance = new cls(...args.map(x => unbox(x)));
+        }
         return instance;
     }, `(new obj . args)
 
