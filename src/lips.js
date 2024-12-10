@@ -12056,6 +12056,9 @@ export {
     serialize,
     unserialize,
 
+    box,
+    unbox,
+
     serialize_bin,
     unserialize_bin,
 
@@ -12125,6 +12128,9 @@ const lips = {
 
     serialize,
     unserialize,
+
+    box,
+    unbox,
 
     serialize_bin,
     unserialize_bin,
