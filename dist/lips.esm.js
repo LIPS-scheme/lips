@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 06 Dec 2024 14:49:50 +0000
+ * build: Tue, 10 Dec 2024 15:10:37 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -3425,7 +3425,7 @@ function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedec
 function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
 function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e4) { throw _e4; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e5) { didErr = true; err = _e5; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -4937,6 +4937,7 @@ var Parser = /*#__PURE__*/function () {
     });
     read_only(this, '_state', {
       parentheses: 0,
+      last_token: null,
       fold_case: false
     }, {
       hidden: true
@@ -4985,7 +4986,7 @@ var Parser = /*#__PURE__*/function () {
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
             case 0:
-              token = this.__lexer__.peek(true);
+              this._state.last_token = token = this.__lexer__.peek(true);
               if (!(token === eof)) {
                 _context.next = 4;
                 break;
@@ -5298,7 +5299,21 @@ var Parser = /*#__PURE__*/function () {
         var re = new RegExp("\\){".concat(count, "}$"));
         e.__code__ = [expr.toString().replace(re, '')];
       }
+      this._agument_exception(e);
       throw e;
+    }
+  }, {
+    key: "_agument_exception",
+    value: function _agument_exception(e) {
+      if (this._meta) {
+        var _this$_state$last_tok = this._state.last_token,
+          col = _this$_state$last_tok.col,
+          offset = _this$_state$last_tok.offset,
+          line = _this$_state$last_tok.line;
+        read_only(e, '__col__', col);
+        read_only(e, '__offset__', offset);
+        read_only(e, '__line__', line);
+      }
     }
     // TODO: Cover This function (array and object branch)
   }, {
@@ -5400,7 +5415,7 @@ var Parser = /*#__PURE__*/function () {
     value: function () {
       var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
         var _this6 = this;
-        var token, special, builtin, expr, extension, is_symbol, was_close_paren, object, args, result, ref, ref_label;
+        var token, special, builtin, expr, extension, is_symbol, was_close_paren, object, args, e, _e, result, _e2, ref, _e3, ref_label;
         return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) switch (_context8.prev = _context8.next) {
             case 0:
@@ -5415,7 +5430,7 @@ var Parser = /*#__PURE__*/function () {
               return _context8.abrupt("return", token);
             case 5:
               if (!is_special(token)) {
-                _context8.next = 51;
+                _context8.next = 57;
                 break;
               }
               // Built-in parser extensions are mapping short symbols to longer symbols
@@ -5456,12 +5471,12 @@ var Parser = /*#__PURE__*/function () {
               throw new Unterminated('Expecting expression eof found');
             case 25:
               if (builtin) {
-                _context8.next = 32;
+                _context8.next = 34;
                 break;
               }
               extension = this.__env__.get(special.symbol);
               if (!(typeof extension === 'function')) {
-                _context8.next = 32;
+                _context8.next = 34;
                 break;
               }
               if (is_literal(token)) {
@@ -5483,93 +5498,101 @@ var Parser = /*#__PURE__*/function () {
                 });
               }));
             case 31:
-              throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
-            case 32:
+              e = new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
+              this._agument_exception(e);
+              throw e;
+            case 34:
               if (!is_literal(token)) {
-                _context8.next = 38;
+                _context8.next = 42;
                 break;
               }
               if (!was_close_paren) {
-                _context8.next = 35;
+                _context8.next = 39;
                 break;
               }
-              throw new Error('Parse Error: expecting datum');
-            case 35:
-              expr = new Pair(special.symbol, new Pair(object, _nil));
-              _context8.next = 39;
-              break;
-            case 38:
-              expr = new Pair(special.symbol, object);
+              _e = new Error('Parse Error: expecting datum');
+              this._agument_exception(_e);
+              throw _e;
             case 39:
+              expr = new Pair(special.symbol, new Pair(object, _nil));
+              _context8.next = 43;
+              break;
+            case 42:
+              expr = new Pair(special.symbol, object);
+            case 43:
               if (!builtin) {
-                _context8.next = 41;
+                _context8.next = 45;
                 break;
               }
               return _context8.abrupt("return", expr);
-            case 41:
+            case 45:
               if (!(extension instanceof Macro)) {
-                _context8.next = 50;
+                _context8.next = 54;
                 break;
               }
-              _context8.next = 44;
+              _context8.next = 48;
               return this._with_syntax_scope(function () {
                 return _this6.evaluate(expr);
               });
-            case 44:
+            case 48:
               result = _context8.sent;
               if (!(is_pair(result) || result instanceof LSymbol)) {
-                _context8.next = 47;
+                _context8.next = 51;
                 break;
               }
               return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
-            case 47:
-              return _context8.abrupt("return", result);
-            case 50:
-              throw new Error('Parse Error: invalid parser extension: ' + special.symbol);
             case 51:
+              return _context8.abrupt("return", result);
+            case 54:
+              _e2 = new Error('Parse Error: invalid parser extension: ' + special.symbol);
+              this._agument_exception(_e2);
+              throw _e2;
+            case 57:
               ref = this.match_datum_ref(token);
               if (!(ref !== null)) {
-                _context8.next = 57;
+                _context8.next = 65;
                 break;
               }
               this.skip();
               if (!this._refs[ref]) {
-                _context8.next = 56;
+                _context8.next = 62;
                 break;
               }
               return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
-            case 56:
-              throw new Error("Parse Error: invalid datum label #".concat(ref, "#"));
-            case 57:
+            case 62:
+              _e3 = new Error("Parse Error: invalid datum label #".concat(ref, "#"));
+              this._agument_exception(_e3);
+              throw _e3;
+            case 65:
               ref_label = this.match_datum_label(token);
               if (!(ref_label !== null)) {
-                _context8.next = 64;
+                _context8.next = 72;
                 break;
               }
               this.skip();
               this._refs[ref_label] = this._read_object();
               return _context8.abrupt("return", this._refs[ref_label]);
-            case 64:
+            case 72:
               if (!this.is_close(token)) {
-                _context8.next = 69;
+                _context8.next = 77;
                 break;
               }
               --this._state.parentheses;
               this.skip();
               // invalid state, we don't need to return anything
-              _context8.next = 76;
+              _context8.next = 84;
               break;
-            case 69:
+            case 77:
               if (!this.is_open(token)) {
-                _context8.next = 75;
+                _context8.next = 83;
                 break;
               }
               ++this._state.parentheses;
               this.skip();
               return _context8.abrupt("return", this.read_list());
-            case 75:
+            case 83:
               return _context8.abrupt("return", this.read_value());
-            case 76:
+            case 84:
             case "end":
               return _context8.stop();
           }
@@ -17382,10 +17405,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 06 Dec 2024 14:49:50 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 10 Dec 2024 15:10:37 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 06 Dec 2024 14:49:50 +0000').valueOf();
+  var date = LString('Tue, 10 Dec 2024 15:10:37 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17425,7 +17448,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 06 Dec 2024 14:49:50 +0000';
+var date = 'Tue, 10 Dec 2024 15:10:37 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

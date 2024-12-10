@@ -1502,6 +1502,7 @@ class Parser {
         read_only(this, '_refs', [], { hidden: true });
         read_only(this, '_state', {
             parentheses: 0,
+            last_token: null,
             fold_case: false
         }, { hidden: true });
     }
@@ -1533,7 +1534,7 @@ class Parser {
     async peek() {
         let token;
         while (true) {
-            token = this.__lexer__.peek(true);
+            this._state.last_token = token = this.__lexer__.peek(true);
             if (token === eof) {
                 return eof;
             }
@@ -1684,7 +1685,16 @@ class Parser {
             const re = new RegExp(`\\){${count}}$`);
             e.__code__ = [expr.toString().replace(re, '')];
         }
+        this._agument_exception(e);
         throw e;
+    }
+    _agument_exception(e) {
+        if (this._meta) {
+            const { col, offset, line } = this._state.last_token;
+            read_only(e, '__col__', col);
+            read_only(e, '__offset__', offset);
+            read_only(e, '__line__', line);
+        }
     }
     // TODO: Cover This function (array and object branch)
     async _resolve_object(object) {
@@ -1762,13 +1772,17 @@ class Parser {
                             });
                         });
                     }
-                    throw new Error('Parse Error: Invalid parser extension ' +
-                                    `invocation ${special.symbol}`);
+                    const e = new Error('Parse Error: Invalid parser extension ' +
+                                        `invocation ${special.symbol}`);
+                    this._agument_exception(e);
+                    throw e;
                 }
             }
             if (is_literal(token)) {
                 if (was_close_paren) {
-                    throw new Error('Parse Error: expecting datum');
+                    const e = new Error('Parse Error: expecting datum');
+                    this._agument_exception(e);
+                    throw e
                 }
                 expr = new Pair(
                     special.symbol,
@@ -1800,8 +1814,10 @@ class Parser {
                 }
                 return result;
             } else {
-                throw new Error('Parse Error: invalid parser extension: ' +
-                                special.symbol);
+                const e = new Error('Parse Error: invalid parser extension: ' +
+                                    special.symbol);
+                this._agument_exception(e);
+                throw e;
             }
         }
         var ref = this.match_datum_ref(token);
@@ -1810,7 +1826,9 @@ class Parser {
             if (this._refs[ref]) {
                 return new DatumReference(ref, this._refs[ref]);
             }
-            throw new Error(`Parse Error: invalid datum label #${ref}#`);
+            const e = new Error(`Parse Error: invalid datum label #${ref}#`);
+            this._agument_exception(e);
+            throw e;
         }
         var ref_label = this.match_datum_label(token);
         if (ref_label !== null) {
