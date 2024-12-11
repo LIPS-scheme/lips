@@ -345,6 +345,28 @@ As you can see the rational number got unboxed and converted into JavaScript flo
 Unboxing always can make you loose some information because LIPS types needs to be converted into native JavaScript
 data types. And JavaScript doesn't have a notion of rationals, there are only floating point numbers, and big ints.
 
+LIPS also unbox arguments when using new operator, but only for classes and functions created in JavaScript.
+It will not unbox the argumnets when creating classes in LIPS. If you need unboxed values to use the objects
+with JavaScript you can unbox the argumnets manualy when creating a class:
+
+```scheme
+(define Person (class Object (constructor (lambda (self name age)
+                                            (set! self.name name)
+                                            (set! self.age age)))))
+
+(define jack (new Person 'Jack 27+i))
+(print jack.age)
+;; ==> 27+1i
+
+(define Person (class Object (constructor (lambda (self name age)
+                                            (set! self.name (lips.unbox name))
+                                            (set! self.age (lips.unbox age))))))
+
+(define jack (new Person 'Jack 27+i))
+(print jack.age)
+;; ==> #(27 1)
+```
+
 ### Procedures
 LIPS Scheme procedures are JavaScript functions, so you can call them from JavaScript.
 
