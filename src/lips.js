@@ -1502,7 +1502,6 @@ class Parser {
         read_only(this, '_refs', [], { hidden: true });
         read_only(this, '_state', {
             parentheses: 0,
-            last_token: null,
             fold_case: false
         }, { hidden: true });
     }
@@ -1534,7 +1533,7 @@ class Parser {
     async peek() {
         let token;
         while (true) {
-            this._state.last_token = token = this.__lexer__.peek(true);
+            token = this.__lexer__.peek(true);
             if (token === eof) {
                 return eof;
             }
@@ -1694,7 +1693,7 @@ class Parser {
     }
     _agument_exception(e) {
         if (this._meta) {
-            const { col, offset, line } = this._state.last_token;
+            const { col, offset, line } = this.__lexer__.__token__;
             read_only(e, '__col__', col);
             read_only(e, '__offset__', offset);
             read_only(e, '__line__', line);

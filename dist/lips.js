@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 10 Dec 2024 19:08:09 +0000
+ * build: Wed, 11 Dec 2024 14:07:27 +0000
  */
 
 (function (global, factory) {
@@ -4944,7 +4944,6 @@
       });
       read_only(this, '_state', {
         parentheses: 0,
-        last_token: null,
         fold_case: false
       }, {
         hidden: true
@@ -4993,7 +4992,7 @@
           return _regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) switch (_context.prev = _context.next) {
               case 0:
-                this._state.last_token = token = this.__lexer__.peek(true);
+                token = this.__lexer__.peek(true);
                 if (!(token === eof)) {
                   _context.next = 4;
                   break;
@@ -5317,10 +5316,10 @@
       key: "_agument_exception",
       value: function _agument_exception(e) {
         if (this._meta) {
-          var _this$_state$last_tok = this._state.last_token,
-            col = _this$_state$last_tok.col,
-            offset = _this$_state$last_tok.offset,
-            line = _this$_state$last_tok.line;
+          var _this$__lexer__$__tok = this.__lexer__.__token__,
+            col = _this$__lexer__$__tok.col,
+            offset = _this$__lexer__$__tok.offset,
+            line = _this$__lexer__$__tok.line;
           read_only(e, '__col__', col);
           read_only(e, '__offset__', offset);
           read_only(e, '__line__', line);
@@ -17422,10 +17421,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 10 Dec 2024 19:08:09 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 11 Dec 2024 14:07:27 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 10 Dec 2024 19:08:09 +0000').valueOf();
+    var date = LString('Wed, 11 Dec 2024 14:07:27 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17465,7 +17464,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Tue, 10 Dec 2024 19:08:09 +0000';
+  var date = 'Wed, 11 Dec 2024 14:07:27 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
