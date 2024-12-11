@@ -333,7 +333,7 @@ if (options.version || options.V) {
         return run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
 } else if (options.e || options.eval) {
-    // from 1.0 documentation should use -e but it's not breaking change
+    // from 1.0 documentation should use -e but it's not a breaking change
     bootstrap(interp).then(function() {
         const code = options.e || options.eval;
         const dynamic = options.d || options.dynamic;
