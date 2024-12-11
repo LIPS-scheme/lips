@@ -223,11 +223,10 @@
 
 (test "parser: should throw an error on extra close paren"
       (lambda (t)
-        (t.is (try
+        (t.snapshot (try
                (lips.exec "(define x 10))")
                (catch (e)
-                      e.message))
-              "Parser: unexpected parenthesis")))
+                      e.message)))))
 
 (test "parser: should process line after comment without text #260"
       (lambda (t)
