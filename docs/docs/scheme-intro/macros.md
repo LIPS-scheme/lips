@@ -452,8 +452,8 @@ The macro works exactly the same as previous one:
 ```
 
 ### Identifiers
-Inside macros you can add identifiers can can be used like keywords from other programming languages. They match only
-if literal symbol was used and it was not shadowed (overwritten) by variable with same name.
+Inside macros you can add identifiers. They can be used like keywords from other programming languages. They match only
+if literal symbol was used, and it was not shadowed (overwritten) by variable with same name.
 
 ```scheme
 (define-syntax for
