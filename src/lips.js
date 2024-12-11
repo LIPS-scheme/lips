@@ -1502,6 +1502,7 @@ class Parser {
         read_only(this, '_refs', [], { hidden: true });
         read_only(this, '_state', {
             parentheses: 0,
+            line: 0,
             fold_case: false
         }, { hidden: true });
     }
@@ -1692,8 +1693,10 @@ class Parser {
         throw e;
     }
     _agument_exception(e) {
-        if (this._meta) {
-            const { col, offset, line } = this.__lexer__.__token__;
+        const token = this.__lexer__.__token__;
+        if ('col' in token) {
+            const { col, offset, line } = token;
+            e.message += ` at line ${line + 1} and column ${col + 1}`;
             read_only(e, '__col__', col);
             read_only(e, '__offset__', offset);
             read_only(e, '__line__', line);
@@ -1732,8 +1735,12 @@ class Parser {
         }
         return pair;
     }
+    get_line() {
+        return this._state.line;
+    }
     async _read_object() {
         const token = await this.peek();
+        this._state.line = this.__lexer__.__token__.line;
         if (token === eof) {
             return token;
         }
@@ -7554,8 +7561,13 @@ Interpreter.prototype.exec = async function(arg, options = {}) {
     if (Array.isArray(arg)) {
         return exec(arg, { env, dynamic_env, use_dynamic });
     } else {
-        this.__parser__.prepare(arg);
-        return exec(this.__parser__, { env, dynamic_env, use_dynamic });
+        try {
+            this.__parser__.prepare(arg);
+            return await exec(this.__parser__, { env, dynamic_env, use_dynamic });
+        } catch(e) {
+            e.message += ` at line ${this.__parser__.get_line() + 1}`;
+            throw e;
+        }
     }
 };
 // -------------------------------------------------------------------------

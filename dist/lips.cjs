@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Dec 2024 14:07:27 +0000
+ * build: Wed, 11 Dec 2024 22:45:10 +0000
  */
 
 'use strict';
@@ -4940,6 +4940,7 @@ var Parser = /*#__PURE__*/function () {
     });
     read_only(this, '_state', {
       parentheses: 0,
+      line: 0,
       fold_case: false
     }, {
       hidden: true
@@ -5311,11 +5312,12 @@ var Parser = /*#__PURE__*/function () {
   }, {
     key: "_agument_exception",
     value: function _agument_exception(e) {
-      if (this._meta) {
-        var _this$__lexer__$__tok = this.__lexer__.__token__,
-          col = _this$__lexer__$__tok.col,
-          offset = _this$__lexer__$__tok.offset,
-          line = _this$__lexer__$__tok.line;
+      var token = this.__lexer__.__token__;
+      if ('col' in token) {
+        var col = token.col,
+          offset = token.offset,
+          line = token.line;
+        e.message += " at line ".concat(line + 1, " and column ").concat(col + 1);
         read_only(e, '__col__', col);
         read_only(e, '__offset__', offset);
         read_only(e, '__line__', line);
@@ -5417,6 +5419,11 @@ var Parser = /*#__PURE__*/function () {
       return _resolve_pair;
     }()
   }, {
+    key: "get_line",
+    value: function get_line() {
+      return this._state.line;
+    }
+  }, {
     key: "_read_object",
     value: function () {
       var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
@@ -5429,14 +5436,15 @@ var Parser = /*#__PURE__*/function () {
               return this.peek();
             case 2:
               token = _context8.sent;
+              this._state.line = this.__lexer__.__token__.line;
               if (!(token === eof)) {
-                _context8.next = 5;
+                _context8.next = 6;
                 break;
               }
               return _context8.abrupt("return", token);
-            case 5:
+            case 6:
               if (!is_special(token)) {
-                _context8.next = 57;
+                _context8.next = 58;
                 break;
               }
               // Built-in parser extensions are mapping short symbols to longer symbols
@@ -5451,38 +5459,38 @@ var Parser = /*#__PURE__*/function () {
               this.skip();
               is_symbol = is_symbol_extension(token);
               _context8.t0 = this;
-              _context8.next = 13;
+              _context8.next = 14;
               return this.peek();
-            case 13:
+            case 14:
               _context8.t1 = _context8.sent;
               was_close_paren = _context8.t0.is_close.call(_context8.t0, _context8.t1);
               if (!is_symbol) {
-                _context8.next = 19;
+                _context8.next = 20;
                 break;
               }
               _context8.t2 = undefined;
-              _context8.next = 22;
+              _context8.next = 23;
               break;
-            case 19:
-              _context8.next = 21;
+            case 20:
+              _context8.next = 22;
               return this._read_object();
-            case 21:
-              _context8.t2 = _context8.sent;
             case 22:
+              _context8.t2 = _context8.sent;
+            case 23:
               object = _context8.t2;
               if (!(object === eof)) {
-                _context8.next = 25;
+                _context8.next = 26;
                 break;
               }
               throw new Unterminated('Expecting expression eof found');
-            case 25:
+            case 26:
               if (builtin) {
-                _context8.next = 34;
+                _context8.next = 35;
                 break;
               }
               extension = this.__env__.get(special.symbol);
               if (!(typeof extension === 'function')) {
-                _context8.next = 34;
+                _context8.next = 35;
                 break;
               }
               if (is_literal(token)) {
@@ -5493,7 +5501,7 @@ var Parser = /*#__PURE__*/function () {
                 args = object.to_array(false);
               }
               if (!(args || is_symbol)) {
-                _context8.next = 31;
+                _context8.next = 32;
                 break;
               }
               return _context8.abrupt("return", this._with_syntax_scope(function () {
@@ -5503,102 +5511,102 @@ var Parser = /*#__PURE__*/function () {
                   use_dynamic: false
                 });
               }));
-            case 31:
+            case 32:
               e = new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
               this._agument_exception(e);
               throw e;
-            case 34:
+            case 35:
               if (!is_literal(token)) {
-                _context8.next = 42;
+                _context8.next = 43;
                 break;
               }
               if (!was_close_paren) {
-                _context8.next = 39;
+                _context8.next = 40;
                 break;
               }
               _e = new Error('Parse Error: expecting datum');
               this._agument_exception(_e);
               throw _e;
-            case 39:
+            case 40:
               expr = new Pair(special.symbol, new Pair(object, _nil));
-              _context8.next = 43;
+              _context8.next = 44;
               break;
-            case 42:
-              expr = new Pair(special.symbol, object);
             case 43:
+              expr = new Pair(special.symbol, object);
+            case 44:
               if (!builtin) {
-                _context8.next = 45;
+                _context8.next = 46;
                 break;
               }
               return _context8.abrupt("return", expr);
-            case 45:
+            case 46:
               if (!(extension instanceof Macro)) {
-                _context8.next = 54;
+                _context8.next = 55;
                 break;
               }
-              _context8.next = 48;
+              _context8.next = 49;
               return this._with_syntax_scope(function () {
                 return _this6.evaluate(expr);
               });
-            case 48:
+            case 49:
               result = _context8.sent;
               if (!(is_pair(result) || result instanceof LSymbol)) {
-                _context8.next = 51;
+                _context8.next = 52;
                 break;
               }
               return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
-            case 51:
+            case 52:
               return _context8.abrupt("return", result);
-            case 54:
+            case 55:
               _e2 = new Error('Parse Error: invalid parser extension: ' + special.symbol);
               this._agument_exception(_e2);
               throw _e2;
-            case 57:
+            case 58:
               ref = this.match_datum_ref(token);
               if (!(ref !== null)) {
-                _context8.next = 65;
+                _context8.next = 66;
                 break;
               }
               this.skip();
               if (!this._refs[ref]) {
-                _context8.next = 62;
+                _context8.next = 63;
                 break;
               }
               return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
-            case 62:
+            case 63:
               _e3 = new Error("Parse Error: invalid datum label #".concat(ref, "#"));
               this._agument_exception(_e3);
               throw _e3;
-            case 65:
+            case 66:
               ref_label = this.match_datum_label(token);
               if (!(ref_label !== null)) {
-                _context8.next = 72;
+                _context8.next = 73;
                 break;
               }
               this.skip();
               this._refs[ref_label] = this._read_object();
               return _context8.abrupt("return", this._refs[ref_label]);
-            case 72:
+            case 73:
               if (!this.is_close(token)) {
-                _context8.next = 77;
+                _context8.next = 78;
                 break;
               }
               --this._state.parentheses;
               this.skip();
               // invalid state, we don't need to return anything
-              _context8.next = 84;
+              _context8.next = 85;
               break;
-            case 77:
+            case 78:
               if (!this.is_open(token)) {
-                _context8.next = 83;
+                _context8.next = 84;
                 break;
               }
               ++this._state.parentheses;
               this.skip();
               return _context8.abrupt("return", this.read_list());
-            case 83:
-              return _context8.abrupt("return", this.read_value());
             case 84:
+              return _context8.abrupt("return", this.read_value());
+            case 85:
             case "end":
               return _context8.stop();
           }
@@ -12960,17 +12968,26 @@ Interpreter.prototype.exec = /*#__PURE__*/function () {
               use_dynamic: use_dynamic
             }));
           case 10:
+            _context16.prev = 10;
             _this22.__parser__.prepare(arg);
-            return _context16.abrupt("return", exec(_this22.__parser__, {
+            _context16.next = 14;
+            return exec(_this22.__parser__, {
               env: env,
               dynamic_env: dynamic_env,
               use_dynamic: use_dynamic
-            }));
-          case 12:
+            });
+          case 14:
+            return _context16.abrupt("return", _context16.sent);
+          case 17:
+            _context16.prev = 17;
+            _context16.t0 = _context16["catch"](10);
+            _context16.t0.message += " at line ".concat(_this22.__parser__.get_line() + 1);
+            throw _context16.t0;
+          case 21:
           case "end":
             return _context16.stop();
         }
-      }, _callee16);
+      }, _callee16, null, [[10, 17]]);
     })();
   });
   return function (_x13) {
@@ -17417,10 +17434,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Wed, 11 Dec 2024 14:07:27 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Wed, 11 Dec 2024 22:45:10 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Wed, 11 Dec 2024 14:07:27 +0000').valueOf();
+  var date = LString('Wed, 11 Dec 2024 22:45:10 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17460,7 +17477,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Wed, 11 Dec 2024 14:07:27 +0000';
+var date = 'Wed, 11 Dec 2024 22:45:10 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
