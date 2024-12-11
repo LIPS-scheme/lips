@@ -7565,7 +7565,10 @@ Interpreter.prototype.exec = async function(arg, options = {}) {
             this.__parser__.prepare(arg);
             return await exec(this.__parser__, { env, dynamic_env, use_dynamic });
         } catch(e) {
-            e.message += ` at line ${this.__parser__.get_line() + 1}`;
+            if (!e.message?.includes('at line')) {
+                const location = ` at line ${this.__parser__.get_line() + 1}`;
+                e.message += location;
+            }
             throw e;
         }
     }

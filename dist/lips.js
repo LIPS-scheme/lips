@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Dec 2024 22:45:10 +0000
+ * build: Wed, 11 Dec 2024 22:55:00 +0000
  */
 
 (function (global, factory) {
@@ -12946,7 +12946,7 @@
       var _this22 = this;
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       return /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
-        var _options$use_dynamic, use_dynamic, dynamic_env, env;
+        var _options$use_dynamic, use_dynamic, dynamic_env, env, _e$message, location;
         return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) switch (_context16.prev = _context16.next) {
             case 0:
@@ -12985,7 +12985,10 @@
             case 17:
               _context16.prev = 17;
               _context16.t0 = _context16["catch"](10);
-              _context16.t0.message += " at line ".concat(_this22.__parser__.get_line() + 1);
+              if (!((_e$message = _context16.t0.message) !== null && _e$message !== void 0 && _e$message.includes('at line'))) {
+                location = " at line ".concat(_this22.__parser__.get_line() + 1);
+                _context16.t0.message += location;
+              }
               throw _context16.t0;
             case 21:
             case "end":
@@ -17438,10 +17441,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 11 Dec 2024 22:45:10 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 11 Dec 2024 22:55:00 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 11 Dec 2024 22:45:10 +0000').valueOf();
+    var date = LString('Wed, 11 Dec 2024 22:55:00 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17481,7 +17484,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Wed, 11 Dec 2024 22:45:10 +0000';
+  var date = 'Wed, 11 Dec 2024 22:55:00 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
