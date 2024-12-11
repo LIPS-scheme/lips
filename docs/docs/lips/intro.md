@@ -613,11 +613,12 @@ Instead of `Array::replace` you should use LIPS Scheme `replace` procedure that 
 ```
 
 ### Regular Expressions
-LIPS define regular expressions it uses native JavaScript regular expressions.
-At first, the syntax looked like in JavaScript. It was problematic for the parser
-so you were not able to put space after `/` to distinguish from divide procedure.
-Later, the syntax was renamed into form that start with hash `#/[0-9]/`. The same
-syntax is used by [Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html) implementation. But LIPS supports more flags (same as JavaScript).
+LIPS define regular expressions it uses native JavaScript regular expressions.  At first, the syntax
+looked like in JavaScript. It was problematic for the parser so you were not able to put space after
+`/` to distinguish from divide procedure.  Later, the syntax was renamed into form that start with
+hash `#/[0-9]/`. The same syntax is used by
+[Gauche](https://practical-scheme.net/gauche/man/gauche-refe/Regular-expressions.html)
+implementation. But LIPS supports more flags (same as JavaScript).
 
 ### Vectors
 In LIPS Scheme vectors are JavaScript arrays. So you can execute methods on them with `-->` macro:
@@ -628,8 +629,8 @@ In LIPS Scheme vectors are JavaScript arrays. So you can execute methods on them
 ```
 
 ### Object literals
-In LIPS you can define object literals with `&`
-[syntax extension](/docs/lips/extension#syntax-extensions):
+In LIPS you can define object literals with `&` [syntax
+extension](/docs/lips/extension#syntax-extensions):
 
 ```scheme
 (define obj &(:name "Jack" :age 22))
