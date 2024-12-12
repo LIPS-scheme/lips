@@ -309,8 +309,8 @@ Will return:
 (quote (1 2 3))
 ```
 
-Because comma is just an alias for quote. You can use them interchangeably. But using symbols is
-faster to type. If you quote quasi quote expression, you will also get symbols expanded:
+Because `'` is just an alias for `quote`. You can use them interchangeably. But using symbols is
+faster to type. If you quote quasiquote expression, you will also get symbols expanded:
 
 ```scheme
 '`(1 2 3 ,(+ 1 2) ,@(list 4 5))
