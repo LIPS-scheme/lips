@@ -31,6 +31,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (stream-take n stream)
+  "return n elements from the stream"
   (if (<= n 0)
       '()
       (cons (head stream) (stream-take (- n 1) (tail stream)))))
@@ -68,6 +69,7 @@
     (if (= i n)
         the-empty-stream
         (stream-cons i (loop (+ i 1))))))
+
 ;; --------------------------------------------------------------------------
 (define (stream-reduce fun stream)
   (let iter ((result (stream-car stream))
@@ -91,7 +93,7 @@
         the-empty-stream
         (stream-cons (apply proc (stream-car stream))
                      (single-map proc (stream-cdr stream)))))
-  (single-map proc (apply zip-streams streams)))
+  (single-map proc (apply stream-zip streams)))
 
 ;; --------------------------------------------------------------------------
 (define (stream-for-each proc stream)
@@ -110,8 +112,14 @@
                            (stream-cdr stream))))))
 
 ;; -----------------------------------------------------------------------------
+(define (stream-skip n stream)
+  (if (<= n 0)
+      stream
+      (stream-skip (- n 1) (stream-cdr stream))))
+
+;; -----------------------------------------------------------------------------
 (define (stream-slice a b stream)
-  (let loop ((n (- b a)) (stream (skip-stream a stream)))
+  (let loop ((n (- b a)) (stream (stream-skip a stream)))
     (if (eq? n 0)
         the-empty-stream
         (stream-cons (stream-car stream)
@@ -131,7 +139,7 @@
 (define fibs
   (stream-cons 0
                (stream-cons 1
-                            (add-streams (tail fibs) fibs))))
+                            (stream-add (tail fibs) fibs))))
 
 ;; -----------------------------------------------------------------------------
 (define (integers-from n)
@@ -141,7 +149,7 @@
 (define ones (stream-cons 1 ones))
 
 ;; -----------------------------------------------------------------------------
-(define integers (stream-cons 1 (add-streams integers ones)))
+(define integers (stream-cons 1 (stream-add integers ones)))
 
 ;; -----------------------------------------------------------------------------
 (define (! n)
