@@ -50,7 +50,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.repository == 'jcubic/lips-website' || (github.repository == 'LIPS-scheme/lips' && github.ref_name == 'master')}}
+        if: ${{ github.repository == 'jcubic/lips-website' || (github.repository == 'jcubic/lips' && github.ref_name == 'master')}}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/build
