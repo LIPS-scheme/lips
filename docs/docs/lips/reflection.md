@@ -61,9 +61,8 @@ Same as with numbers and list you can access internals of Strings.
 
 ```scheme
 (let ((str "hello"))
-  (str.__string__.toUpperCase)
-  (set! str.__string__ "world")
-  str)
+  (str.__string__.toUpperCase))
+;; ==> "HELLO"
 ```
 
 `__string__` property is read only so you can't modify it's value:
