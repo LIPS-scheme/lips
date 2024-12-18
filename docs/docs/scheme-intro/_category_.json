@@ -2,6 +2,7 @@
   "label": "Introduction to Scheme",
   "position": 2,
   "link": {
-    "type": "generated-index"
+    "type": "generated-index",
+    "description": "Scheme Tutorial, that teaches you basics of Scheme Programming Language. This tutorial explain all the features of Scheme and it's not specific of LIPS Scheme. It mostly describes R7RS standard of Scheme."
   }
 }
