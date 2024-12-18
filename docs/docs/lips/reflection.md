@@ -65,7 +65,7 @@ Same as with numbers and list you can access internals of Strings.
 ;; ==> "HELLO"
 ```
 
-`__string__` property is read only so you can't modify it's value:
+`__string__` property is read only so you can't modify its value:
 
 ```scheme
 (let ((str "hello"))
