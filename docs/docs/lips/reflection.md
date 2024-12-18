@@ -111,6 +111,22 @@ source code of the procedure that you can modify:
      (set-cdr! r (list (+ (cadr r) 1)))))
 ```
 
+:::info
+
+The `__code__` property always contain a lambda expression, because:
+
+```scheme
+(define (foo x) ...)
+```
+
+is an alias for:
+
+```scheme
+(define foo (lambda (x) ...))
+```
+
+:::
+
 This procedure modify its source code. Each time you execute this function it will run one more
 times.
 
