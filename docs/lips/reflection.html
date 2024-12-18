@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.6.1">
 <title data-rh="true">Reflection | LIPS Scheme</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" name="twitter:image" content="https://lips.js.org/img/lips-social-card.png"><meta data-rh="true" property="og:url" content="https://lips.js.org/docs/lips/reflection"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Reflection | LIPS Scheme"><meta data-rh="true" name="description" content="A way to introspect and manipulate LIPS internals"><meta data-rh="true" property="og:description" content="A way to introspect and manipulate LIPS internals"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://lips.js.org/docs/lips/reflection"><link data-rh="true" rel="alternate" href="https://lips.js.org/docs/lips/reflection" hreflang="en"><link data-rh="true" rel="alternate" href="https://lips.js.org/docs/lips/reflection" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://HSV6UC2UY5-dsn.algolia.net" crossorigin="anonymous"><link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="LIPS Scheme blog RSS Feed"><link rel="stylesheet" href="/assets/css/styles.18f81f7e.css">
-<script src="/assets/js/runtime~main.136b170d.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.43281dcb.js" defer="defer"></script>
 <script src="/assets/js/main.7ceba099.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -14,7 +14,7 @@
 <li>
 <p>Scheme functions</p>
 <ul>
-<li><code>dir</code> - this procedure is inspired by Python function with the same name, it return all properties
+<li><code>dir</code> - this procedure is inspired by Python function with the same name, it returns all properties
 that you can access on an object. Including those from object prototype and whole chain.</li>
 <li><code>env</code> - function return everything what is inside current-environment.</li>
 </ul>
@@ -53,7 +53,7 @@ that you can access on an object. Including those from object prototype and whol
 </span><span class="token-line" style="color:#393A34"><span class="token plain">  x</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span>
 </span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token comment" style="color:#999988;font-style:italic">;; ==&gt; #0=(1 2 3 . #0#)</span>
 </span></code></pre><div class="buttonGroup_6DOT"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_FhaS" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_phi_"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_FfTR"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
-<p>Above create a cycle. When you you try to display a cycle it&#x27;s printed using R7RS datum syntax.</p>
+<p>Above create a cycle. When you try to display a cycle it&#x27;s printed using R7RS datum syntax.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="strings">Strings<a href="#strings" class="hash-link" aria-label="Direct link to Strings" title="Direct link to Strings">​</a></h2>
 <p>Same as with numbers and list you can access internals of Strings.</p>
 <div><div><pre tabindex="0"><code><span class="token-line" style="color:#393A34"><span class="token punctuation" style="color:#393A34">(</span><span class="token keyword" style="color:#00009f">let</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">(</span><span class="token function" style="color:#d73a49">str</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;hello&quot;</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span>
@@ -81,7 +81,7 @@ that you can access on an object. Including those from object prototype and whol
 </span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token comment" style="color:#999988;font-style:italic">;; ==&gt; &quot;X&quot;</span>
 </span></code></pre><div class="buttonGroup_6DOT"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_FhaS" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_phi_"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_FfTR"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="procedures">Procedures<a href="#procedures" class="hash-link" aria-label="Direct link to Procedures" title="Direct link to Procedures">​</a></h2>
-<p>Procedures as described in <a href="/docs/lips/intro#procedures">Core features</a> are JavaScript functions,
+<p>As described in <a href="/docs/lips/intro#procedures">Core features</a>, procedures are JavaScript functions,
 they also hold additional properties like <code>__code__</code> and <code>__doc__</code>. The first property is the live
 source code of the procedure that you can modify:</p>
 <div><div><pre tabindex="0"><code><span class="token-line" style="color:#393A34"><span class="token punctuation" style="color:#393A34">(</span><span class="token keyword" style="color:#00009f">define</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">(</span><span class="token function" style="color:#d73a49">repeater</span><span class="token plain"> x</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span>
